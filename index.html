@@ -238,6 +238,11 @@ h3 .pts{vertical-align:middle;margin-inline-start:4px}
 .grp+.grp{margin-top:8px}
 .grp-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .grp-h h3{font-size:15px;font-weight:600;flex:1;min-width:0}
+.gtog{flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:0;background:none;padding:6px 0;text-align:start;color:var(--ink)}
+.gtog svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;flex:none;color:var(--muted);transition:transform .2s ease}
+.grp.closed .gtog svg{transform:rotate(90deg)}
+.gname{font-size:15px;font-weight:600;min-width:0}
+.grp.closed .gbar{opacity:.8}
 .gsc{font-family:var(--f-num);font-size:13px;color:var(--muted)}
 .iconbtn.sm2{width:32px;height:32px;border-radius:8px;font-size:17px;color:var(--muted)}
 .iconbtn.sm2 svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
@@ -678,11 +683,12 @@ function vToday(){
     const anyOff=live.some(x=>!isSched(x,k));
     const blocks=groupedLive().map(bk=>{
       const items=bk.items.slice().sort((p,q)=>(isSched(q,k)?1:0)-(isSched(p,k)?1:0)),gs=groupScore(bk.items,k),gid=bk.g?bk.g.id:"";
-      return '<div class="grp"><div class="grp-h"><h3>'+(bk.g?esc(bk.g.name):"بدون مجموعة")+'</h3><span class="gsc">'+L(gs.got+" / "+gs.max)+'</span>'+
+      const ck=gKey(bk.g),closed=COLL.has(ck),dn=bk.items.filter(h=>isDone(h,k)).length;
+      return '<div class="grp'+(closed?" closed":"")+'"><div class="grp-h">'+gToggle(bk.g,closed)+'<span class="gsc">'+(closed?L(dn+"/"+bk.items.length)+' مهام · ':"")+L(gs.got+" / "+gs.max)+'</span>'+
         (bk.g?'<button class="iconbtn sm2" data-act="editGroup" data-id="'+gid+'" aria-label="تعديل المجموعة">'+ICON.edit+'</button>':"")+
         '<button class="iconbtn sm2" data-act="newHabitIn" data-g="'+gid+'" aria-label="إضافة مهمة إلى هذه المجموعة">+</button></div>'+
         '<div class="gbar"><i style="width:'+(gs.max?Math.round(Math.min(1,gs.got/gs.max)*100):0)+'%"></i></div>'+
-        (items.length?'<div class="hlist">'+items.map(row).join("")+'</div>':'<p class="muted small" style="margin:0">لا مهام في هذه المجموعة بعد.</p>')+'</div>'}).join("");
+        (closed?"":items.length?'<div class="hlist">'+items.map(row).join("")+'</div>':'<p class="muted small" style="margin:0">لا مهام في هذه المجموعة بعد.</p>')+'</div>'}).join("");
     main=summary+'<section class="sec"><div class="sec-h"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div>'+blocks+
       (anyOff?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'</section>';
   }
@@ -721,9 +727,9 @@ function vHabits(){
   const card=h=>{const r=hRate(h,30);
     return '<article class="panel hcard"><div class="hhead"><div><h3>'+esc(h.name)+' '+ptsTag(hPts(h))+'</h3><div class="lbl">'+esc(schedText(h))+' · منذ '+esc(fShort(hStart(h)))+'</div></div><button class="btn sm" data-act="editHabit" data-id="'+h.id+'">تعديل</button></div>'+
     '<div class="stats"><div class="stat"><b>'+curStreak(h)+'</b><span>السلسلة الحالية</span></div><div class="stat"><b>'+bestStreak(h)+'</b><span>أطول سلسلة</span></div><div class="stat"><b>'+(Number.isFinite(r)?L(Math.round(r*100)+"%"):"–")+'</b><span>التزام 30 يوماً</span></div></div>'+heat(h)+'</article>'};
-  s+=groupedLive().map(bk=>'<section class="sec"><div class="grp-h"><h3>'+(bk.g?esc(bk.g.name):"بدون مجموعة")+'</h3><span class="lbl">'+bk.items.length+' '+(bk.items.length===1?"مهمة":"مهام")+'</span>'+
+  s+=groupedLive().map(bk=>{const closed=COLL.has(gKey(bk.g));return '<section class="sec grp'+(closed?" closed":"")+'"><div class="grp-h">'+gToggle(bk.g,closed)+'<span class="lbl">'+bk.items.length+' '+(bk.items.length===1?"مهمة":"مهام")+'</span>'+
     (bk.g?'<button class="btn sm" data-act="editGroup" data-id="'+bk.g.id+'">تعديل المجموعة</button>':"")+'<button class="btn sm" data-act="newHabitIn" data-g="'+(bk.g?bk.g.id:"")+'">إضافة مهمة</button></div>'+
-    (bk.items.length?'<div class="cols">'+bk.items.map(card).join("")+'</div>':'<p class="muted small" style="margin:0">لا مهام في هذه المجموعة بعد.</p>')+'</section>').join("");
+    (closed?"":bk.items.length?'<div class="cols">'+bk.items.map(card).join("")+'</div>':'<p class="muted small" style="margin:0">لا مهام في هذه المجموعة بعد.</p>')+'</section>'}).join("");
   if(arch.length)s+='<section class="sec"><div class="lbl">مؤرشفة</div>'+arch.map(h=>'<div class="panel row" style="justify-content:space-between"><span>'+esc(h.name)+'</span><button class="btn sm" data-act="editHabit" data-id="'+h.id+'">تعديل</button></div>').join("")+'</section>';
   return s;
 }
@@ -918,6 +924,9 @@ function vWeight(){
   return s;
 }
 /* ---------- groups ---------- */
+let COLL=new Set();try{COLL=new Set(JSON.parse(localStorage.getItem("dt-coll")||"[]"))}catch(e){}
+const gKey=g=>g?g.id:"_none";
+function gToggle(g,closed){return '<button class="gtog" data-act="gColl" data-k="'+gKey(g)+'" aria-expanded="'+!closed+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg><span class="gname">'+(g?esc(g.name):"بدون مجموعة")+'</span></button>'}
 const groupOf=h=>h.g&&S.groups.some(g=>g.id===h.g)?h.g:"";
 function groupedLive(){
   const live=liveHabits(),out=S.groups.map(g=>({g:g,items:live.filter(h=>groupOf(h)===g.id)}));
@@ -1155,6 +1164,7 @@ document.addEventListener("click",e=>{
     case "sleepStep":{const d=ensureDay(S.cur);let v=Number.isFinite(d.sleep)?d.sleep:7;if(Number.isFinite(d.sleep))v+= +b.dataset.n;v=Math.max(0,Math.min(16,v));d.sleep=v;saveDay(S.cur);render();break}
     case "sugg":{const n=b.dataset.n;const ex=S.habits.find(h=>h.name===n&&!h.archived);if(!ex){addHabit(n,[]);render()}break}
     case "newHabit":openHabit(null);break;
+    case "gColl":{const ck=b.dataset.k;if(COLL.has(ck))COLL.delete(ck);else COLL.add(ck);try{localStorage.setItem("dt-coll",JSON.stringify(Array.from(COLL)))}catch(er){}render();break}
     case "newHabitIn":openHabit(null,b.dataset.g||"");break;
     case "newGroup":openGroup(null);break;
     case "editGroup":{const g=S.groups.find(x=>x.id===id);if(g)openGroup(g);break}
