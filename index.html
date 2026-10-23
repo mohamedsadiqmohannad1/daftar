@@ -450,7 +450,10 @@ function mkFmt(o){try{return new Intl.DateTimeFormat("ar-IQ-u-nu-latn",o)}catch(
 const F_LONG=mkFmt({weekday:"long",day:"numeric",month:"long"});
 const F_SHORT=mkFmt({day:"numeric",month:"short"});
 const F_FULL=mkFmt({day:"numeric",month:"long",year:"numeric"});
-const fLong=k=>F_LONG.format(parse(k)), fShort=k=>F_SHORT.format(parse(k)), fFull=k=>F_FULL.format(parse(k));
+const WD=mkFmt({weekday:"long"});
+const daysAr=n=>n===1?"يوم":n===2?"يومين":n<=10?n+" أيام":n+" يوماً";
+const dNum=k=>{const d=parse(k);return d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear()}; // day/month/year, always with the year
+const fLong=k=>WD.format(parse(k))+" "+dNum(k), fShort=k=>dNum(k), fFull=k=>dNum(k);
 const DAYS_ORDER=[6,0,1,2,3,4,5]; // Sat..Fri (JS getDay numbers)
 const DAY_LETTER={6:"س",0:"ح",1:"ن",2:"ث",3:"ر",4:"خ",5:"ج"};
 const DAY_NAME={6:"السبت",0:"الأحد",1:"الاثنين",2:"الثلاثاء",3:"الأربعاء",4:"الخميس",5:"الجمعة"};
@@ -465,7 +468,7 @@ const ICON={
 };
 
 /* ---------- state ---------- */
-const S={habits:[],groups:[],ngroups:[],todos:{},days:{},goals:{},notes:{},wgoal:null,lastBackup:null,mode:"loading",cur:todayK(),tab:"today"};
+const S={habits:[],groups:[],ngroups:[],ggroups:[],todos:{},days:{},goals:{},notes:{},wgoal:null,lastBackup:null,mode:"loading",cur:todayK(),tab:"today"};
 try{const t=localStorage.getItem("dt-tab");if(t&&["today","memories","habits","notes","goals","weight"].includes(t))S.tab=t}catch(e){}
 if(["today","memories","habits","notes","goals","weight"].includes(location.hash.slice(1)))S.tab=location.hash.slice(1);
 
@@ -508,12 +511,12 @@ window.addEventListener("pagehide",flushAll);
 let localTimer=null;
 function persistLocal(){
   clearTimeout(localTimer);
-  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup,ngroups:S.ngroups,todos:S.todos}))}catch(e){}},250);
+  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos}))}catch(e){}},250);
 }
 function loadLocal(){
-  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.todos=o.todos||{}}}catch(e){}
+  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.ggroups=o.ggroups||[];S.todos=o.todos||{}}}catch(e){}
 }
-const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;return JSON.parse(JSON.stringify(o))};
+const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;return JSON.parse(JSON.stringify(o))};
 const saveConfig=()=>queueWrite("app/config",cfgDoc());
 const saveNote=id=>queueWrite("notes/"+id,S.notes[id]||null);
 const saveTodo=id=>queueWrite("todos/"+id,S.todos[id]||null);
@@ -550,7 +553,7 @@ function startDB(db){
   const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&S.mode==="loading"){S.mode="db";setSync();migrateX()}render()};
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
-    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[]}
+    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[]}
     got.c=true;ready();
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -578,7 +581,7 @@ function startDB(db){
     S.notes=nn;got.n=true;ready();
   },onErr));
 }
-function resetState(){S.ngroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
@@ -823,7 +826,7 @@ function backupBanner(){
   if(lb&&age<14)return "";
   return '<div class="banner row" style="justify-content:space-between"><span>'+(lb?"آخر نسخة احتياطية قبل "+age+" يوماً.":"لم تصدّر أي نسخة احتياطية بعد.")+'</span><button class="btn sm" data-act="export">تصدير الآن</button></div>';
 }
-const ago=iso=>{if(!iso)return "";const k=keyOf(new Date(iso)),n=diffD(k,todayK());return fShort(k)+(n===0?" · اليوم":n===1?" · أمس":" · منذ "+n+" يوم")};
+const ago=iso=>{if(!iso)return "";const k=keyOf(new Date(iso)),n=diffD(k,todayK());return fShort(k)+(n===0?" · اليوم":n===1?" · أمس":" · منذ "+daysAr(n))};
 let TD_ALL=false;
 function migrateX(){ // older "today only" tasks become pending tasks
   let n=0;Object.keys(S.days).forEach(k=>{const d=S.days[k];if(!d||!Array.isArray(d.x)||!d.x.length)return;
@@ -859,7 +862,7 @@ function vToday(){
   const k=S.cur,t=todayK(),day=S.days[k]||{},off=!!day.off;
   const fk=firstLogKey(),dayN=fk&&fk<=k?diffD(fk,k)+1:null;
   const head=backupBanner()+'<section class="datebar"><button class="iconbtn" data-act="day" data-n="-1" aria-label="اليوم السابق">'+ICON.prev+'</button>'+
-    '<div class="d"><h1>'+esc(fLong(k))+'</h1><div class="lbl">'+(k===t?"اليوم":(diffD(k,t)===1?"أمس":"قبل "+diffD(k,t)+" يوم"))+(dayN?' · اليوم <span class="num">'+dayN+'</span> في السجل':"")+'</div>'+'<div class="dbtns">'+(k!==t?'<button class="chip-link" data-act="goToday">العودة لليوم</button>':"")+'<button class="chip-link'+(off?" on":"")+'" data-act="dayOff" aria-pressed="'+off+'">'+(off?"إلغاء العذر":"يوم معذور")+'</button></div></div>'+
+    '<div class="d"><h1>'+esc(fLong(k))+'</h1><div class="lbl">'+(k===t?"اليوم":(diffD(k,t)===1?"أمس":"قبل "+daysAr(diffD(k,t))))+(dayN?' · اليوم <span class="num">'+dayN+'</span> في السجل':"")+'</div>'+'<div class="dbtns">'+(k!==t?'<button class="chip-link" data-act="goToday">العودة لليوم</button>':"")+'<button class="chip-link'+(off?" on":"")+'" data-act="dayOff" aria-pressed="'+off+'">'+(off?"إلغاء العذر":"يوم معذور")+'</button></div></div>'+
     
     '<button class="iconbtn" data-act="day" data-n="1" aria-label="اليوم التالي"'+(k>=t?" disabled":"")+'>'+ICON.next+'</button></section>';
   const live=liveHabits(),sc=dayScore(k),p=sc.max?sc.got/sc.max:NaN;
@@ -954,13 +957,18 @@ function goalChart(g,st){
       xTicks:[[0,fNum(x0)],[mid,fNum(addD(x0,mid))],[xMax,fNum(addD(x0,xMax))]],label:"تطور "+g.title});
   })+'<div class="legend"><span><i style="background:var(--accent)"></i>القراءات</span><span><i style="background:var(--good)"></i>الهدف</span>'+(st.slope!=null&&st.status!=="done"&&st.daysLeft>=0?'<span><i style="background:var(--accent);opacity:.6"></i>الاتجاه الحالي حتى الموعد</span>':"")+'</div>';
 }
+S.gl={g:""};
+const ggName=id=>{const g=S.ggroups.find(x=>x.id===id);return g?g.name:""};
 function vGoals(){
-  const gs=Object.values(S.goals).sort((a,b)=>(a.created||"")<(b.created||"")?-1:1);
+  const fg=S.gl.g,all=Object.values(S.goals).sort((a,b)=>(a.created||"")<(b.created||"")?-1:1);
+  const gs=all.filter(x=>!fg||(fg==="_none"?!ggName(x.g):x.g===fg));
   let s='<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الأهداف</h2><button class="btn pri sm" data-act="newGoal">هدف جديد</button></section>';
+  s+=groupChips("g");
+  if(all.length&&!gs.length)return s+'<p class="muted small">لا أهداف في هذه المجموعة.</p>';
   if(!gs.length)return s+'<section class="panel empty"><h2>هدف قابل للقياس</h2><p class="muted small" style="margin:0">حدّد قيمة البداية والقيمة المستهدفة والموعد، مثل الوزن أو عدد الصفحات أو ساعات الدراسة. كل قراءة تسجّلها تُحدّث نسبة الإنجاز والمعدل المطلوب أسبوعياً، وتقارنه بمعدلك الفعلي في آخر 28 يوماً.</p><div class="row"><button class="btn pri" data-act="newGoal">إضافة أول هدف</button></div></section>';
   s+='<div class="cols">';
   gs.forEach(g=>{const st=gStats(g),u=g.unit?" "+esc(g.unit):"",pr=Math.max(0,Math.min(1,st.prog));
-    s+='<article class="panel hcard"><div class="hhead"><div><h3>'+esc(g.title)+'</h3><div class="lbl">'+(g.created?'أُضيف '+esc(fShort(keyOf(new Date(g.created))))+' · ':'')+'الموعد '+esc(fFull(g.deadline))+'</div></div><span class="pill '+st.status+'">'+STATUS_TXT[st.status]+'</span></div>'+
+    s+='<article class="panel hcard"><div class="hhead"><div><h3>'+esc(g.title)+'</h3><div class="lbl">'+(!fg&&ggName(g.g)?esc(ggName(g.g))+' · ':'')+(g.created?'أُضيف '+esc(fShort(keyOf(new Date(g.created))))+' · ':'')+'الموعد '+esc(fFull(g.deadline))+'</div></div><span class="pill '+st.status+'">'+STATUS_TXT[st.status]+'</span></div>'+
     '<div class="row" style="justify-content:space-between"><span><span class="num" style="font-size:24px">'+L(num(st.cur,2))+'</span> <span class="muted small">من '+L(num(+g.target,2)+u)+'</span></span><span class="num muted">'+L(Math.round(st.prog*100)+"%")+'</span></div>'+
     '<div class="bar"><i style="width:'+(pr*100).toFixed(1)+'%"></i></div>'+
     '<div class="kv"><div><b>'+(st.daysLeft>=0?st.daysLeft:0)+'</b><span>يوم متبقٍ</span></div>'+
@@ -1036,7 +1044,7 @@ const getHappy=d=>d?(Number.isFinite(d.happy)?d.happy:Number.isFinite(d.mood)?(d
 const hWord=v=>v<=-60?"سيئ جداً":v<-20?"سيئ":v<=20?"عادي":v<60?"جيد":"ممتاز";
 const hLabel=v=>Number.isFinite(v)?L(signed(Math.round(v),0))+" · "+hWord(v):"لم يُسجّل";
 const F_LIST=mkFmt({weekday:"long",day:"numeric",month:"long",year:"numeric"});
-const fList=k=>F_LIST.format(parse(k));
+const fList=k=>fLong(k);
 S.mem={sel:todayK(),range:defRange(),q:""};
 const memRangeStart=()=>rangeStartFor(S.mem.range,d=>Number.isFinite(getHappy(d))||!!(d&&d.note));
 function setHappy(k,v){const d=ensureDay(k);if(v===null)delete d.happy;else d.happy=Math.max(-100,Math.min(100,Math.round(v)));delete d.mood;saveDay(k)}
@@ -1243,22 +1251,27 @@ function noteEditorHTML(n){
     '<div class="row" style="justify-content:space-between"><span class="lbl">يُحفظ تلقائياً أثناء الكتابة</span><button class="btn sm danger" data-act="ntDel">حذف الفكرة</button></div>'+
   '</section>';
 }
-function openNgroup(g){
-  openSheet('<h2>'+(g?"تعديل مجموعة الأفكار":"مجموعة أفكار جديدة")+'</h2><form class="f" id="ng-form"><div class="fld"><label for="ng-name">الاسم</label><input id="ng-name" name="name" maxlength="40" required value="'+esc(g?g.name:"")+'" placeholder="مثال: مشاريع"></div>'+
+function openNgroup(g,kind){
+  kind=kind||"n";const list=kind==="g"?S.ggroups:S.ngroups,what=kind==="g"?"الأهداف":"الأفكار";
+  openSheet('<h2>'+(g?"تعديل مجموعة "+what:"مجموعة "+what+" جديدة")+'</h2><form class="f" id="ng-form"><div class="fld"><label for="ng-name">الاسم</label><input id="ng-name" name="name" maxlength="40" required value="'+esc(g?g.name:"")+'" placeholder="'+(kind==="g"?"مثال: الصحة":"مثال: مشاريع")+'"></div>'+
     '<p class="err" id="ng-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div>'+
-    (g?'<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn sm danger" type="button" data-act="ngDel" data-id="'+g.id+'">حذف المجموعة</button></div><p class="lbl" style="margin:0">حذف المجموعة لا يحذف أفكارها، بل تصبح بدون مجموعة.</p>':"")+'</form>',fd=>{
+    (g?'<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn sm danger" type="button" data-act="ngDel" data-k="'+kind+'" data-id="'+g.id+'">حذف المجموعة</button></div><p class="lbl" style="margin:0">حذف المجموعة لا يحذف '+what+'ها، بل تصبح بدون مجموعة.</p>':"")+'</form>',fd=>{
     const name=String(fd.get("name")||"").trim();if(!name){const e=$("#ng-err");e.textContent="اكتب اسماً للمجموعة.";e.hidden=false;return}
-    const cur=g&&S.ngroups.find(x=>x.id===g.id);if(cur)cur.name=name;else{const ng={id:uid(),name:name};S.ngroups.push(ng);S.nt.g=ng.id}
+    const cur=g&&list.find(x=>x.id===g.id);if(cur)cur.name=name;else{const ng={id:uid(),name:name};list.push(ng);if(kind==="g")S.gl.g=ng.id;else S.nt.g=ng.id}
     saveConfig();closeSheet();render();
   });
+}
+function groupChips(kind){
+  const list=kind==="g"?S.ggroups:S.ngroups,cur=kind==="g"?S.gl.g:S.nt.g,items=kind==="g"?Object.values(S.goals):Object.values(S.notes).filter(x=>(x.title||"").trim()||(x.body||"").trim());
+  const has=id=>list.some(g=>g.id===id),cnt=f=>items.filter(x=>!f||(f==="_none"?!has(x.g):x.g===f)).length;
+  const chip=(f,lbl)=>'<button class="nchip'+(cur===f?" on":"")+'" data-act="ngPick" data-k="'+kind+'" data-g="'+f+'">'+esc(lbl)+' <span class="num">'+cnt(f)+'</span></button>';
+  return '<div class="nchips">'+chip("","الكل")+list.map(g=>chip(g.id,g.name)).join("")+(list.length&&cnt("_none")?chip("_none","بدون مجموعة"):"")+'<button class="nchip add" data-act="ngNew" data-k="'+kind+'">+ مجموعة</button>'+
+    (cur&&cur!=="_none"&&has(cur)?'<button class="chip-link" data-act="ngEdit" data-k="'+kind+'" data-id="'+cur+'">تعديل المجموعة</button>':"")+'</div>';
 }
 function vNotes(){
   const n=S.nt.sel&&S.notes[S.nt.sel]?S.notes[S.nt.sel]:null,wide=isWide();
   let s='<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الأفكار والملاحظات</h2><button class="btn pri sm" data-act="ntNew">فكرة جديدة</button></section>';
-  const cnt=f=>Object.values(S.notes).filter(x=>((x.title||"").trim()||(x.body||"").trim())&&(!f||(f==="_none"?!ngName(x.g):x.g===f))).length;
-  const chip=(f,lbl)=>'<button class="nchip'+(S.nt.g===f?" on":"")+'" data-act="ngPick" data-g="'+f+'">'+esc(lbl)+' <span class="num">'+cnt(f)+'</span></button>';
-  const chips='<div class="nchips">'+chip("","الكل")+S.ngroups.map(g=>chip(g.id,g.name)).join("")+(S.ngroups.length&&cnt("_none")?chip("_none","بدون مجموعة"):"")+'<button class="nchip add" data-act="ngNew">+ مجموعة</button>'+
-    (S.nt.g&&S.nt.g!=="_none"?'<button class="chip-link" data-act="ngEdit" data-id="'+S.nt.g+'">تعديل المجموعة</button>':"")+'</div>';
+  const chips=groupChips("n");
   const list='<section class="sec">'+chips+'<input id="nt-q" class="keep search" type="search" placeholder="ابحث في أفكارك" value="'+esc(S.nt.q)+'" aria-label="بحث"><div id="nt-list" class="mlist"></div></section>';
   if(!wide)return s+(n?noteEditorHTML(n):list);
   return s+'<div class="cols">'+list+(n?noteEditorHTML(n):'<section class="panel empty"><h2>اختر فكرة</h2><p class="muted small" style="margin:0">افتح فكرة من القائمة لتعديلها، أو أنشئ واحدة جديدة.</p></section>')+'</div>';
@@ -1405,7 +1418,9 @@ function goalForm(g){
   const t=todayK();
   return '<h2>'+(g?"تعديل الهدف":"هدف جديد")+'</h2><form class="f" id="goal-form">'+
   '<div class="fld"><label for="gf-title">الهدف</label><input id="gf-title" name="title" maxlength="80" required value="'+esc(g?g.title:"")+'" placeholder="مثال: الوزن"></div>'+
-  '<div class="fld"><label for="gf-unit">الوحدة</label><input id="gf-unit" name="unit" maxlength="16" value="'+esc(g?g.unit:"")+'" placeholder="kg"></div>'+
+  '<div class="two"><div class="fld"><label for="gf-unit">الوحدة</label><input id="gf-unit" name="unit" maxlength="16" value="'+esc(g?g.unit:"")+'" placeholder="kg"></div>'+
+  '<div class="fld"><label for="gf-g">المجموعة</label><select id="gf-g" name="gg" class="sel"><option value="">بدون مجموعة</option>'+S.ggroups.map(x=>'<option value="'+x.id+'"'+((g?g.g:(S.gl.g!=="_none"?S.gl.g:""))===x.id?" selected":"")+'>'+esc(x.name)+'</option>').join("")+'</select></div></div>'+
+  (g&&g.created?'<p class="lbl" style="margin:0">أُضيف هذا الهدف '+esc(fFull(keyOf(new Date(g.created))))+'</p>':"")+
   '<div class="two"><div class="fld"><label for="gf-start">قيمة البداية</label><input class="ltr" id="gf-start" name="start" type="number" step="any" required value="'+(g?g.start:"")+'"></div>'+
   '<div class="fld"><label for="gf-target">القيمة المستهدفة</label><input class="ltr" id="gf-target" name="target" type="number" step="any" required value="'+(g?g.target:"")+'"></div></div>'+
   '<div class="two"><div class="fld"><label for="gf-sd">تاريخ البداية</label><input class="ltr" id="gf-sd" name="startDate" type="date" required max="'+t+'" value="'+(g?g.startDate:t)+'"></div>'+
@@ -1424,7 +1439,8 @@ function openGoal(g){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(o.startDate)||!/^\d{4}-\d{2}-\d{2}$/.test(o.deadline))return bad("أدخل التاريخين.");
     if(o.deadline<=o.startDate)return bad("الموعد يجب أن يكون بعد تاريخ البداية.");
     const cg=g&&S.goals[g.id];if(g&&!cg){closeSheet();render();return}
-    if(cg){Object.assign(cg,o);saveGoal(cg.id)}else{const id=uid();S.goals[id]=Object.assign({id:id,entries:[],created:new Date().toISOString()},o);saveGoal(id)}
+    const gg=String(fd.get("gg")||"");
+    if(cg){Object.assign(cg,o);if(gg)cg.g=gg;else delete cg.g;saveGoal(cg.id)}else{const id=uid();S.goals[id]=Object.assign({id:id,entries:[],created:new Date().toISOString()},o);if(gg)S.goals[id].g=gg;saveGoal(id)}
     closeSheet();render();
   });
 }
@@ -1450,7 +1466,7 @@ function openLog(g){
 
 /* ---------- export ---------- */
 function doExport(){
-  const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,ngroups:S.ngroups,todos:S.todos},null,1);
+  const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos},null,1);
   try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download="daftar-backup-"+todayK()+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}catch(e){}
   S.lastBackup=new Date().toISOString();saveConfig();render();
 }
@@ -1479,6 +1495,7 @@ async function applyImport(o){
   if(o.days&&typeof o.days==="object")Object.keys(o.days).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;const v=clone(o.days[k]),cur=S.days[k]||{};
     S.days[k]=Object.assign({},cur,v,{d:k,h:Object.assign({},cur.h||{},v.h||{})});ops.push({path:"days/"+k,data:S.days[k]})});
   if(o.goals&&typeof o.goals==="object")Object.keys(o.goals).forEach(id=>{S.goals[id]=clone(o.goals[id]);ops.push({path:"goals/"+id,data:S.goals[id]})});
+  if(Array.isArray(o.ggroups)){const ids=new Set(S.ggroups.map(g=>g.id));o.ggroups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.ggroups.push(clone(g))});ops[0].data=cfgDoc()}
   if(Array.isArray(o.ngroups)){const ids=new Set(S.ngroups.map(g=>g.id));o.ngroups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.ngroups.push(clone(g))});ops[0].data=cfgDoc()}
   if(o.todos&&typeof o.todos==="object")Object.keys(o.todos).forEach(id=>{S.todos[id]=clone(o.todos[id]);ops.push({path:"todos/"+id,data:S.todos[id]})});
   if(o.notes&&typeof o.notes==="object")Object.keys(o.notes).forEach(id=>{const n=clone(o.notes[id]);if(!(n.title||"").trim()&&!(n.body||"").trim())return;S.notes[id]=n;ops.push({path:"notes/"+id,data:n})});
@@ -1521,10 +1538,10 @@ document.addEventListener("click",e=>{
     case "grDel":{if(confirmArm[a+id]){S.groups=S.groups.filter(x=>x.id!==id);S.habits.forEach(h=>{if(h.g===id)delete h.g});saveConfig();closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف المجموعة"},4000)}break}
     case "ntNew":{if(S.nt.sel)cleanupNote(S.nt.sel);const nid=uid(),now=new Date().toISOString();S.notes[nid]={id:nid,title:"",body:"",created:now,updated:now};if(S.nt.g&&S.nt.g!=="_none"&&ngName(S.nt.g))S.notes[nid].g=S.nt.g;S.nt.sel=nid;render(true);const ti=$("#nt-title");if(ti)ti.focus();break}
     case "ntOpen":openNote(id);break;
-    case "ngPick":S.nt.g=b.dataset.g;render();break;
-    case "ngNew":openNgroup(null);break;
-    case "ngEdit":{const g=S.ngroups.find(x=>x.id===id);if(g)openNgroup(g);break}
-    case "ngDel":{if(confirmArm[a+id]){S.ngroups=S.ngroups.filter(x=>x.id!==id);Object.values(S.notes).forEach(n=>{if(n.g===id){delete n.g;saveNote(n.id)}});if(S.nt.g===id)S.nt.g="";saveConfig();closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف المجموعة"},4000)}break}
+    case "ngPick":if(b.dataset.k==="g")S.gl.g=b.dataset.g;else S.nt.g=b.dataset.g;render();break;
+    case "ngNew":openNgroup(null,b.dataset.k);break;
+    case "ngEdit":{const kind=b.dataset.k,g=(kind==="g"?S.ggroups:S.ngroups).find(x=>x.id===id);if(g)openNgroup(g,kind);break}
+    case "ngDel":{if(confirmArm[a+id]){if(b.dataset.k==="g"){S.ggroups=S.ggroups.filter(x=>x.id!==id);Object.values(S.goals).forEach(x=>{if(x.g===id){delete x.g;saveGoal(x.id)}});if(S.gl.g===id)S.gl.g=""}else{S.ngroups=S.ngroups.filter(x=>x.id!==id);Object.values(S.notes).forEach(n=>{if(n.g===id){delete n.g;saveNote(n.id)}});if(S.nt.g===id)S.nt.g=""}saveConfig();closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف المجموعة"},4000)}break}
     case "ntBack":cleanupNote(S.nt.sel);S.nt.sel=null;render(true);break;
     case "ntPin":{const n=S.notes[S.nt.sel];if(n){n.pinned=!n.pinned;n.saved=true;saveNote(n.id);render(true)}break}
     case "ntDel":{const nid=S.nt.sel;if(!nid)break;if(confirmArm[a+nid]){delete S.notes[nid];saveNote(nid);S.nt.sel=null;delete confirmArm[a+nid];render(true)}else{confirmArm[a+nid]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+nid];if(b.isConnected)b.textContent="حذف الفكرة"},4000)}break}
