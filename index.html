@@ -118,6 +118,7 @@ button{cursor:pointer}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.danger{color:var(--bad);border-color:var(--bad);background:transparent}
 .btn.sm{padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.55;cursor:default}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 
 /* goals */
@@ -1081,7 +1082,7 @@ function vWeight(){
   let s='<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الوزن</h2></section>';
   s+='<form id="wform" class="panel wform" autocomplete="off"><div class="fld"><label for="wf-d">اليوم</label><input id="wf-d" class="keep ltr datein" type="date" max="'+t+'" value="'+sel+'"></div>'+
     '<div class="fld"><label for="wf-v">الوزن على الميزان (كغم)</label><input id="wf-v" class="keep ltr numin" type="number" inputmode="decimal" min="20" max="400" step="0.1" placeholder="مثال: 84.6" value="'+(Number.isFinite(dsel.w)?dsel.w:"")+'"></div>'+
-    '<button class="btn pri" type="submit">'+(Number.isFinite(dsel.w)?"تحديث القراءة":"حفظ القراءة")+'</button>'+
+    '<button class="btn pri" type="submit" id="wf-btn" data-saved="'+(Number.isFinite(dsel.w)?dsel.w:"")+'"'+(Number.isFinite(dsel.w)?" disabled":"")+'>'+(Number.isFinite(dsel.w)?"محفوظ ✓":"حفظ القراءة")+'</button>'+
     (Number.isFinite(dsel.w)?'<button class="btn sm danger" type="button" data-act="wdel" data-k="'+sel+'">حذف قراءة هذا اليوم</button>':"")+
     '<p class="err" id="wf-err"'+(S.wt.msg?"":" hidden")+'>'+esc(S.wt.msg)+'</p></form>'+weightGoalHTML();
   const tile=(lbl,val,sub)=>'<div class="panel tile"><span class="lbl">'+lbl+'</span><b>'+val+'</b>'+(sub?'<span class="delta muted">'+sub+'</span>':"")+'</div>';
@@ -1147,7 +1148,7 @@ function weightGoalHTML(){
     else{const days=Math.round(rem/sl),eta=addD(t,days);msg="باقٍ "+L(num(Math.abs(rem),1))+" كغم. بمعدلك الحالي ("+L(signed(sl*7,2))+" كغم أسبوعياً، من قراءات آخر 4 أسابيع) تصل إليه في حوالي "+esc(fFull(eta))+"، بعد "+Math.max(1,Math.round(days/7))+" أسبوعاً تقريباً."}
   }
   return '<section class="panel sec"><div class="sec-h"><h2>الوزن المستهدف</h2></div><form id="wgform" class="wform" autocomplete="off"><div class="fld"><label for="wg-v">الهدف (كغم)</label><input id="wg-v" class="keep ltr numin" type="number" inputmode="decimal" min="20" max="400" step="0.1" value="'+(has?wg:"")+'" placeholder="مثال: 80"></div>'+
-    '<button class="btn sm pri" type="submit">حفظ الهدف</button>'+(has?'<button class="btn sm" type="button" data-act="wgClear">إزالة الهدف</button>':"")+'</form>'+
+    '<button class="btn sm pri" type="submit" id="wg-btn" data-saved="'+(has?wg:"")+'"'+(has?" disabled":"")+'>'+(has?"محفوظ ✓":"حفظ الهدف")+'</button>'+(has?'<button class="btn sm" type="button" data-act="wgClear">إزالة الهدف</button>':"")+'</form>'+
     (msg?'<p class="small" style="margin:0">'+msg+'</p>':has?"":'<p class="lbl" style="margin:0">حدد وزنك المستهدف ليظهر على المنحني مع موعد الوصول المتوقع.</p>')+'</section>';
 }
 
@@ -1547,6 +1548,8 @@ document.addEventListener("input",e=>{
   if(id==="mem-q"){S.mem.q=e.target.value;drawMemList();return}
   if(id==="nt-title"||id==="nt-body"){const n=S.notes[S.nt.sel];if(!n)return;n[id==="nt-title"?"title":"body"]=e.target.value;n.updated=new Date().toISOString();n.saved=true;saveNote(n.id);lastKeep=Date.now();drawNotesList();return}
   if(id==="nt-q"){S.nt.q=e.target.value;drawNotesList();return}
+  if(id==="wf-v"||id==="wg-v"){const btn=$(id==="wf-v"?"#wf-btn":"#wg-btn");if(btn){const sv=parseFloat(btn.dataset.saved),v=parseFloat(e.target.value),has=Number.isFinite(sv),same=has&&v===sv;
+    btn.disabled=same||e.target.value==="";btn.textContent=same?"محفوظ ✓":has?(id==="wf-v"?"تحديث القراءة":"تحديث الهدف"):(id==="wf-v"?"حفظ القراءة":"حفظ الهدف")}return}
   if(id&&id.indexOf("q-")===0){const hid=id.slice(2),raw=e.target.value;if(raw===""){setQ(hid,S.cur,null)}else{const v=parseFloat(raw);if(!Number.isFinite(v)||v<0)return;setQ(hid,S.cur,v)}lastKeep=Date.now();updateQRow(hid,S.cur);return}
   if(e.target.id==="sleep"){const v=parseFloat(e.target.value);const d=ensureDay(S.cur);
     if(e.target.value===""){delete d.sleep}else if(Number.isFinite(v)&&v>=0&&v<=16){d.sleep=Math.round(v*4)/4}else return;
