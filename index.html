@@ -666,10 +666,10 @@ const ptsTag=p=>'<span class="pts">'+L("+"+p)+'</span>';
 function vToday(){
   const k=S.cur,t=todayK(),day=S.days[k]||{};
   const fk=firstLogKey(),dayN=fk&&fk<=k?diffD(fk,k)+1:null;
-  const head='<section class="datebar"><button class="iconbtn" data-act="day" data-n="-7" aria-label="الأسبوع السابق">'+ICON.prev+'</button>'+
+  const head='<section class="datebar"><button class="iconbtn" data-act="day" data-n="-1" aria-label="اليوم السابق">'+ICON.prev+'</button>'+
     '<div class="d"><h1>'+esc(fLong(k))+'</h1><div class="lbl">'+(k===t?"اليوم":(diffD(k,t)===1?"أمس":"قبل "+diffD(k,t)+" يوم"))+(dayN?' · اليوم <span class="num">'+dayN+'</span> في السجل':"")+'</div></div>'+
     (k!==t?'<button class="chip-link" data-act="goToday">العودة لليوم</button>':"")+
-    '<button class="iconbtn" data-act="day" data-n="7" aria-label="الأسبوع التالي"'+(weekStartK(k)>=weekStartK(t)?" disabled":"")+'>'+ICON.next+'</button></section>'+weekStrip(k);
+    '<button class="iconbtn" data-act="day" data-n="1" aria-label="اليوم التالي"'+(k>=t?" disabled":"")+'>'+ICON.next+'</button></section>';
   const live=liveHabits(),sc=dayScore(k),p=sc.max?sc.got/sc.max:NaN;
   const summary='<section class="panel summary">'+ring(p)+'<div><div class="big"><span class="num">'+sc.got+'</span> <span class="small muted" style="font-family:var(--f-body)">نقطة من</span> <span class="num">'+sc.max+'</span></div><div class="muted small">'+
     (sc.max?(sc.got>=sc.max?"جمعت كل نقاط هذا اليوم":"مجموع نقاط المهام المنجزة لهذا اليوم"):"لا مهام لهذا اليوم بعد")+'</div></div></section>';
