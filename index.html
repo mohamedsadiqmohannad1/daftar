@@ -264,6 +264,87 @@ h3 .pts{vertical-align:middle;margin-inline-start:4px}
 .code{font-family:var(--f-num);font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0;overflow-x:auto}
 .filebtn{position:relative;overflow:hidden;cursor:pointer;display:inline-flex;align-items:center}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.dbtns{display:flex;gap:16px;margin-top:2px}
+.chip-link.on{color:var(--warm);font-weight:600}
+.qrow{display:grid;grid-template-columns:1fr;gap:8px;cursor:default;text-align:start}
+.qrow:hover{border-color:var(--line)}
+.qtop{display:flex;align-items:center;gap:10px}
+.qtop .nmw{flex:1}
+.qctl{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.qb{width:34px;height:34px;font-size:18px}
+.qin{width:76px;text-align:center;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:6px;font-family:var(--f-num)}
+.qt{font-size:12px;color:var(--muted)}
+.qbar{height:5px;border-radius:3px;background:var(--miss);overflow:hidden;direction:ltr}
+.qbar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.qrow.on .qbar i{background:var(--good)}
+.qrow.on .nm{color:var(--ink)}
+.miss{font-size:11px;color:var(--warm);font-weight:600}
+.dots i.p,.heat i.p{background:color-mix(in srgb,var(--accent) 45%,var(--miss))}
+.seg2{display:inline-flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;flex-wrap:wrap}
+.seg2 label{position:relative}
+.seg2 input{position:absolute;opacity:0;pointer-events:none}
+.seg2 span{display:block;padding:6px 12px;border-radius:7px;font-size:13px;color:var(--muted);cursor:pointer}
+.seg2 input:checked+span{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line);font-weight:600}
+.seg2 input:focus-visible+span{outline:2px solid var(--accent)}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.qbox{display:flex;flex-direction:column;gap:12px;border:1px dashed var(--line);border-radius:12px;padding:12px}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px}
+.chk input{width:18px;height:18px;accent-color:var(--accent)}
+.sbar{display:inline-block;width:46px;height:5px;border-radius:3px;background:var(--miss);overflow:hidden;vertical-align:middle;margin-inline-end:6px;direction:ltr}
+.sbar i{display:block;height:100%;background:var(--accent)}
+.sbar.wide{display:block;width:100%;margin:0}
+.garows{display:flex;flex-direction:column;gap:10px}
+.garow{display:grid;grid-template-columns:minmax(90px,1.2fr) 2fr 46px 40px;gap:10px;align-items:center;font-size:14px}
+.garow.worst .gan{color:var(--warm);font-weight:600}
+.gab{height:8px;border-radius:4px;background:var(--miss);overflow:hidden;direction:ltr}
+.gab i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.gap{text-align:left}.gad{font-size:12px;text-align:left}
+.up{color:var(--good)}.down{color:var(--bad)}
+.tscroll{overflow-x:auto;margin:0 -4px}
+.tan{border-collapse:collapse;width:100%;min-width:520px;font-size:13px}
+.tan th{font-weight:500;color:var(--muted);text-align:start;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tan td{padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tan td.tn{white-space:normal;min-width:140px}
+.tan tr.tgh td{font-weight:600;color:var(--ink);background:var(--bg);padding-top:10px}
+.ygrid{display:grid;grid-template-columns:18px repeat(31,minmax(7px,1fr));gap:2px;min-width:300px}
+.ygrid i{aspect-ratio:1;border-radius:2px;background:var(--off);display:block;cursor:pointer}
+.ygrid i.nd{background:var(--off);box-shadow:inset 0 0 0 1px var(--line)}
+.ygrid i.f{background:transparent;box-shadow:none;cursor:default}
+.ygrid i.x{visibility:hidden}
+.ygrid i.ysel{outline:2px solid var(--warm);outline-offset:1px}
+.ym,.yd{font-family:var(--f-num);font-size:9px;color:var(--muted);text-align:center;line-height:1}
+.ym{align-self:center}
+.legend i.lgsq{width:10px;height:10px;border-radius:2px}
+@media (max-width:420px){.three{grid-template-columns:1fr 1fr}.garow{grid-template-columns:minmax(80px,1fr) 1.4fr 40px 34px;gap:8px}}
+
+/* timeline + group colours */
+:root{--g1:#0d6b7b;--g2:#b26f22;--g3:#2c7a4c;--g4:#7a4fa3;--g5:#b0443a;--g6:#2f6fb3;--g7:#8a7a1e;--g8:#a1457a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--g1:#4cb2c3;--g2:#dfa257;--g3:#5cbd82;--g4:#b08ad6;--g5:#e2786a;--g6:#6ea6e6;--g7:#d1c25a;--g8:#df86b7}}
+:root[data-theme="dark"]{--g1:#4cb2c3;--g2:#dfa257;--g3:#5cbd82;--g4:#b08ad6;--g5:#e2786a;--g6:#6ea6e6;--g7:#d1c25a;--g8:#df86b7}
+.tl{position:relative;padding-inline-start:26px;display:flex;flex-direction:column;gap:18px}
+.tl::before{content:"";position:absolute;inset-inline-start:8px;top:14px;bottom:14px;width:2px;background:var(--line);border-radius:1px}
+.tli{position:relative}
+.tli::before{content:"";position:absolute;inset-inline-start:-25px;top:13px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:3px solid var(--gc);transition:background .3s}
+.tli.full::before{background:var(--gc)}
+.tli .gname{color:var(--gc)}
+.tli .gbar i{background:var(--gc)}
+.tli .hrow.on .box{background:var(--gc);border-color:var(--gc)}
+.tli .hrow:hover{border-color:var(--gc)}
+.tli .pts{color:var(--gc);background:color-mix(in srgb,var(--gc) 14%,transparent)}
+.tli .dots i.d{background:var(--gc)}
+.tli .qbar i{background:var(--gc)}
+.tli.full .grp-h .gsc{color:var(--gc);font-weight:600}
+.hrow.just .box{animation:pop .35s ease}
+.hrow.just{animation:flash .6s ease}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes flash{0%{background:color-mix(in srgb,var(--gc,var(--accent)) 16%,var(--surface))}100%{background:var(--surface)}}
+.spark{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;direction:rtl}
+.sp{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:4px}
+.spb{width:100%;max-width:34px;height:46px;border-radius:8px;background:var(--miss);display:flex;align-items:flex-end;overflow:hidden}
+.spb i{display:block;width:100%;background:var(--accent);border-radius:8px 8px 0 0;opacity:.55;transition:height .3s}
+.sp.cur .spb i{opacity:1}
+.sp.cur .spl{color:var(--accent);font-weight:600}
+.spl{font-size:11px;color:var(--muted)}
 /* memories */
 .rng{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
 .rng button{border:0;background:transparent;border-radius:7px;padding:5px 11px;font-size:13px;color:var(--muted)}
@@ -376,7 +457,7 @@ const ICON={
 };
 
 /* ---------- state ---------- */
-const S={habits:[],groups:[],days:{},goals:{},notes:{},mode:"loading",cur:todayK(),tab:"today"};
+const S={habits:[],groups:[],days:{},goals:{},notes:{},wgoal:null,lastBackup:null,mode:"loading",cur:todayK(),tab:"today"};
 try{const t=localStorage.getItem("dt-tab");if(t&&["today","memories","habits","notes","goals","weight"].includes(t))S.tab=t}catch(e){}
 if(["today","memories","habits","notes","goals","weight"].includes(location.hash.slice(1)))S.tab=location.hash.slice(1);
 
@@ -419,12 +500,13 @@ window.addEventListener("pagehide",flushAll);
 let localTimer=null;
 function persistLocal(){
   clearTimeout(localTimer);
-  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes}))}catch(e){}},250);
+  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup}))}catch(e){}},250);
 }
 function loadLocal(){
-  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{}}}catch(e){}
+  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null}}catch(e){}
 }
-const saveConfig=()=>queueWrite("app/config",{habits:S.habits,groups:S.groups,v:1});
+const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;return JSON.parse(JSON.stringify(o))};
+const saveConfig=()=>queueWrite("app/config",cfgDoc());
 const saveNote=id=>queueWrite("notes/"+id,S.notes[id]||null);
 const saveDay=k=>queueWrite("days/"+k,S.days[k]);
 const saveGoal=id=>queueWrite("goals/"+id,S.goals[id]||null);
@@ -459,7 +541,7 @@ function startDB(db){
   const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&S.mode==="loading"){S.mode="db";setSync()}render()};
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
-    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[]}
+    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null}
     got.c=true;ready();
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -481,7 +563,7 @@ function startDB(db){
     S.notes=nn;got.n=true;ready();
   },onErr));
 }
-function resetState(){S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
@@ -536,41 +618,84 @@ async function doAuth(kind){
 }
 
 /* ---------- habit math ---------- */
+// task kinds: binary (done / not), quantity (h.q = {t:target, u:unit, m:"min"|"max", s:step});
+// frequency: fixed weekdays (h.days) or N times per week (h.wk)
 const liveHabits=()=>S.habits.filter(h=>!h.archived);
 const hStart=h=>h.created||todayK();
-const isDone=(h,k)=>{const d=S.days[k];return !!(d&&d.h&&d.h[h.id])};
-const isSched=(h,k)=>!h.days||!h.days.length||h.days.length===7||h.days.includes(dow(k));
+const isQ=h=>!!(h.q&&+h.q.t>0);
+const isWk=h=>+h.wk>0;
+const isOff=k=>!!(S.days[k]&&S.days[k].off);
+const rawV=(h,k)=>{const d=S.days[k];return d&&d.h?d.h[h.id]:undefined};
+const entered=(h,k)=>{const v=rawV(h,k);if(v===undefined||v===null||v===false)return false;return isQ(h)?Number.isFinite(+v):!!v};
+function frac(h,k){
+  if(!entered(h,k))return 0;
+  if(!isQ(h))return 1;
+  const n=+rawV(h,k),t=+h.q.t;
+  if(h.q.m==="max")return n<=t?1:Math.max(0,1-(n-t)/t); // full credit under the limit, falls to zero at twice the limit
+  return Math.max(0,Math.min(1,n/t));
+}
+const isDone=(h,k)=>frac(h,k)>=1;
+const hPts=h=>{const p=+h.pts;return Number.isFinite(p)&&p>0?p:10};
+const earned=(h,k)=>Math.round(hPts(h)*frac(h,k)*10)/10;
+const isSched=(h,k)=>{if(isWk(h)||isOff(k))return false;return !h.days||!h.days.length||h.days.length===7||h.days.includes(dow(k))};
 const activeOn=(h,k)=>hStart(h)<=k&&(!h.archived||(h.archivedAt&&h.archivedAt>k));
+const wlink=h=>h.wl===true||(h.wl===undefined&&/الوزن/.test(h.name||""));
+function scoreOf(items,k){
+  let got=0,max=0;
+  items.forEach(h=>{if(!activeOn(h,k))return;const p=hPts(h),e=earned(h,k);if(isSched(h,k))max+=p;else if(e>0)max+=e;got+=e});
+  return {got:Math.round(got*10)/10,max:Math.round(max*10)/10};
+}
+function weekCount(h,ws){let c=0;const t=todayK();for(let i=0;i<7;i++){const d=addD(ws,i);if(d>t)break;if(isDone(h,d))c++}return c}
 function curStreak(h){
-  const t=todayK(),st=hStart(h);let k=t,n=0;
-  if(isSched(h,k)&&!isDone(h,k))k=addD(k,-1);
+  const t=todayK(),st=hStart(h);
+  if(isWk(h)){let ws=weekStartK(t),n=0;if(weekCount(h,ws)<+h.wk)ws=addD(ws,-7);
+    for(let i=0;i<500&&addD(ws,6)>=st;i++,ws=addD(ws,-7)){if(weekCount(h,ws)>=+h.wk)n++;else break}return n}
+  let k=t,n=0;if(isSched(h,k)&&!isDone(h,k))k=addD(k,-1);
   for(let i=0;i<2000&&k>=st;i++,k=addD(k,-1)){if(!isSched(h,k))continue;if(isDone(h,k))n++;else break}
   return n;
 }
 function bestStreak(h){
-  const t=todayK();let k=hStart(h),run=0,best=0;
+  const t=todayK();let run=0,best=0;
+  if(isWk(h)){for(let ws=weekStartK(hStart(h)),i=0;ws<=t&&i<600;ws=addD(ws,7),i++){const ok=weekCount(h,ws)>=+h.wk;if(ok){run++;best=Math.max(best,run)}else if(ws!==weekStartK(t))run=0}return best}
+  let k=hStart(h);
   for(let i=0;i<3000&&k<=t;i++,k=addD(k,1)){if(!isSched(h,k))continue;if(isDone(h,k)){run++;best=Math.max(best,run)}else if(k!==t)run=0}
   return best;
 }
-function hRate(h,n){
-  const t=todayK();let k=addD(t,-(n-1));if(k<hStart(h))k=hStart(h);let s=0,d=0;
-  for(;k<=t;k=addD(k,1)){if(!isSched(h,k))continue;const dn=isDone(h,k);if(k===t&&!dn)continue;s++;if(dn)d++}
+function rateRange(h,a,b){ // share of what was asked that got done, a..b inclusive
+  const t=todayK();if(a<hStart(h))a=hStart(h);if(b>t)b=t;if(a>b)return NaN;
+  if(isWk(h)){let need=0,got=0;for(let ws=weekStartK(a);ws<=b;ws=addD(ws,7)){const c=weekCount(h,ws);if(ws===weekStartK(t)&&c<+h.wk)continue;need+= +h.wk;got+=Math.min(c,+h.wk)}return need?got/need:NaN}
+  let s=0,d=0;
+  for(let k=a;k<=b;k=addD(k,1)){if(!isSched(h,k))continue;const f=frac(h,k);if(k===t&&f<1)continue;s++;d+=f}
   return s?d/s:NaN;
 }
-function dayCounts(k){
-  const t=todayK();let s=0,d=0;
-  S.habits.forEach(h=>{if(!activeOn(h,k)||!isSched(h,k))return;const dn=isDone(h,k);if(k===t&&!dn)return;s++;if(dn)d++});
-  return {s:s,d:d};
+const hRate=(h,n)=>rateRange(h,addD(todayK(),-(n-1)),todayK());
+function strength(h){ // habit strength 0-100: each repetition strengthens, each miss weakens, a long record cushions one miss
+  const t=todayK(),st=hStart(h);let s=0;
+  if(isWk(h)){const m=Math.pow(.5,1/4),cw=weekStartK(t);for(let ws=weekStartK(st);ws<=cw;ws=addD(ws,7)){const c=weekCount(h,ws);if(ws===cw&&c<+h.wk)break;s=s*m+Math.min(1,c/+h.wk)*(1-m)}return Math.round(s*100)}
+  const m=Math.pow(.5,1/13);
+  for(let k=st;k<=t;k=addD(k,1)){if(!isSched(h,k))continue;const f=frac(h,k);if(k===t&&f<1)continue;s=s*m+f*(1-m)}
+  return Math.round(s*100);
 }
-function rangeRate(a,b){let s=0,d=0;for(let k=a;k<=b;k=addD(k,1)){const c=dayCounts(k);s+=c.s;d+=c.d}return s?d/s:NaN}
+function missedYesterday(h,k){
+  if(isWk(h)||k!==todayK())return false;const y=addD(k,-1);
+  return y>=hStart(h)&&isSched(h,y)&&!isDone(h,y)&&isSched(h,k)&&!isDone(h,k);
+}
+function weakDay(h){ // weekday with the lowest completion over the last 8 weeks
+  if(isWk(h))return null;const t=todayK(),c={};
+  for(let i=1;i<=56;i++){const k=addD(t,-i);if(k<hStart(h)||!isSched(h,k))continue;const w=dow(k);c[w]=c[w]||[0,0];c[w][0]++;c[w][1]+=frac(h,k)}
+  let worst=null;Object.keys(c).forEach(w=>{const r=c[w][1]/c[w][0];if(c[w][0]>=3&&(!worst||r<worst.r))worst={w:+w,r:r}});
+  return worst&&worst.r<0.8?worst:null;
+}
 function firstLogKey(){
   let f=null;S.habits.forEach(h=>{if(h.created&&(!f||h.created<f))f=h.created});
   Object.keys(S.days).forEach(k=>{if(!f||k<f)f=k});return f;
 }
 function schedText(h){
+  if(isWk(h))return +h.wk+" "+(+h.wk===1?"مرة":+h.wk===2?"مرتان":"مرات")+" في الأسبوع";
   if(!h.days||!h.days.length||h.days.length===7)return "كل يوم";
   return DAYS_ORDER.filter(d=>h.days.includes(d)).map(d=>DAY_NAME[d]).join("، ");
 }
+const qText=h=>(h.q.m==="max"?"حد أقصى ":"الهدف ")+num(+h.q.t,2)+(h.q.u?" "+h.q.u:"");
 
 /* ---------- goal math ---------- */
 function gStats(g){
@@ -633,66 +758,92 @@ const L=v=>'<bdi class="ltr">'+v+'</bdi>'; // keep signed numbers and units in r
 const signed=(v,dp)=>(v>0?"+":"")+num(v,dp);
 
 /* ---------- views ---------- */
-const hPts=h=>{const p=+h.pts;return Number.isFinite(p)&&p>0?p:10};
 function dayScore(k){
-  let got=0,max=0;
-  S.habits.forEach(h=>{if(!activeOn(h,k))return;const p=hPts(h),dn=isDone(h,k),sc=isSched(h,k);if(sc)max+=p;if(dn){got+=p;if(!sc)max+=p}});
+  const s=scoreOf(S.habits,k);let got=s.got,max=s.max;
   const d=S.days[k];((d&&d.x)||[]).forEach(t=>{const p=+t.pts||0;max+=p;if(t.done)got+=p});
-  return {got:got,max:max};
+  return {got:Math.round(got*10)/10,max:Math.round(max*10)/10};
 }
 function ring(p){
   const r=34,c=2*Math.PI*r,off=c*(1-(Number.isFinite(p)?Math.min(1,p):0));
-  return '<svg class="ring" viewBox="0 0 84 84" aria-hidden="true"><circle class="bgc" cx="42" cy="42" r="'+r+'"/><circle class="fg" cx="42" cy="42" r="'+r+'" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 42 42)"/><text x="42" y="49" text-anchor="middle" direction="ltr">'+(Number.isFinite(p)?Math.round(p*100):0)+'%</text></svg>';
+  return '<svg class="ring" viewBox="0 0 84 84" aria-hidden="true"><circle class="bgc" cx="42" cy="42" r="'+r+'"/><circle class="fg" cx="42" cy="42" r="'+r+'" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 42 42)"/><text x="42" y="49" text-anchor="middle" direction="ltr">'+(Number.isFinite(p)?Math.round(Math.min(1,p)*100):0)+'%</text></svg>';
 }
 function vEmpty(){
-  const have=new Set(S.habits.map(h=>h.name));
   return '<section class="panel empty"><h2>ابدأ بتحديد مهامك الثابتة</h2>'+
   '<p class="muted small" style="margin:0">المهام الثابتة تتكرر في أيامها المجدولة ولكل منها نقاط تحددها. أضف أول مهمة.</p>'+
   '<div class="row"><button class="btn pri" data-act="newHabit">مهمة ثابتة جديدة</button></div></section>';
 }
-function weekStrip(k){
-  const t=todayK(),ws=weekStartK(k);let s='<section class="week" aria-label="أيام الأسبوع">';
-  for(let i=0;i<7;i++){const d=addD(ws,i),sc=dayScore(d),fut=d>t,f=sc.max?sc.got/sc.max:0;
-    s+='<button class="wd'+(d===k?" sel":"")+(d===t?" today":"")+'" data-act="pick" data-k="'+d+'"'+(fut?" disabled":"")+' aria-label="'+esc(fLong(d))+'"'+(d===k?' aria-current="date"':"")+'>'+
-      '<span class="l">'+DAY_LETTER[dow(d)]+'</span><span class="n">'+parse(d).getDate()+'</span><span class="m"><i style="width:'+(fut?0:Math.round(Math.min(1,f)*100))+'%"></i></span></button>'}
-  return s+'</section>';
-}
 function dots7(h,k){
   let s='<span class="dots" aria-hidden="true">';
-  for(let i=6;i>=0;i--){const d=addD(k,-i);s+='<i class="'+(d<hStart(h)?"o":isDone(h,d)?"d":isSched(h,d)?"":"o")+'"></i>'}
+  for(let i=6;i>=0;i--){const d=addD(k,-i),f=frac(h,d);s+='<i class="'+(d<hStart(h)?"o":f>=1?"d":f>0?"p":isSched(h,d)?"":"o")+'"></i>'}
   return s+'</span>';
 }
 const ptsTag=p=>'<span class="pts">'+L("+"+p)+'</span>';
+let HIDE_DONE=false;try{HIDE_DONE=localStorage.getItem("dt-hidedone")==="1"}catch(e){}
+function taskRow(x,k){
+  const t=todayK(),on=isDone(x,k),st=curStreak(x),wk=isWk(x),ws=weekStartK(k),wc=wk?weekCount(x,ws):0,wkMet=wk&&wc>=+x.wk&&!on;
+  const badges=[];
+  if(missedYesterday(x,k))badges.push('<span class="miss">فاتتك أمس</span>');
+  if(wk)badges.push('<span class="st">'+(wkMet?"اكتملت هذا الأسبوع":"هذا الأسبوع")+' <span class="num">'+L(wc+"/"+x.wk)+'</span></span>');
+  else if(k===t&&st)badges.push('<span class="st">سلسلة <span class="num">'+st+'</span> '+(st===1?"يوم":"أيام")+'</span>');
+  const edit='<button class="iconbtn xdel" data-act="editHabit" data-id="'+x.id+'" aria-label="تعديل أو حذف '+esc(x.name)+'">'+ICON.edit+'</button>';
+  const dim=!isSched(x,k)&&!(wk&&!wkMet);
+  if(isQ(x)){
+    const v=rawV(x,k),has=entered(x,k),f=frac(x,k),e=earned(x,k);
+    return '<div class="xrow"><div class="hrow qrow'+(on?" on":"")+(dim?" dim":"")+'" id="qr-'+x.id+'"><div class="qtop"><span class="nmw"><span class="nm">'+esc(x.name)+'</span>'+badges.join("")+'</span>'+
+      '<span class="pts" id="qp-'+x.id+'">'+L(num(e,1)+" / "+hPts(x))+'</span></div>'+
+      '<div class="qctl"><button class="iconbtn qb" data-act="qstep" data-id="'+x.id+'" data-n="-1" aria-label="إنقاص">−</button>'+
+      '<input id="q-'+x.id+'" class="keep ltr qin" type="number" inputmode="decimal" min="0" step="any" value="'+(has?+v:"")+'" placeholder="0" aria-label="الكمية">'+
+      '<button class="iconbtn qb" data-act="qstep" data-id="'+x.id+'" data-n="1" aria-label="زيادة">+</button>'+
+      '<span class="qt">'+esc(qText(x))+'</span></div>'+
+      '<div class="qbar'+(x.q.m==="max"?" mx":"")+'"><i id="qb-'+x.id+'" style="width:'+Math.round(f*100)+'%"></i></div></div>'+edit+'</div>';
+  }
+  return '<div class="xrow"><button class="hrow'+(on?" on":"")+(dim?" dim":"")+(JUST===x.id?" just":"")+'" data-act="toggle" data-id="'+x.id+'" aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+esc(x.name)+'</span>'+badges.join("")+'</span>'+
+    dots7(x,k)+ptsTag(hPts(x))+'</button>'+edit+'</div>';
+}
+function backupBanner(){
+  if(!(S.mode==="db"||S.mode==="local"))return "";
+  const fk=firstLogKey();if(!fk||diffD(fk,todayK())<7)return "";
+  const lb=S.lastBackup?keyOf(new Date(S.lastBackup)):null,age=lb?diffD(lb,todayK()):null;
+  if(lb&&age<14)return "";
+  return '<div class="banner row" style="justify-content:space-between"><span>'+(lb?"آخر نسخة احتياطية قبل "+age+" يوماً.":"لم تصدّر أي نسخة احتياطية بعد.")+'</span><button class="btn sm" data-act="export">تصدير الآن</button></div>';
+}
+function weekSpark(k){
+  let s='<section class="spark" aria-label="آخر 7 أيام">';
+  for(let i=6;i>=0;i--){const d=addD(k,-i),sc=dayScore(d),f=sc.max?Math.min(1,sc.got/sc.max):0;
+    s+='<button class="sp'+(d===k?" cur":"")+'" data-act="pick" data-k="'+d+'" aria-label="'+esc(fLong(d))+'"><span class="spb"><i style="height:'+Math.max(4,Math.round(f*100))+'%"></i></span><span class="spl">'+DAY_LETTER[dow(d)]+'</span></button>'}
+  return s+'</section>';
+}
 function vToday(){
-  const k=S.cur,t=todayK(),day=S.days[k]||{};
+  const k=S.cur,t=todayK(),day=S.days[k]||{},off=!!day.off;
   const fk=firstLogKey(),dayN=fk&&fk<=k?diffD(fk,k)+1:null;
-  const head='<section class="datebar"><button class="iconbtn" data-act="day" data-n="-1" aria-label="اليوم السابق">'+ICON.prev+'</button>'+
-    '<div class="d"><h1>'+esc(fLong(k))+'</h1><div class="lbl">'+(k===t?"اليوم":(diffD(k,t)===1?"أمس":"قبل "+diffD(k,t)+" يوم"))+(dayN?' · اليوم <span class="num">'+dayN+'</span> في السجل':"")+'</div></div>'+
-    (k!==t?'<button class="chip-link" data-act="goToday">العودة لليوم</button>':"")+
+  const head=backupBanner()+'<section class="datebar"><button class="iconbtn" data-act="day" data-n="-1" aria-label="اليوم السابق">'+ICON.prev+'</button>'+
+    '<div class="d"><h1>'+esc(fLong(k))+'</h1><div class="lbl">'+(k===t?"اليوم":(diffD(k,t)===1?"أمس":"قبل "+diffD(k,t)+" يوم"))+(dayN?' · اليوم <span class="num">'+dayN+'</span> في السجل':"")+'</div>'+'<div class="dbtns">'+(k!==t?'<button class="chip-link" data-act="goToday">العودة لليوم</button>':"")+'<button class="chip-link'+(off?" on":"")+'" data-act="dayOff" aria-pressed="'+off+'">'+(off?"إلغاء العذر":"يوم معذور")+'</button></div></div>'+
+    
     '<button class="iconbtn" data-act="day" data-n="1" aria-label="اليوم التالي"'+(k>=t?" disabled":"")+'>'+ICON.next+'</button></section>';
   const live=liveHabits(),sc=dayScore(k),p=sc.max?sc.got/sc.max:NaN;
-  const summary='<section class="panel summary">'+ring(p)+'<div><div class="big"><span class="num">'+sc.got+'</span> <span class="small muted" style="font-family:var(--f-body)">نقطة من</span> <span class="num">'+sc.max+'</span></div><div class="muted small">'+
-    (sc.max?(sc.got>=sc.max?"جمعت كل نقاط هذا اليوم":"مجموع نقاط المهام المنجزة لهذا اليوم"):"لا مهام لهذا اليوم بعد")+'</div></div></section>';
+  const summary='<section class="panel summary">'+ring(p)+'<div style="min-width:0"><div class="big"><span class="num">'+num(sc.got,1)+'</span> <span class="small muted" style="font-family:var(--f-body)">نقطة من</span> <span class="num">'+num(sc.max,1)+'</span></div><div class="muted small">'+
+    (off?"يوم معذور: المهام الثابتة لا تُحسب فائتة، وما تنجزه يُضاف لنقاطك.":sc.max?(sc.got>=sc.max?"جمعت كل نقاط هذا اليوم":"مجموع نقاط المهام المنجزة لهذا اليوم"):"لا مهام لهذا اليوم بعد")+'</div></div>'+
+    '</section>';
   let main;
   if(!live.length)main=summary+vEmpty();
   else{
-    const sched=live.filter(x=>isSched(x,k)),other=live.filter(x=>!isSched(x,k));
-    const row=x=>{const on=isDone(x,k),st=curStreak(x);
-      return '<div class="xrow"><button class="hrow'+(on?" on":"")+(isSched(x,k)?"":" dim")+'" data-act="toggle" data-id="'+x.id+'" aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+esc(x.name)+'</span>'+
-        (k===t&&st?'<span class="st">سلسلة <span class="num">'+st+'</span> '+(st===1?"يوم":"أيام")+'</span>':"")+'</span>'+dots7(x,k)+ptsTag(hPts(x))+'</button><button class="iconbtn xdel" data-act="editHabit" data-id="'+x.id+'" aria-label="تعديل أو حذف '+esc(x.name)+'">'+ICON.edit+'</button></div>'};
-    const anyOff=live.some(x=>!isSched(x,k));
+    const hidden=x=>HIDE_DONE&&(isDone(x,k)||(isWk(x)&&weekCount(x,weekStartK(k))>=+x.wk));
+    let nHidden=0;
     const blocks=groupedLive().map(bk=>{
-      const items=bk.items.slice().sort((p,q)=>(isSched(q,k)?1:0)-(isSched(p,k)?1:0)),gs=groupScore(bk.items,k),gid=bk.g?bk.g.id:"";
-      const ck=gKey(bk.g),closed=COLL.has(ck),dn=bk.items.filter(h=>isDone(h,k)).length;
-      return '<div class="grp'+(closed?" closed":"")+'"><div class="grp-h">'+gToggle(bk.g,closed)+'<span class="gsc">'+(closed?L(dn+"/"+bk.items.length)+' مهام · ':"")+L(gs.got+" / "+gs.max)+'</span>'+
+      const items=bk.items.slice().sort((p,q)=>((isSched(q,k)||isWk(q))?1:0)-((isSched(p,k)||isWk(p))?1:0));
+      const vis=items.filter(h=>!hidden(h));nHidden+=items.length-vis.length;
+      const gs=scoreOf(bk.items,k),gid=bk.g?bk.g.id:"",ck=gKey(bk.g),closed=COLL.has(ck),dn=bk.items.filter(h=>isDone(h,k)).length;
+      const full=gs.max>0&&gs.got>=gs.max;
+      return '<div class="grp tli'+(closed?" closed":"")+(full?" full":"")+'" style="--gc:'+gColor(bk.g)+'"><div class="grp-h">'+gToggle(bk.g,closed)+'<span class="gsc">'+(closed?L(dn+"/"+bk.items.length)+' مهام · ':"")+L(num(gs.got,1)+" / "+num(gs.max,1))+'</span>'+
         (bk.g?'<button class="iconbtn sm2" data-act="editGroup" data-id="'+gid+'" aria-label="تعديل المجموعة">'+ICON.edit+'</button>':"")+
         '<button class="iconbtn sm2" data-act="newHabitIn" data-g="'+gid+'" aria-label="إضافة مهمة إلى هذه المجموعة">+</button></div>'+
         '<div class="gbar"><i style="width:'+(gs.max?Math.round(Math.min(1,gs.got/gs.max)*100):0)+'%"></i></div>'+
-        (closed?"":items.length?'<div class="hlist">'+items.map(row).join("")+'</div>':'<p class="muted small" style="margin:0">لا مهام في هذه المجموعة بعد.</p>')+'</div>'}).join("");
-    main=summary+'<section class="sec"><div class="sec-h"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div>'+blocks+
-      (anyOff?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'</section>';
+        (closed?"":vis.length?'<div class="hlist">'+vis.map(x=>taskRow(x,k)).join("")+'</div>':'<p class="muted small" style="margin:0">'+(items.length?"كل مهام هذه المجموعة منجزة.":"لا مهام في هذه المجموعة بعد.")+'</p>')+'</div>'}).join("");
+    const anyOff=live.some(x=>!isSched(x,k)&&!isWk(x));
+    main=summary+weekSpark(k)+'<section class="sec"><div class="sec-h" style="flex-wrap:wrap"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="hideDone" aria-pressed="'+HIDE_DONE+'">'+(HIDE_DONE?"إظهار المنجز"+(nHidden?" ("+nHidden+")":""):"إخفاء المنجز")+'</button><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div><div class="tl">'+blocks+'</div>'+
+      (anyOff&&!off?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'</section>';
   }
-  const xs=day.x||[];
+  const xs=(day.x||[]).filter(x=>!(HIDE_DONE&&x.done));
   const side='<section class="sec"><div class="sec-h"><h2>مهام لهذا اليوم فقط</h2></div>'+
     '<form id="xadd" class="panel xadd" autocomplete="off"><div class="fld"><label for="xa-name">المهمة</label><input id="xa-name" class="keep" maxlength="60" placeholder="مثال: مقابلة عمل"></div>'+
     '<div class="row"><div class="fld" style="flex:1;min-width:110px"><label for="xa-pts">النقاط</label><input id="xa-pts" class="keep ltr" type="number" inputmode="numeric" min="1" max="1000" step="1" placeholder="20"></div><button class="btn pri" type="submit" style="align-self:flex-end">إضافة</button></div>'+
@@ -706,27 +857,49 @@ function heat(h){
   return chart(w=>{
     const WEEKS=Math.max(12,Math.min(30,Math.floor((w+3)/14)));
     const t=todayK(),start=addD(weekStartK(t),-(WEEKS-1)*7),st=hStart(h);let s="";
-    for(let i=0;i<WEEKS*7;i++){const k=addD(start,i);let c;
-      if(k>t)c="n";else if(k<st)c="";else if(isDone(h,k))c="d";else if(isSched(h,k))c="s";else c="";
+    for(let i=0;i<WEEKS*7;i++){const k=addD(start,i),f=k<=t&&k>=st?frac(h,k):0;let c;
+      if(k>t)c="n";else if(k<st)c="";else if(f>=1)c="d";else if(f>0)c="p";else if(isSched(h,k))c="s";else c="";
       s+='<i class="'+c+'" title="'+esc(fShort(k))+'"></i>'}
     return '<div class="heat" aria-label="آخر '+WEEKS+' أسبوعاً">'+s+'</div>';
   });
 }
+S.ga={range:"14"};
+function groupAnalysis(){
+  const t=todayK(),y=addD(t,-1),n=+S.ga.range,a=addD(y,-(n-1)),pa=addD(a,-n),pb=addD(a,-1);
+  const sum=(items,from,to)=>{let g=0,m=0;for(let k=from;k<=to;k=addD(k,1)){const s=scoreOf(items,k);g+=s.got;m+=s.max}return m?g/m:NaN};
+  const rows=groupedLive().filter(b=>b.items.length).map(b=>({name:b.g?b.g.name:"بدون مجموعة",r:sum(b.items,a,y),p:sum(b.items,pa,pb)}));
+  if(!rows.length)return "";
+  const worst=rows.filter(r=>Number.isFinite(r.r)).reduce((w,r)=>!w||r.r<w.r?r:w,null);
+  return '<section class="panel sec"><div class="sec-h" style="flex-wrap:wrap"><h2>الالتزام حسب المجموعة</h2><div class="rng" role="group" aria-label="الفترة">'+[["7","أسبوع"],["14","أسبوعان"],["30","شهر"]].map(r=>'<button data-act="gaRange" data-r="'+r[0]+'" class="'+(S.ga.range===r[0]?"on":"")+'" aria-pressed="'+(S.ga.range===r[0])+'">'+r[1]+'</button>').join("")+'</div></div>'+
+    '<div class="garows">'+rows.map(r=>{const d=Number.isFinite(r.r)&&Number.isFinite(r.p)?Math.round((r.r-r.p)*100):null;
+      return '<div class="garow'+(r===worst&&rows.length>1?" worst":"")+'"><span class="gan">'+esc(r.name)+'</span><span class="gab"><i style="width:'+(Number.isFinite(r.r)?Math.round(r.r*100):0)+'%"></i></span><span class="num gap">'+(Number.isFinite(r.r)?L(Math.round(r.r*100)+"%"):"–")+'</span><span class="num gad '+(d>0?"up":d<0?"down":"muted")+'">'+(d===null?"":d===0?"=":L((d>0?"+":"")+d))+'</span></div>'}).join("")+'</div>'+
+    '<p class="lbl" style="margin:0">نسبة النقاط المجموعة من الممكنة حتى أمس، والرقم الأخير هو الفرق بالنقاط المئوية عن الفترة السابقة بالطول نفسه.'+(worst&&rows.length>1?' الأضعف: '+esc(worst.name)+'.':"")+'</p></section>';
+}
+function taskAnalysis(){
+  const t=todayK(),groups=groupedLive().filter(b=>b.items.length);if(!groups.length)return "";
+  let rows="";
+  groups.forEach(b=>{rows+='<tr class="tgh"><td colspan="5">'+esc(b.g?b.g.name:"بدون مجموعة")+'</td></tr>';
+    b.items.forEach(h=>{const r=hRate(h,30),pr=rateRange(h,addD(t,-59),addD(t,-30)),d=Number.isFinite(r)&&Number.isFinite(pr)?Math.round((r-pr)*100):null,wd=weakDay(h),st=strength(h);
+      rows+='<tr><td class="tn">'+esc(h.name)+'</td><td><span class="sbar"><i style="width:'+st+'%"></i></span><span class="num">'+st+'</span></td><td class="num">'+(Number.isFinite(r)?L(Math.round(r*100)+"%"):"–")+'</td><td class="num '+(d>0?"up":d<0?"down":"muted")+'">'+(d===null?"–":L((d>0?"+":"")+d))+'</td><td>'+(wd?DAY_NAME[wd.w]+' <span class="num muted">'+L(Math.round(wd.r*100)+"%")+'</span>':"–")+'</td></tr>'})});
+  return '<section class="panel sec"><div class="sec-h"><h2>تحليل المهام</h2></div><div class="tscroll"><table class="tan"><thead><tr><th>المهمة</th><th>القوة</th><th>آخر 30 يوماً</th><th>التغير</th><th>أضعف يوم</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<p class="lbl" style="margin:0">القوة من 0 إلى 100: ترتفع مع كل إنجاز وتنخفض مع كل فوات، ويوم فائت بعد التزام طويل ينقصها قليلاً فقط. التغير مقارنة بالثلاثين يوماً التي قبلها. أضعف يوم يظهر إن كان التزامك فيه أقل من 80% خلال آخر ثمانية أسابيع.</p></section>';
+}
 function vHabits(){
   const live=liveHabits(),arch=S.habits.filter(h=>h.archived),t=todayK();
   let s='<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">المهام</h2><div class="row"><button class="btn sm" data-act="newGroup">مجموعة جديدة</button><button class="btn pri sm" data-act="newHabit">مهمة ثابتة جديدة</button></div></section>';
-  // points curve
   const last7=[],wk=[];for(let i=0;i<7;i++)last7.push(dayScore(addD(t,-i)).got);
   for(let k=weekStartK(t);k<=t;k=addD(k,1))wk.push(dayScore(k).got);
   let best=null;Object.keys(S.days).forEach(k=>{if(k>t)return;const g=dayScore(k).got;if(g>0&&(!best||g>best.v))best={k:k,v:g}});
   s+='<section class="panel sec"><div class="sec-h" style="flex-wrap:wrap"><h2>نقاط كل يوم</h2>'+rangeChips("tkRange",S.tk.range)+'</div>'+
-    '<div class="kv"><div><b>'+num(avg(last7),0)+'</b><span>متوسط آخر 7 أيام</span></div><div><b>'+wk.reduce((a,b)=>a+b,0)+'</b><span>مجموع هذا الأسبوع</span></div><div><b>'+(best?best.v:"–")+'</b><span>'+(best?"أعلى يوم · "+esc(fShort(best.k)):"أعلى يوم")+'</span></div></div>'+
+    '<div class="kv"><div><b>'+num(avg(last7),0)+'</b><span>متوسط آخر 7 أيام</span></div><div><b>'+num(wk.reduce((a,b)=>a+b,0),1)+'</b><span>مجموع هذا الأسبوع</span></div><div><b>'+(best?num(best.v,1):"–")+'</b><span>'+(best?"أعلى يوم · "+esc(fShort(best.k)):"أعلى يوم")+'</span></div></div>'+
     '<div id="tk-chart" class="chart"></div><div class="legend"><span><i style="background:var(--accent)"></i>النقاط المجموعة</span><span><i style="background:var(--muted);opacity:.6"></i>أقصى نقاط ممكنة</span></div></section>';
   if(!live.length&&!arch.length&&!S.groups.length)return s+vEmpty();
-  if(live.length)s+='<div class="heat-legend"><span><i style="background:var(--accent)"></i>منجزة</span><span><i style="background:var(--miss)"></i>فائتة</span><span><i style="background:var(--off);box-shadow:inset 0 0 0 1px var(--line)"></i>غير مجدولة</span><span>كل عمود أسبوع يبدأ بالسبت، والأحدث يميناً</span></div>';
-  const card=h=>{const r=hRate(h,30);
-    return '<article class="panel hcard"><div class="hhead"><div><h3>'+esc(h.name)+' '+ptsTag(hPts(h))+'</h3><div class="lbl">'+esc(schedText(h))+' · منذ '+esc(fShort(hStart(h)))+'</div></div><button class="btn sm" data-act="editHabit" data-id="'+h.id+'">تعديل</button></div>'+
-    '<div class="stats"><div class="stat"><b>'+curStreak(h)+'</b><span>السلسلة الحالية</span></div><div class="stat"><b>'+bestStreak(h)+'</b><span>أطول سلسلة</span></div><div class="stat"><b>'+(Number.isFinite(r)?L(Math.round(r*100)+"%"):"–")+'</b><span>التزام 30 يوماً</span></div></div>'+heat(h)+'</article>'};
+  s+=groupAnalysis()+taskAnalysis();
+  if(live.length)s+='<div class="heat-legend"><span><i style="background:var(--accent)"></i>منجزة</span><span><i style="background:color-mix(in srgb,var(--accent) 45%,var(--miss))"></i>جزئياً</span><span><i style="background:var(--miss)"></i>فائتة</span><span><i style="background:var(--off);box-shadow:inset 0 0 0 1px var(--line)"></i>غير مجدولة</span><span>كل عمود أسبوع يبدأ بالسبت، والأحدث يميناً</span></div>';
+  const card=h=>{const r=hRate(h,30),st=strength(h);
+    return '<article class="panel hcard"><div class="hhead"><div><h3>'+esc(h.name)+' '+ptsTag(hPts(h))+'</h3><div class="lbl">'+esc(schedText(h))+(isQ(h)?" · "+esc(qText(h)):"")+' · منذ '+esc(fShort(hStart(h)))+'</div></div><button class="btn sm" data-act="editHabit" data-id="'+h.id+'">تعديل</button></div>'+
+    '<div class="stats"><div class="stat"><b>'+st+'</b><span>القوة</span></div><div class="stat"><b>'+curStreak(h)+'</b><span>السلسلة الحالية'+(isWk(h)?" بالأسابيع":"")+'</span></div><div class="stat"><b>'+(Number.isFinite(r)?L(Math.round(r*100)+"%"):"–")+'</b><span>التزام 30 يوماً</span></div></div>'+
+    '<span class="sbar wide"><i style="width:'+st+'%"></i></span>'+heat(h)+'</article>'};
   s+=groupedLive().map(bk=>{const closed=COLL.has(gKey(bk.g));return '<section class="sec grp'+(closed?" closed":"")+'"><div class="grp-h">'+gToggle(bk.g,closed)+'<span class="lbl">'+bk.items.length+' '+(bk.items.length===1?"مهمة":"مهام")+'</span>'+
     (bk.g?'<button class="btn sm" data-act="editGroup" data-id="'+bk.g.id+'">تعديل المجموعة</button>':"")+'<button class="btn sm" data-act="newHabitIn" data-g="'+(bk.g?bk.g.id:"")+'">إضافة مهمة</button></div>'+
     (closed?"":bk.items.length?'<div class="cols">'+bk.items.map(card).join("")+'</div>':'<p class="muted small" style="margin:0">لا مهام في هذه المجموعة بعد.</p>')+'</section>'}).join("");
@@ -784,6 +957,7 @@ function curve(box,o){
   for(let j=0;j<=cnt;j++){const i=Math.round(j*n/cnt),anc=j===0?"start":j===cnt?"end":"middle";s+='<text class="ax" x="'+X(i).toFixed(1)+'" y="'+(H-8)+'" text-anchor="'+anc+'">'+fNum(addD(o.st,i))+'</text>'}
   const si=o.sel?diffD(o.st,o.sel):-1;
   if(si>=0&&si<=n)s+='<line class="selln" x1="'+X(si).toFixed(1)+'" x2="'+X(si).toFixed(1)+'" y1="'+P.t+'" y2="'+(P.t+ih)+'"/>';
+  (o.hlines||[]).forEach(hl=>{s+='<line class="ln '+hl.cls+'" x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(hl.y).toFixed(1)+'" y2="'+Y(hl.y).toFixed(1)+'"/>'});
   if(o.faint&&o.faint.length>1)s+='<polyline class="ln faint" points="'+o.faint.map(p=>X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join(" ")+'"/>';
   if(pts.length>1){
     if(o.area!=null)s+='<path class="area" d="M'+X(pts[0].i).toFixed(1)+' '+Y(o.area).toFixed(1)+pts.map(p=>' L'+X(p.i).toFixed(1)+' '+Y(p.v).toFixed(1)).join("")+' L'+X(pts[pts.length-1].i).toFixed(1)+' '+Y(o.area).toFixed(1)+' Z"/>';
@@ -844,7 +1018,7 @@ function drawMemChart(){
 function refreshMemEditor(){
   // swap only the editor's day without moving the page
   const ed=$("#mem-ed");if(!ed){render(true);return}
-  const y=window.scrollY;ed.outerHTML=memEditorHTML();drawMemChart();drawMemList();window.scrollTo(0,y);
+  const y=window.scrollY;ed.outerHTML=memEditorHTML();drawMemChart();drawMemList();drawYear();window.scrollTo(0,y);
 }
 function drawMemList(){
   const box=$("#mem-list");if(!box)return;
@@ -876,7 +1050,7 @@ function memEditorHTML(){
 function vMem(){
   return '<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الذكريات</h2></section>'+
   '<section class="panel sec"><div class="sec-h" style="flex-wrap:wrap">'+rangeChips("memRange",S.mem.range)+'<span class="lbl">اضغط على أي يوم لتحديده</span></div>'+
-  '<div id="mem-chart" class="chart"></div><div class="legend"><span><i class="lg-note"></i>يوم فيه ذكرى مكتوبة</span><span><i style="background:var(--muted)"></i>الصفر</span></div></section>'+
+  '<div id="mem-chart" class="chart"></div><div class="legend"><span><i class="lg-note"></i>يوم فيه ذكرى مكتوبة</span><span><i style="background:var(--muted)"></i>الصفر</span></div></section>'+yearHTML()+
   '<div class="cols">'+memEditorHTML()+'<section class="sec"><div class="sec-h"><h2>الذكريات المكتوبة</h2></div><input id="mem-q" class="keep search" type="search" placeholder="ابحث في ذكرياتك" value="'+esc(S.mem.q)+'" aria-label="بحث"><div id="mem-list" class="mlist"></div></section></div>';
 }
 
@@ -890,9 +1064,10 @@ function drawWeightChart(){
   const pts=[];keys.forEach(k=>{const i=diffD(st,k);if(i>=0&&i<=n)pts.push({i:i,k:k,v:S.days[k].w})});
   const all=keys.map(k=>[diffD(st,k),S.days[k].w]);const av=rolling(all,7).filter(p=>p[0]>=0);
   let mn=Infinity,mx=-Infinity;pts.forEach(p=>{mn=Math.min(mn,p.v);mx=Math.max(mx,p.v)});
-  if(!pts.length){mn=60;mx=90}if(mx-mn<2){const c=(mx+mn)/2;mn=c-1;mx=c+1}
+  if(!pts.length){mn=60;mx=90}
+  const wg=+S.wgoal,hasG=Number.isFinite(wg)&&wg>0;if(hasG){mn=Math.min(mn,wg);mx=Math.max(mx,wg)}if(mx-mn<2){const c=(mx+mn)/2;mn=c-1;mx=c+1}
   const pad=(mx-mn)*.12;mn=Math.floor((mn-pad)*2)/2;mx=Math.ceil((mx+pad)*2)/2;const md=Math.round((mn+mx))/2;
-  curve(box,{st:st,n:n,pts:pts,avg:av,thin:true,yMin:mn,yMax:mx,yTicks:[[mn,num(mn,1)],[md,num(md,1)],[mx,num(mx,1)]],sel:S.wt.sel,label:"منحني الوزن",
+  curve(box,{st:st,n:n,pts:pts,avg:av,thin:true,hlines:hasG?[{y:wg,cls:"t"}]:[],yMin:mn,yMax:mx,yTicks:[[mn,num(mn,1)],[md,num(md,1)],[mx,num(mx,1)]],sel:S.wt.sel,label:"منحني الوزن",
     empty:"لا توجد قراءات وزن في هذه الفترة.",
     tip:p=>{const a=av.find(q=>q[0]===p.i);return tipHead(p.k,L(num(p.v,1)))+(a?'<span class="ex" dir="rtl">متوسط 7 أيام: '+L(num(a[1],1))+'</span>':"")},
     onPick:k=>{S.wt.sel=k;S.wt.msg="";render(true)}});
@@ -908,7 +1083,7 @@ function vWeight(){
     '<div class="fld"><label for="wf-v">الوزن على الميزان (كغم)</label><input id="wf-v" class="keep ltr numin" type="number" inputmode="decimal" min="20" max="400" step="0.1" placeholder="مثال: 84.6" value="'+(Number.isFinite(dsel.w)?dsel.w:"")+'"></div>'+
     '<button class="btn pri" type="submit">'+(Number.isFinite(dsel.w)?"تحديث القراءة":"حفظ القراءة")+'</button>'+
     (Number.isFinite(dsel.w)?'<button class="btn sm danger" type="button" data-act="wdel" data-k="'+sel+'">حذف قراءة هذا اليوم</button>':"")+
-    '<p class="err" id="wf-err"'+(S.wt.msg?"":" hidden")+'>'+esc(S.wt.msg)+'</p></form>';
+    '<p class="err" id="wf-err"'+(S.wt.msg?"":" hidden")+'>'+esc(S.wt.msg)+'</p></form>'+weightGoalHTML();
   const tile=(lbl,val,sub)=>'<div class="panel tile"><span class="lbl">'+lbl+'</span><b>'+val+'</b>'+(sub?'<span class="delta muted">'+sub+'</span>':"")+'</div>';
   const kg=v=>Number.isFinite(v)?L(num(v,1))+' <span class="u">كغم</span>':"–";
   const wd=a7-a7p;
@@ -917,22 +1092,77 @@ function vWeight(){
     tile("التغير منذ أول قراءة",last&&keys.length>1?L(signed(S.days[last].w-first,1))+' <span class="u">كغم</span>':"–",keys.length?"منذ "+esc(fShort(keys[0])):"")+
     tile("أقل وزن",mnK?kg(S.days[mnK].w):"–",mnK?esc(fShort(mnK)):"")+'</section>';
   s+='<section class="panel sec"><div class="sec-h" style="flex-wrap:wrap"><h2>منحني الوزن</h2>'+rangeChips("wtRange",S.wt.range)+'</div><div id="wt-chart" class="chart"></div>'+
-    '<div class="legend"><span><i style="background:var(--accent)"></i>القراءات اليومية</span><span><i style="background:var(--warm)"></i>متوسط متحرك 7 أيام</span><span>اضغط على يوم لتعديل قراءته</span></div></section>';
+    '<div class="legend"><span><i style="background:var(--accent)"></i>القراءات اليومية</span><span><i style="background:var(--warm)"></i>متوسط متحرك 7 أيام</span>'+(+S.wgoal>0?'<span><i style="background:var(--good)"></i>الهدف</span>':'')+'<span>اضغط على يوم لتعديل قراءته</span></div></section>';
   if(keys.length){const allR=keys.slice().reverse(),rec=S.wt.all?allR:allR.slice(0,14);
     s+='<section class="sec"><div class="sec-h"><h2>القراءات</h2><span class="lbl">'+keys.length+' قراءة</span></div><div class="panel wlist">'+rec.map((k,i)=>{const prev=rec[i+1],d=prev?S.days[k].w-(S.days[prev]?S.days[prev].w:NaN):(allR[i+1]?S.days[k].w-S.days[allR[i+1]].w:NaN);
       return '<button class="wrow'+(k===sel?" sel":"")+'" data-act="wpick" data-k="'+k+'"><span>'+esc(fLong(k))+'</span><span class="num">'+L(num(S.days[k].w,1))+'</span><span class="num small '+(d<0?"down-good":d>0?"up-bad":"muted")+'">'+(Number.isFinite(d)?L(signed(d,1)):"")+'</span></button>'}).join("")+'</div>'+(allR.length>14?'<button class="chip-link" data-act="wall">'+(S.wt.all?"عرض آخر 14 قراءة فقط":"عرض كل القراءات ("+allR.length+")")+'</button>':"")+'</section>'}
   return s;
 }
+/* ---------- year in colours ---------- */
+S.yr={mode:"mood",year:new Date().getFullYear()};
+function drawYear(){
+  const box=$("#yp");if(!box)return;
+  const t=todayK(),Y=S.yr.year;let s='<div class="ygrid" dir="ltr"><span></span>';
+  for(let d=1;d<=31;d++)s+='<span class="yd">'+(d%5===0||d===1?d:"")+'</span>';
+  for(let m=1;m<=12;m++){
+    s+='<span class="ym">'+m+'</span>';
+    for(let d=1;d<=31;d++){
+      const dt=new Date(Y,m-1,d,12);if(dt.getMonth()!==m-1){s+='<i class="x"></i>';continue}
+      const k=keyOf(dt);let st="",cls="";
+      if(k>t)cls="f";
+      else if(S.yr.mode==="mood"){const v=getHappy(S.days[k]);if(Number.isFinite(v))st=v>=0?"background:color-mix(in srgb,var(--accent) "+Math.round(18+82*v/100)+"%,var(--miss))":"background:color-mix(in srgb,var(--bad) "+Math.round(18+82*(-v)/100)+"%,var(--miss))";else cls="nd"}
+      else{const sc=dayScore(k);if(sc.max>0)st="background:color-mix(in srgb,var(--accent) "+Math.round(12+88*Math.min(1,sc.got/sc.max))+"%,var(--miss))";else cls="nd"}
+      s+='<i class="'+cls+(k===S.mem.sel?" ysel":"")+'" style="'+st+'" data-act="ypick" data-k="'+k+'" title="'+esc(fShort(k))+'"></i>';
+    }
+  }
+  box.innerHTML=s+'</div>';
+}
+function yearHTML(){
+  const ys=new Set([new Date().getFullYear()]);Object.keys(S.days).forEach(k=>ys.add(+k.slice(0,4)));
+  const yl=Array.from(ys).sort();
+  return '<section class="panel sec"><div class="sec-h" style="flex-wrap:wrap"><h2>السنة بالألوان</h2><div class="row">'+
+    '<div class="rng" role="group" aria-label="المقياس"><button data-act="ypMode" data-r="mood" class="'+(S.yr.mode==="mood"?"on":"")+'">المزاج</button><button data-act="ypMode" data-r="pts" class="'+(S.yr.mode==="pts"?"on":"")+'">النقاط</button></div>'+
+    (yl.length>1?'<div class="rng" role="group" aria-label="السنة">'+yl.map(y=>'<button data-act="ypYear" data-r="'+y+'" class="'+(S.yr.year===y?"on":"")+'">'+y+'</button>').join("")+'</div>':"")+'</div></div>'+
+    '<div id="yp" class="chart"></div>'+
+    '<div class="legend">'+(S.yr.mode==="mood"?'<span><i class="lgsq" style="background:var(--bad)"></i>سيئ</span><span><i class="lgsq" style="background:color-mix(in srgb,var(--accent) 18%,var(--miss))"></i>عادي</span><span><i class="lgsq" style="background:var(--accent)"></i>جيد</span>':'<span><i class="lgsq" style="background:color-mix(in srgb,var(--accent) 12%,var(--miss))"></i>نقاط قليلة</span><span><i class="lgsq" style="background:var(--accent)"></i>كل النقاط</span>')+
+    '<span><i class="lgsq" style="background:var(--off);box-shadow:inset 0 0 0 1px var(--line)"></i>بلا تسجيل</span><span>كل صف شهر، وكل عمود يوم من الشهر. اضغط يوماً لفتحه.</span></div></section>';
+}
+
+/* ---------- weight goal ---------- */
+function weightTrend(){ // kg per day from readings of the last 28 days
+  const keys=wKeys();if(keys.length<4)return null;const last=keys[keys.length-1];
+  const win=keys.filter(k=>diffD(k,last)<=28);if(win.length<4||diffD(win[0],last)<10)return null;
+  const xs=win.map(k=>diffD(win[0],k)),ys=win.map(k=>S.days[k].w),mx=avg(xs),my=avg(ys);let nu=0,de=0;
+  xs.forEach((x,i)=>{nu+=(x-mx)*(ys[i]-my);de+=(x-mx)*(x-mx)});return de>0?nu/de:null;
+}
+function weightGoalHTML(){
+  const wg=+S.wgoal,has=Number.isFinite(wg)&&wg>0,t=todayK(),keys=wKeys(),a7=avgAround(keys,t,7),cur=Number.isFinite(a7)?a7:(keys.length?S.days[keys[keys.length-1]].w:NaN);
+  let msg="";
+  if(has&&Number.isFinite(cur)){
+    const rem=wg-cur,sl=weightTrend();
+    if(Math.abs(rem)<0.15)msg="وصلت إلى هدفك.";
+    else if(sl===null)msg="باقٍ "+L(num(Math.abs(rem),1))+" كغم. التقدير يحتاج 4 قراءات على الأقل تمتد 10 أيام خلال آخر 4 أسابيع.";
+    else if(Math.abs(sl*7)<0.05)msg="باقٍ "+L(num(Math.abs(rem),1))+" كغم. وزنك ثابت تقريباً بالمعدل الحالي، فلا يمكن تقدير موعد.";
+    else if(Math.sign(sl)!==Math.sign(rem))msg="باقٍ "+L(num(Math.abs(rem),1))+" كغم. بمعدلك الحالي ("+L(signed(sl*7,2))+" كغم أسبوعياً) أنت تبتعد عن الهدف.";
+    else{const days=Math.round(rem/sl),eta=addD(t,days);msg="باقٍ "+L(num(Math.abs(rem),1))+" كغم. بمعدلك الحالي ("+L(signed(sl*7,2))+" كغم أسبوعياً، من قراءات آخر 4 أسابيع) تصل إليه في حوالي "+esc(fFull(eta))+"، بعد "+Math.max(1,Math.round(days/7))+" أسبوعاً تقريباً."}
+  }
+  return '<section class="panel sec"><div class="sec-h"><h2>الوزن المستهدف</h2></div><form id="wgform" class="wform" autocomplete="off"><div class="fld"><label for="wg-v">الهدف (كغم)</label><input id="wg-v" class="keep ltr numin" type="number" inputmode="decimal" min="20" max="400" step="0.1" value="'+(has?wg:"")+'" placeholder="مثال: 80"></div>'+
+    '<button class="btn sm pri" type="submit">حفظ الهدف</button>'+(has?'<button class="btn sm" type="button" data-act="wgClear">إزالة الهدف</button>':"")+'</form>'+
+    (msg?'<p class="small" style="margin:0">'+msg+'</p>':has?"":'<p class="lbl" style="margin:0">حدد وزنك المستهدف ليظهر على المنحني مع موعد الوصول المتوقع.</p>')+'</section>';
+}
+
 /* ---------- groups ---------- */
 let COLL=new Set();try{COLL=new Set(JSON.parse(localStorage.getItem("dt-coll")||"[]"))}catch(e){}
 const gKey=g=>g?g.id:"_none";
+const gColor=g=>{const i=g?S.groups.findIndex(x=>x.id===g.id):-1;return i<0?"var(--muted)":"var(--g"+(i%8+1)+")"};
+let JUST=null;
 function gToggle(g,closed){return '<button class="gtog" data-act="gColl" data-k="'+gKey(g)+'" aria-expanded="'+!closed+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg><span class="gname">'+(g?esc(g.name):"بدون مجموعة")+'</span></button>'}
 const groupOf=h=>h.g&&S.groups.some(g=>g.id===h.g)?h.g:"";
 function groupedLive(){
   const live=liveHabits(),out=S.groups.map(g=>({g:g,items:live.filter(h=>groupOf(h)===g.id)}));
   const ung=live.filter(h=>!groupOf(h));if(ung.length)out.push({g:null,items:ung});return out;
 }
-function groupScore(items,k){let got=0,max=0;items.forEach(h=>{if(!activeOn(h,k))return;const p=hPts(h),dn=isDone(h,k),sc=isSched(h,k);if(sc)max+=p;if(dn){got+=p;if(!sc)max+=p}});return {got:got,max:max}}
+function groupScore(items,k){return scoreOf(items,k)}
 function groupForm(g){
   const i=g?S.groups.findIndex(x=>x.id===g.id):-1,cnt=g?liveHabits().filter(h=>groupOf(h)===g.id).length:0;
   return '<h2>'+(g?"تعديل المجموعة":"مجموعة جديدة")+'</h2><form class="f" id="group-form">'+
@@ -1006,7 +1236,7 @@ function render(force){
   h+=S.tab==="notes"?vNotes():S.tab==="habits"?vHabits():S.tab==="goals"?vGoals():S.tab==="weight"?vWeight():S.tab==="memories"?vMem():vToday();
   v.innerHTML=h;
   v.querySelectorAll("[data-ch]").forEach(el=>{const f=CH[+el.dataset.ch];if(f)el.innerHTML=f(Math.max(240,Math.floor(el.clientWidth)))});
-  if(S.tab==="memories"){drawMemChart();drawMemList()}
+  if(S.tab==="memories"){drawMemChart();drawMemList();drawYear()}
   if(S.tab==="habits")drawTaskChart();
   if(S.tab==="weight")drawWeightChart();
   if(S.tab==="notes")drawNotesList();
@@ -1016,15 +1246,47 @@ document.addEventListener("focusout",e=>{if(e.target&&e.target.classList&&e.targ
 
 /* ---------- mutations ---------- */
 function ensureDay(k){if(!S.days[k])S.days[k]={d:k,h:{}};if(!S.days[k].h)S.days[k].h={};S.days[k].d=k;return S.days[k]}
+function touchStart(h,k){if(k<hStart(h)){h.created=k;saveConfig()}}
 function toggleHabit(id){
   const k=S.cur,h=S.habits.find(x=>x.id===id);if(!h)return;
-  const d=ensureDay(k);if(d.h[id])delete d.h[id];else{d.h[id]=1;if(k<hStart(h)){h.created=k;saveConfig()}}
-  saveDay(k);render();
+  const d=ensureDay(k);
+  if(d.h[id]){delete d.h[id];saveDay(k);render();return}
+  JUST=id;setTimeout(()=>{JUST=null},600);
+  if(wlink(h)){openWeightPrompt(h,k);return}
+  d.h[id]=1;touchStart(h,k);saveDay(k);render();
+}
+function setQ(id,k,v){
+  const h=S.habits.find(x=>x.id===id);if(!h)return;const d=ensureDay(k);
+  if(v===null||!Number.isFinite(v)||v<0)delete d.h[id];else{d.h[id]=Math.round(v*100)/100;touchStart(h,k)}
+  saveDay(k);
+}
+function updateQRow(id,k){
+  const h=S.habits.find(x=>x.id===id);if(!h)return;const f=frac(h,k);
+  const p=$("#qp-"+id);if(p)p.innerHTML=L(num(earned(h,k),1)+" / "+hPts(h));
+  const b=$("#qb-"+id);if(b)b.style.width=Math.round(f*100)+"%";
+  const r=$("#qr-"+id);if(r)r.classList.toggle("on",f>=1);
+  const sc=dayScore(k),big=document.querySelector(".summary .big");if(big)big.innerHTML='<span class="num">'+num(sc.got,1)+'</span> <span class="small muted" style="font-family:var(--f-body)">نقطة من</span> <span class="num">'+num(sc.max,1)+'</span>';
+}
+function openWeightPrompt(h,k){
+  const d=S.days[k]||{};
+  openSheet('<h2>'+esc(h.name)+'</h2><form class="f" id="wp-form"><div class="fld"><label for="wp-v">الوزن على الميزان (كغم) · '+esc(fShort(k))+'</label><input id="wp-v" class="ltr" type="number" inputmode="decimal" min="20" max="400" step="0.1" value="'+(Number.isFinite(d.w)?d.w:"")+'" placeholder="مثال: 84.6"></div>'+
+    '<p class="err" id="wp-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ وإنجاز</button><button class="btn" type="button" data-act="wpSkip" data-id="'+h.id+'">إنجاز بدون وزن</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div>'+
+    '<p class="lbl" style="margin:0">القراءة تُحفظ في قسم الوزن لهذا اليوم.</p></form>',fd=>{
+    const v=parseFloat($("#wp-v").value),err=$("#wp-err");
+    if(!Number.isFinite(v)||v<20||v>400){err.textContent="أدخل الوزن رقماً بين 20 و 400 كغم.";err.hidden=false;return}
+    const dd=ensureDay(k);dd.w=Math.round(v*10)/10;dd.h[h.id]=1;const cur=S.habits.find(x=>x.id===h.id);if(cur)touchStart(cur,k);saveDay(k);closeSheet();render();
+  });
 }
 function addHabit(name,days,pts){
   name=name.trim();if(!name)return null;
   const h={id:uid(),name:name,pts:pts||10,days:days&&days.length&&days.length<7?days:[],created:todayK()};
   S.habits.push(h);saveConfig();return h;
+}
+function moveHabit(id,dir){
+  const h=S.habits.find(x=>x.id===id);if(!h)return false;const g=groupOf(h),i=S.habits.indexOf(h);
+  let j=i+dir;while(j>=0&&j<S.habits.length&&(S.habits[j].archived||groupOf(S.habits[j])!==g))j+=dir;
+  if(j<0||j>=S.habits.length)return false;
+  S.habits[i]=S.habits[j];S.habits[j]=h;saveConfig();return true;
 }
 
 /* ---------- sheet ---------- */
@@ -1037,33 +1299,56 @@ function openSheet(html,onSubmit){
 function closeSheet(){sheet.hidden=true;card.innerHTML="";sheetSubmit=null;if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}}
 sheet.addEventListener("click",e=>{if(e.target===sheet)closeSheet()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!sheet.hidden)closeSheet()});
-card.addEventListener("submit",e=>{e.preventDefault();if(sheetSubmit)sheetSubmit(new FormData(e.target),e.target)});
+card.addEventListener("submit",e=>{e.preventDefault();if(!sheetSubmit)return;clickForce=true;try{sheetSubmit(new FormData(e.target),e.target)}finally{clickForce=false}});
 
 function habitForm(h,pg){
-  const days=h&&h.days&&h.days.length?h.days:DAYS_ORDER,gsel=h?groupOf(h):(pg||"");
+  const days=h&&h.days&&h.days.length?h.days:DAYS_ORDER,gsel=h?groupOf(h):(pg||""),q=h&&isQ(h)?h.q:null,wk=h&&isWk(h)?+h.wk:0;
+  const sameG=h?liveHabits().filter(x=>groupOf(x)===groupOf(h)):[],pos=h?sameG.indexOf(h):-1;
   return '<h2>'+(h?"تعديل المهمة الثابتة":"مهمة ثابتة جديدة")+'</h2><form class="f" id="habit-form">'+
-  '<div class="fld"><label for="hf-name">الاسم</label><input id="hf-name" name="name" maxlength="60" required value="'+esc(h?h.name:"")+'" placeholder="مثال: تمرين"></div>'+
-  '<div class="fld"><label for="hf-pts">النقاط عند إنجازها</label><input class="ltr" id="hf-pts" name="pts" type="number" inputmode="numeric" min="1" max="1000" step="1" required value="'+(h?hPts(h):10)+'"></div>'+
+  '<div class="fld"><label for="hf-name">الاسم</label><input id="hf-name" name="name" maxlength="80" required value="'+esc(h?h.name:"")+'" placeholder="مثال: تمرين"></div>'+
+  '<div class="two"><div class="fld"><label for="hf-pts">النقاط الكاملة</label><input class="ltr" id="hf-pts" name="pts" type="number" inputmode="numeric" min="1" max="1000" step="1" required value="'+(h?hPts(h):10)+'"></div>'+
   '<div class="fld"><label for="hf-g">المجموعة</label><select id="hf-g" name="g" class="sel"><option value="">بدون مجموعة</option>'+S.groups.map(g=>'<option value="'+g.id+'"'+(g.id===gsel?" selected":"")+'>'+esc(g.name)+'</option>').join("")+'<option value="__new">مجموعة جديدة…</option></select>'+
-  '<input id="hf-gnew" name="gnew" maxlength="40" placeholder="اسم المجموعة الجديدة" hidden></div>'+
-  '<div class="fld"><span class="lbl2">الأيام المجدولة</span><div class="daypick">'+DAYS_ORDER.map(d=>'<label title="'+DAY_NAME[d]+'"><input type="checkbox" id="hf-d'+d+'" name="d" value="'+d+'"'+(days.includes(d)?" checked":"")+'><span>'+DAY_LETTER[d]+'</span></label>').join("")+'</div><span class="lbl">الأيام غير المجدولة لا تكسر السلسلة.</span></div>'+
+  '<input id="hf-gnew" name="gnew" maxlength="40" placeholder="اسم المجموعة الجديدة" hidden></div></div>'+
+  '<div class="fld"><span class="lbl2">نوع المهمة</span><div class="seg2" role="radiogroup"><label><input type="radio" name="kind" value="bin" id="hf-k-bin"'+(q?"":" checked")+'><span>إنجاز</span></label><label><input type="radio" name="kind" value="q" id="hf-k-q"'+(q?" checked":"")+'><span>كمية</span></label></div></div>'+
+  '<div id="hf-qbox" class="qbox"'+(q?"":" hidden")+'>'+
+    '<div class="fld"><span class="lbl2">طريقة الحساب</span><div class="seg2" role="radiogroup"><label><input type="radio" name="qm" value="min" id="hf-qm-min"'+(!q||q.m!=="max"?" checked":"")+'><span>هدف أدنى</span></label><label><input type="radio" name="qm" value="max" id="hf-qm-max"'+(q&&q.m==="max"?" checked":"")+'><span>حد أقصى</span></label></div>'+
+    '<span class="lbl" id="hf-qhelp">'+(q&&q.m==="max"?"نقاط كاملة إذا بقيت تحت الحد، وتنقص بالنسبة كلما تجاوزته حتى تصبح صفراً عند ضعف الحد.":"النقاط بنسبة ما أنجزته من الهدف: نصف الهدف يعطي نصف النقاط.")+'</span></div>'+
+    '<div class="three"><div class="fld"><label for="hf-qt">الهدف أو الحد</label><input class="ltr" id="hf-qt" name="qt" type="number" step="any" min="0" value="'+(q?q.t:"")+'" placeholder="5"></div>'+
+    '<div class="fld"><label for="hf-qu">الوحدة</label><input id="hf-qu" name="qu" maxlength="16" value="'+esc(q?q.u||"":"")+'" placeholder="بطل"></div>'+
+    '<div class="fld"><label for="hf-qs">مقدار الزيادة</label><input class="ltr" id="hf-qs" name="qs" type="number" step="any" min="0" value="'+(q?q.s||1:1)+'"></div></div></div>'+
+  '<div class="fld"><span class="lbl2">التكرار</span><div class="seg2" role="radiogroup"><label><input type="radio" name="fr" value="days" id="hf-fr-days"'+(wk?"":" checked")+'><span>أيام محددة</span></label><label><input type="radio" name="fr" value="wk" id="hf-fr-wk"'+(wk?" checked":"")+'><span>عدد مرات في الأسبوع</span></label></div></div>'+
+  '<div class="fld" id="hf-daysbox"'+(wk?" hidden":"")+'><div class="daypick">'+DAYS_ORDER.map(d=>'<label title="'+DAY_NAME[d]+'"><input type="checkbox" id="hf-d'+d+'" name="d" value="'+d+'"'+(days.includes(d)?" checked":"")+'><span>'+DAY_LETTER[d]+'</span></label>').join("")+'</div><span class="lbl">الأيام غير المجدولة لا تكسر السلسلة.</span></div>'+
+  '<div class="fld" id="hf-wkbox"'+(wk?"":" hidden")+'><label for="hf-wk">كم مرة في الأسبوع</label><input class="ltr" id="hf-wk" name="wk" type="number" min="1" max="7" step="1" value="'+(wk||1)+'" style="max-width:120px">'+
+    '<span class="lbl">تظهر كل أيام الأسبوع حتى تكمل العدد، وتُحسب نقاطها في اليوم الذي تنجزها فيه، ولا تدخل في الحد الأقصى اليومي. الأسبوع يبدأ بالسبت.</span></div>'+
+  '<label class="chk"><input type="checkbox" name="wl" id="hf-wl"'+(h?(wlink(h)?" checked":""):"")+'><span>اطلب تسجيل الوزن عند إنجازها</span></label>'+
   '<p class="err" id="hf-err" hidden></p>'+
   '<div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div>'+
-  (h?'<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn sm" type="button" data-act="archHabit" data-id="'+h.id+'">'+(h.archived?"إعادة تفعيل":"أرشفة")+'</button><button class="btn sm danger" type="button" data-act="delHabit" data-id="'+h.id+'">حذف نهائي</button></div><p class="lbl" style="margin:0">الأرشفة تخفي المهمة وتحتفظ بسجلها. الحذف يزيلها من القائمة.</p>':"")+
+  (h?'<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn sm" type="button" data-act="hMove" data-id="'+h.id+'" data-n="-1"'+(pos<=0?" disabled":"")+'>تحريك للأعلى</button><button class="btn sm" type="button" data-act="hMove" data-id="'+h.id+'" data-n="1"'+(pos<0||pos>=sameG.length-1?" disabled":"")+'>تحريك للأسفل</button></div>'+
+    '<div class="row"><button class="btn sm" type="button" data-act="archHabit" data-id="'+h.id+'">'+(h.archived?"إعادة تفعيل":"أرشفة")+'</button><button class="btn sm danger" type="button" data-act="delHabit" data-id="'+h.id+'">حذف نهائي</button></div><p class="lbl" style="margin:0">الأرشفة تخفي المهمة وتحتفظ بسجلها. الحذف يزيلها من القائمة.</p>':"")+
   '</form>';
 }
 function openHabit(h,pg){
   openSheet(habitForm(h,pg),fd=>{
     const name=String(fd.get("name")||"").trim(),days=fd.getAll("d").map(Number),pts=parseInt(fd.get("pts"),10);
-    const err=$("#hf-err");
-    if(!name){err.textContent="اكتب اسماً للمهمة.";err.hidden=false;return}
-    if(!Number.isFinite(pts)||pts<1||pts>1000){err.textContent="النقاط رقم صحيح من 1 إلى 1000.";err.hidden=false;return}
-    if(!days.length){err.textContent="اختر يوماً واحداً على الأقل.";err.hidden=false;return}
+    const err=$("#hf-err"),bad=m=>{err.textContent=m;err.hidden=false};
+    if(!name)return bad("اكتب اسماً للمهمة.");
+    if(!Number.isFinite(pts)||pts<1||pts>1000)return bad("النقاط رقم صحيح من 1 إلى 1000.");
+    const kind=fd.get("kind"),fr=fd.get("fr");let q=null,wk=0;
+    if(kind==="q"){const qt=parseFloat(fd.get("qt")),qs=parseFloat(fd.get("qs"));
+      if(!Number.isFinite(qt)||qt<=0)return bad("أدخل الهدف أو الحد رقماً أكبر من صفر.");
+      q={t:qt,u:String(fd.get("qu")||"").trim(),m:fd.get("qm")==="max"?"max":"min",s:Number.isFinite(qs)&&qs>0?qs:1}}
+    if(fr==="wk"){wk=parseInt(fd.get("wk"),10);if(!Number.isFinite(wk)||wk<1||wk>7)return bad("عدد المرات في الأسبوع من 1 إلى 7.")}
+    else if(!days.length)return bad("اختر يوماً واحداً على الأقل.");
     let gid=String(fd.get("g")||"");
-    if(gid==="__new"){const gn=String(fd.get("gnew")||"").trim();if(!gn){err.textContent="اكتب اسم المجموعة الجديدة.";err.hidden=false;return}const ng={id:uid(),name:gn};S.groups.push(ng);gid=ng.id}
+    if(gid==="__new"){const gn=String(fd.get("gnew")||"").trim();if(!gn)return bad("اكتب اسم المجموعة الجديدة.");const ng={id:uid(),name:gn};S.groups.push(ng);gid=ng.id}
     const cur=h&&S.habits.find(x=>x.id===h.id);if(h&&!cur){closeSheet();render();return}
-    if(cur){cur.name=name;cur.pts=pts;cur.days=days.length===7?[]:days;if(gid)cur.g=gid;else delete cur.g;saveConfig()}else{const nh=addHabit(name,days,pts);if(nh&&gid){nh.g=gid;saveConfig()}}
-    closeSheet();render();
+    const tgt=cur||addHabit(name,days,pts);if(!tgt)return;
+    tgt.name=name;tgt.pts=pts;tgt.days=fr==="wk"?[]:(days.length===7?[]:days);
+    if(wk)tgt.wk=wk;else delete tgt.wk;
+    if(q)tgt.q=q;else delete tgt.q;
+    tgt.wl=!!fd.get("wl");
+    if(gid)tgt.g=gid;else delete tgt.g;
+    saveConfig();closeSheet();render();
   });
 }
 function goalForm(g){
@@ -1115,8 +1400,9 @@ function openLog(g){
 
 /* ---------- export ---------- */
 function doExport(){
-  const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes},null,1);
+  const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal},null,1);
   try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download="daftar-backup-"+todayK()+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}catch(e){}
+  S.lastBackup=new Date().toISOString();saveConfig();render();
 }
 function settingsHTML(){
   const embedded=!!EMBED_CFG;
@@ -1139,7 +1425,7 @@ async function applyImport(o){
   const clone=x=>JSON.parse(JSON.stringify(x));const ops=[];
   if(Array.isArray(o.groups)){const ids=new Set(S.groups.map(g=>g.id));o.groups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.groups.push(clone(g))})}
   if(Array.isArray(o.habits)){o.habits.forEach(h=>{if(!h||!h.id)return;const i=S.habits.findIndex(x=>x.id===h.id);if(i>=0)S.habits[i]=clone(h);else S.habits.push(clone(h))})}
-  ops.push({path:"app/config",data:{habits:S.habits,groups:S.groups,v:1}});
+  if(+o.wgoal>0&&!(+S.wgoal>0))S.wgoal=+o.wgoal;ops.push({path:"app/config",data:cfgDoc()});
   if(o.days&&typeof o.days==="object")Object.keys(o.days).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;const v=clone(o.days[k]),cur=S.days[k]||{};
     S.days[k]=Object.assign({},cur,v,{d:k,h:Object.assign({},cur.h||{},v.h||{})});ops.push({path:"days/"+k,data:S.days[k]})});
   if(o.goals&&typeof o.goals==="object")Object.keys(o.goals).forEach(id=>{S.goals[id]=clone(o.goals[id]);ops.push({path:"goals/"+id,data:S.goals[id]})});
@@ -1164,6 +1450,17 @@ document.addEventListener("click",e=>{
     case "sleepStep":{const d=ensureDay(S.cur);let v=Number.isFinite(d.sleep)?d.sleep:7;if(Number.isFinite(d.sleep))v+= +b.dataset.n;v=Math.max(0,Math.min(16,v));d.sleep=v;saveDay(S.cur);render();break}
     case "sugg":{const n=b.dataset.n;const ex=S.habits.find(h=>h.name===n&&!h.archived);if(!ex){addHabit(n,[]);render()}break}
     case "newHabit":openHabit(null);break;
+    case "dayOff":{const d=ensureDay(S.cur);if(d.off)delete d.off;else d.off=true;saveDay(S.cur);render();break}
+    case "hideDone":HIDE_DONE=!HIDE_DONE;try{localStorage.setItem("dt-hidedone",HIDE_DONE?"1":"0")}catch(er){}render();break;
+    case "qstep":{const h=S.habits.find(x=>x.id===id);if(!h||!isQ(h))break;const k=S.cur,cur=entered(h,k)?+rawV(h,k):0,st=+h.q.s||1;let v=Math.max(0,Math.round((cur+(+b.dataset.n)*st)*100)/100);
+      setQ(id,k,(v===0&&h.q.m!=="max"&&!entered(h,k))?null:v);render();break}
+    case "wpSkip":{const h=S.habits.find(x=>x.id===id);if(h){const d=ensureDay(S.cur);d.h[id]=1;touchStart(h,S.cur);saveDay(S.cur)}closeSheet();render();break}
+    case "hMove":{const h=S.habits.find(x=>x.id===id);if(h&&moveHabit(id,+b.dataset.n)){card.innerHTML=habitForm(h);render()}break}
+    case "gaRange":S.ga.range=b.dataset.r;render();break;
+    case "ypMode":S.yr.mode=b.dataset.r;render();break;
+    case "ypYear":S.yr.year=+b.dataset.r;render();break;
+    case "ypick":{const k=b.dataset.k;if(k&&k<=todayK()){S.mem.sel=k;if(k<memRangeStart())S.mem.range="all";refreshMemEditor()}break}
+    case "wgClear":S.wgoal=null;saveConfig();render();break;
     case "gColl":{const ck=b.dataset.k;if(COLL.has(ck))COLL.delete(ck);else COLL.add(ck);try{localStorage.setItem("dt-coll",JSON.stringify(Array.from(COLL)))}catch(er){}render();break}
     case "newHabitIn":openHabit(null,b.dataset.g||"");break;
     case "newGroup":openGroup(null);break;
@@ -1210,6 +1507,7 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("submit",e=>{
   if(e.target.closest&&e.target.closest("#sheet"))return;
+  lastKeep=0;
   if(e.target.id==="auth-form"){e.preventDefault();doAuth("in");return}
   if(e.target.id==="setup-form"){e.preventDefault();const c=parseCfg($("#su-cfg").value);
     if(!c){S.setupErr="لم أجد apiKey و projectId و appId في النص. انسخ الكتلة كاملة.";render(true);return}
@@ -1220,6 +1518,7 @@ document.addEventListener("submit",e=>{
     if(!Number.isFinite(p)||p<1||p>1000){err.textContent="النقاط رقم صحيح من 1 إلى 1000.";err.hidden=false;pt.focus();return}
     const d=ensureDay(S.cur);if(!d.x)d.x=[];d.x.push({id:uid(),name:name,pts:p,done:false});saveDay(S.cur);render(true);
     const n2=$("#xa-name");if(n2)n2.focus();return}
+  if(e.target.id==="wgform"){e.preventDefault();const v=parseFloat($("#wg-v").value);if(!Number.isFinite(v)||v<20||v>400){S.wt.msg="أدخل الهدف رقماً بين 20 و 400 كغم.";render(true);return}S.wgoal=Math.round(v*10)/10;S.wt.msg="";saveConfig();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
   if(e.target.id==="wform"){e.preventDefault();
     const k=$("#wf-d").value,v=parseFloat($("#wf-v").value);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(k)||k>todayK()){S.wt.msg="اختر يوماً حتى اليوم.";render(true);return}
@@ -1232,6 +1531,9 @@ document.addEventListener("change",e=>{
     r.onload=()=>{let o=null;try{o=JSON.parse(r.result)}catch(er){}
       if(!o||typeof o!=="object"||!(o.days||o.habits||o.notes)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
       IMP=o;card.innerHTML=importSummary(o)};r.readAsText(f);return}
+  if(e.target.name==="kind"&&e.target.closest("#habit-form")){const bx=$("#hf-qbox");if(bx)bx.hidden=e.target.value!=="q";return}
+  if(e.target.name==="fr"&&e.target.closest("#habit-form")){const w=e.target.value==="wk";$("#hf-daysbox").hidden=w;$("#hf-wkbox").hidden=!w;return}
+  if(e.target.name==="qm"&&e.target.closest("#habit-form")){const hp=$("#hf-qhelp");if(hp)hp.textContent=e.target.value==="max"?"نقاط كاملة إذا بقيت تحت الحد، وتنقص بالنسبة كلما تجاوزته حتى تصبح صفراً عند ضعف الحد.":"النقاط بنسبة ما أنجزته من الهدف: نصف الهدف يعطي نصف النقاط.";return}
   if(e.target.id==="hf-g"){const ni=$("#hf-gnew");if(ni){ni.hidden=e.target.value!=="__new";if(!ni.hidden)ni.focus()}return}
   if(e.target.id==="wf-d"){const k=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&k<=todayK()){S.wt.sel=k;S.wt.msg="";e.target.blur();render(true)}return}
   if(e.target.id==="me-pick"){const k=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&k<=todayK()){S.mem.sel=k;if(k<memRangeStart())S.mem.range="all";e.target.blur();render(true)}}
@@ -1245,6 +1547,7 @@ document.addEventListener("input",e=>{
   if(id==="mem-q"){S.mem.q=e.target.value;drawMemList();return}
   if(id==="nt-title"||id==="nt-body"){const n=S.notes[S.nt.sel];if(!n)return;n[id==="nt-title"?"title":"body"]=e.target.value;n.updated=new Date().toISOString();n.saved=true;saveNote(n.id);lastKeep=Date.now();drawNotesList();return}
   if(id==="nt-q"){S.nt.q=e.target.value;drawNotesList();return}
+  if(id&&id.indexOf("q-")===0){const hid=id.slice(2),raw=e.target.value;if(raw===""){setQ(hid,S.cur,null)}else{const v=parseFloat(raw);if(!Number.isFinite(v)||v<0)return;setQ(hid,S.cur,v)}lastKeep=Date.now();updateQRow(hid,S.cur);return}
   if(e.target.id==="sleep"){const v=parseFloat(e.target.value);const d=ensureDay(S.cur);
     if(e.target.value===""){delete d.sleep}else if(Number.isFinite(v)&&v>=0&&v<=16){d.sleep=Math.round(v*4)/4}else return;
     saveDay(S.cur)}
