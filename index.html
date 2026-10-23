@@ -346,6 +346,13 @@ h3 .pts{vertical-align:middle;margin-inline-start:4px}
 .sp.cur .spb i{opacity:1}
 .sp.cur .spl{color:var(--accent);font-weight:600}
 .spl{font-size:11px;color:var(--muted)}
+.nchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.nchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--muted)}
+.nchip .num{font-size:11px;opacity:.75}
+.nchip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.nchip.add{border-style:dashed;color:var(--accent)}
+.nsel{width:auto;flex:1;min-width:0;padding:6px 10px}
+.iconbtn.arm{color:var(--bad);border-color:var(--bad)}
 /* memories */
 .rng{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
 .rng button{border:0;background:transparent;border-radius:7px;padding:5px 11px;font-size:13px;color:var(--muted)}
@@ -458,7 +465,7 @@ const ICON={
 };
 
 /* ---------- state ---------- */
-const S={habits:[],groups:[],days:{},goals:{},notes:{},wgoal:null,lastBackup:null,mode:"loading",cur:todayK(),tab:"today"};
+const S={habits:[],groups:[],ngroups:[],todos:{},days:{},goals:{},notes:{},wgoal:null,lastBackup:null,mode:"loading",cur:todayK(),tab:"today"};
 try{const t=localStorage.getItem("dt-tab");if(t&&["today","memories","habits","notes","goals","weight"].includes(t))S.tab=t}catch(e){}
 if(["today","memories","habits","notes","goals","weight"].includes(location.hash.slice(1)))S.tab=location.hash.slice(1);
 
@@ -501,14 +508,15 @@ window.addEventListener("pagehide",flushAll);
 let localTimer=null;
 function persistLocal(){
   clearTimeout(localTimer);
-  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup}))}catch(e){}},250);
+  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup,ngroups:S.ngroups,todos:S.todos}))}catch(e){}},250);
 }
 function loadLocal(){
-  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null}}catch(e){}
+  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.todos=o.todos||{}}}catch(e){}
 }
-const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;return JSON.parse(JSON.stringify(o))};
+const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;return JSON.parse(JSON.stringify(o))};
 const saveConfig=()=>queueWrite("app/config",cfgDoc());
 const saveNote=id=>queueWrite("notes/"+id,S.notes[id]||null);
+const saveTodo=id=>queueWrite("todos/"+id,S.todos[id]||null);
 const saveDay=k=>queueWrite("days/"+k,S.days[k]);
 const saveGoal=id=>queueWrite("goals/"+id,S.goals[id]||null);
 
@@ -538,11 +546,11 @@ let unsubs=[];
 function startDB(db){
   DB=db;S.mode="loading";render();
   unsubs.forEach(u=>{try{u()}catch(e){}});unsubs=[];
-  let got={c:false,d:false,g:false,n:false};
-  const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&S.mode==="loading"){S.mode="db";setSync()}render()};
+  let got={c:false,d:false,g:false,n:false,t:false};
+  const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&S.mode==="loading"){S.mode="db";setSync();migrateX()}render()};
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
-    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null}
+    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[]}
     got.c=true;ready();
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -557,6 +565,12 @@ function startDB(db){
     Object.keys(S.goals).forEach(k=>{const it=dirty.get("goals/"+k);if(!ng[k]&&it&&it.data!==null)ng[k]=S.goals[k]});
     S.goals=ng;got.g=true;ready();
   },onErr));
+  unsubs.push(DB.collection("todos").onSnapshot(snap=>{
+    const nt={};
+    snap.docs.forEach(doc=>{const p="todos/"+doc.id;nt[doc.id]=isDirty(p)&&S.todos[doc.id]?S.todos[doc.id]:JSON.parse(JSON.stringify(doc.data()))});
+    Object.keys(S.todos).forEach(k=>{const it=dirty.get("todos/"+k);if(!nt[k]&&it&&it.data!==null)nt[k]=S.todos[k]});
+    S.todos=nt;got.t=true;ready();
+  },onErr));
   unsubs.push(DB.collection("notes").onSnapshot(snap=>{
     const nn={};
     snap.docs.forEach(doc=>{const p="notes/"+doc.id;nn[doc.id]=isDirty(p)&&S.notes[doc.id]?S.notes[doc.id]:JSON.parse(JSON.stringify(doc.data()))});
@@ -564,14 +578,14 @@ function startDB(db){
     S.notes=nn;got.n=true;ready();
   },onErr));
 }
-function resetState(){S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){S.ngroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
   const cfg=getCfg();
   if(!cfg){
     let localOnly=false;try{localOnly=localStorage.getItem("dt-localonly")==="1"}catch(e){}
-    if(localOnly){S.mode="local";loadLocal();setSync();render();return}
+    if(localOnly){S.mode="local";loadLocal();migrateX();setSync();render();return}
     S.mode="setup";setSync();render();return;
   }
   let mods;
@@ -762,6 +776,7 @@ const signed=(v,dp)=>(v>0?"+":"")+num(v,dp);
 function dayScore(k){
   const s=scoreOf(S.habits,k);let got=s.got,max=s.max;
   const d=S.days[k];((d&&d.x)||[]).forEach(t=>{const p=+t.pts||0;max+=p;if(t.done)got+=p});
+  Object.values(S.todos).forEach(t=>{if(t.doneAt===k){const p=+t.pts||0;got+=p;max+=p}});
   return {got:Math.round(got*10)/10,max:Math.round(max*10)/10};
 }
 function ring(p){
@@ -808,6 +823,32 @@ function backupBanner(){
   if(lb&&age<14)return "";
   return '<div class="banner row" style="justify-content:space-between"><span>'+(lb?"آخر نسخة احتياطية قبل "+age+" يوماً.":"لم تصدّر أي نسخة احتياطية بعد.")+'</span><button class="btn sm" data-act="export">تصدير الآن</button></div>';
 }
+const ago=iso=>{if(!iso)return "";const k=keyOf(new Date(iso)),n=diffD(k,todayK());return fShort(k)+(n===0?" · اليوم":n===1?" · أمس":" · منذ "+n+" يوم")};
+let TD_ALL=false;
+function migrateX(){ // older "today only" tasks become pending tasks
+  let n=0;Object.keys(S.days).forEach(k=>{const d=S.days[k];if(!d||!Array.isArray(d.x)||!d.x.length)return;
+    d.x.forEach(x=>{if(!x||!x.id||S.todos[x.id])return;S.todos[x.id]={id:x.id,name:x.name||"مهمة",pts:+x.pts||0,created:parse(k).toISOString(),doneAt:x.done?k:null};saveTodo(x.id);n++});
+    delete d.x;saveDay(k)});
+  if(n)render();
+}
+function todoRow(t,k){
+  const on=!!t.doneAt;
+  return '<div class="xrow"><button class="hrow'+(on?" on":"")+'" data-act="tdo" data-id="'+t.id+'" aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+esc(t.name)+'</span>'+
+    '<span class="st">'+(on?"أُنجزت "+esc(ago(parse(t.doneAt).toISOString()))+" · ":"")+'أُضيفت '+esc(ago(t.created))+'</span></span>'+(+t.pts?ptsTag(+t.pts):"")+'</button>'+
+    '<button class="iconbtn xdel" data-act="tdel" data-id="'+t.id+'" aria-label="حذف المهمة">×</button></div>';
+}
+function todoPanel(k){
+  const all=Object.values(S.todos),byC=(a,b)=>(a.created||"")<(b.created||"")?-1:1;
+  const pend=all.filter(t=>!t.doneAt).sort(byC),here=all.filter(t=>t.doneAt===k).sort(byC),older=all.filter(t=>t.doneAt&&t.doneAt!==k).sort((a,b)=>a.doneAt<b.doneAt?1:-1);
+  return '<section class="sec"><div class="sec-h"><h2>مهام معلّقة</h2><span class="lbl">'+(pend.length?pend.length+" باقية":"لا شيء معلّق")+'</span></div>'+
+    '<form id="xadd" class="panel xadd" autocomplete="off"><div class="fld"><label for="xa-name">مهمة جديدة</label><input id="xa-name" class="keep" maxlength="80" placeholder="مثال: تجديد الجواز"></div>'+
+    '<div class="row"><div class="fld" style="flex:1;min-width:110px"><label for="xa-pts">النقاط (اختياري)</label><input id="xa-pts" class="keep ltr" type="number" inputmode="numeric" min="0" max="1000" step="1" placeholder="0"></div><button class="btn pri" type="submit" style="align-self:flex-end">إضافة</button></div>'+
+    '<p class="err" id="xa-err" hidden></p></form>'+
+    (pend.length?'<div class="hlist">'+pend.map(t=>todoRow(t,k)).join("")+'</div>':'<p class="muted small" style="margin:0">المهام هنا تبقى ظاهرة كل يوم حتى تنجزها، وتُحسب نقاطها في اليوم الذي تنجزها فيه.</p>')+
+    (here.length&&!HIDE_DONE?'<div class="lbl">أُنجزت في هذا اليوم</div><div class="hlist">'+here.map(t=>todoRow(t,k)).join("")+'</div>':"")+
+    (older.length?'<button class="chip-link" data-act="tdAll">'+(TD_ALL?"إخفاء المنجزة سابقاً":"المنجزة سابقاً ("+older.length+")")+'</button>'+(TD_ALL?'<div class="hlist">'+older.slice(0,60).map(t=>todoRow(t,k)).join("")+'</div>':""):"")+
+    '</section>';
+}
 function weekSpark(k){
   let s='<section class="spark" aria-label="آخر 7 أيام">';
   for(let i=6;i>=0;i--){const d=addD(k,-i),sc=dayScore(d),f=sc.max?Math.min(1,sc.got/sc.max):0;
@@ -844,14 +885,7 @@ function vToday(){
     main=summary+weekSpark(k)+'<section class="sec"><div class="sec-h" style="flex-wrap:wrap"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="hideDone" aria-pressed="'+HIDE_DONE+'">'+(HIDE_DONE?"إظهار المنجز"+(nHidden?" ("+nHidden+")":""):"إخفاء المنجز")+'</button><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div><div class="tl">'+blocks+'</div>'+
       (anyOff&&!off?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'</section>';
   }
-  const xs=(day.x||[]).filter(x=>!(HIDE_DONE&&x.done));
-  const side='<section class="sec"><div class="sec-h"><h2>مهام لهذا اليوم فقط</h2></div>'+
-    '<form id="xadd" class="panel xadd" autocomplete="off"><div class="fld"><label for="xa-name">المهمة</label><input id="xa-name" class="keep" maxlength="60" placeholder="مثال: مقابلة عمل"></div>'+
-    '<div class="row"><div class="fld" style="flex:1;min-width:110px"><label for="xa-pts">النقاط</label><input id="xa-pts" class="keep ltr" type="number" inputmode="numeric" min="1" max="1000" step="1" placeholder="20"></div><button class="btn pri" type="submit" style="align-self:flex-end">إضافة</button></div>'+
-    '<p class="err" id="xa-err" hidden></p></form>'+
-    (xs.length?'<div class="hlist">'+xs.map(x=>'<div class="xrow"><button class="hrow'+(x.done?" on":"")+'" data-act="xtoggle" data-id="'+x.id+'" aria-pressed="'+!!x.done+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+esc(x.name)+'</span></span>'+ptsTag(+x.pts||0)+'</button><button class="iconbtn xdel" data-act="xdel" data-id="'+x.id+'" aria-label="حذف المهمة">×</button></div>').join("")+'</div>'
-      :'<p class="muted small" style="margin:0">أضف أي مهمة خاصة بهذا اليوم وحدد نقاطها، وتُجمع مع نقاط المهام الثابتة.</p>')+
-    '</section>';
+  const side=todoPanel(k);
   return head+'<div class="tg"><div class="tg-main">'+main+'</div><div class="tg-side">'+side+'</div></div>';
 }
 function heat(h){
@@ -926,7 +960,7 @@ function vGoals(){
   if(!gs.length)return s+'<section class="panel empty"><h2>هدف قابل للقياس</h2><p class="muted small" style="margin:0">حدّد قيمة البداية والقيمة المستهدفة والموعد، مثل الوزن أو عدد الصفحات أو ساعات الدراسة. كل قراءة تسجّلها تُحدّث نسبة الإنجاز والمعدل المطلوب أسبوعياً، وتقارنه بمعدلك الفعلي في آخر 28 يوماً.</p><div class="row"><button class="btn pri" data-act="newGoal">إضافة أول هدف</button></div></section>';
   s+='<div class="cols">';
   gs.forEach(g=>{const st=gStats(g),u=g.unit?" "+esc(g.unit):"",pr=Math.max(0,Math.min(1,st.prog));
-    s+='<article class="panel hcard"><div class="hhead"><div><h3>'+esc(g.title)+'</h3><div class="lbl">الموعد '+esc(fFull(g.deadline))+'</div></div><span class="pill '+st.status+'">'+STATUS_TXT[st.status]+'</span></div>'+
+    s+='<article class="panel hcard"><div class="hhead"><div><h3>'+esc(g.title)+'</h3><div class="lbl">'+(g.created?'أُضيف '+esc(fShort(keyOf(new Date(g.created))))+' · ':'')+'الموعد '+esc(fFull(g.deadline))+'</div></div><span class="pill '+st.status+'">'+STATUS_TXT[st.status]+'</span></div>'+
     '<div class="row" style="justify-content:space-between"><span><span class="num" style="font-size:24px">'+L(num(st.cur,2))+'</span> <span class="muted small">من '+L(num(+g.target,2)+u)+'</span></span><span class="num muted">'+L(Math.round(st.prog*100)+"%")+'</span></div>'+
     '<div class="bar"><i style="width:'+(pr*100).toFixed(1)+'%"></i></div>'+
     '<div class="kv"><div><b>'+(st.daysLeft>=0?st.daysLeft:0)+'</b><span>يوم متبقٍ</span></div>'+
@@ -1184,7 +1218,8 @@ function openGroup(g){
 }
 
 /* ---------- ideas & notes ---------- */
-S.nt={sel:null,q:""};
+S.nt={sel:null,q:"",g:""};
+const ngName=id=>{const g=S.ngroups.find(x=>x.id===id);return g?g.name:""};
 const isWide=()=>window.innerWidth>=900;
 const noteTitle=n=>(n.title||"").trim()||((n.body||"").trim().split("\n")[0]||"").slice(0,60)||"بلا عنوان";
 function notesSorted(){return Object.values(S.notes).sort((a,b)=>((b.pinned?1:0)-(a.pinned?1:0))||((b.updated||"")>(a.updated||"")?1:(b.updated||"")<(a.updated||"")?-1:0))}
@@ -1192,25 +1227,39 @@ function cleanupNote(id){const n=id&&S.notes[id];if(n&&!(n.title||"").trim()&&!(
 function openNote(id){if(S.nt.sel&&S.nt.sel!==id)cleanupNote(S.nt.sel);S.nt.sel=id;render(true)}
 function drawNotesList(){
   const box=$("#nt-list");if(!box)return;
-  const q=S.nt.q.trim(),ns=notesSorted().filter(n=>(n.title||"").trim()||(n.body||"").trim()).filter(n=>!q||(n.title||"").includes(q)||(n.body||"").includes(q));
+  const q=S.nt.q.trim(),fg=S.nt.g,ns=notesSorted().filter(n=>(n.title||"").trim()||(n.body||"").trim()).filter(n=>!q||(n.title||"").includes(q)||(n.body||"").includes(q))
+    .filter(n=>!fg||(fg==="_none"?!ngName(n.g):n.g===fg));
   box.innerHTML=ns.length?ns.map(n=>{const body=(n.body||"").trim(),ex=(n.title||"").trim()?body:body.split("\n").slice(1).join(" ");
-    return '<button class="mitem'+(n.id===S.nt.sel?" sel":"")+'" data-act="ntOpen" data-id="'+n.id+'"><span class="mh"><span class="md">'+esc(noteTitle(n))+'</span><span class="lbl">'+(n.pinned?"مثبتة · ":"")+esc(n.updated?fShort(keyOf(new Date(n.updated))):"")+'</span></span>'+(ex?'<span class="mt">'+esc(ex)+'</span>':"")+'</button>'}).join("")
+    return '<button class="mitem'+(n.id===S.nt.sel?" sel":"")+'" data-act="ntOpen" data-id="'+n.id+'"><span class="mh"><span class="md">'+esc(noteTitle(n))+'</span><span class="lbl">'+(n.pinned?"مثبتة · ":"")+(!fg&&ngName(n.g)?esc(ngName(n.g))+" · ":"")+'أُنشئت '+esc(n.created?fShort(keyOf(new Date(n.created))):"")+'</span></span>'+(ex?'<span class="mt">'+esc(ex)+'</span>':"")+'</button>'}).join("")
     :'<p class="muted small" style="margin:0">'+(q?"لا توجد فكرة تحتوي هذا النص.":"لا توجد أفكار بعد. اضغط «فكرة جديدة» واكتب ما في بالك.")+'</p>';
 }
 function noteEditorHTML(n){
   const wide=isWide();
   return '<section class="panel sec nt-ed" id="nt-ed">'+
-    '<div class="sec-h">'+(wide?'<span class="lbl">'+(n.updated?"آخر تعديل "+esc(fShort(keyOf(new Date(n.updated)))):"فكرة جديدة")+'</span>':'<button class="chip-link" data-act="ntBack">كل الأفكار</button>')+
-      '<button class="btn sm" data-act="ntPin">'+(n.pinned?"إلغاء التثبيت":"تثبيت في الأعلى")+'</button></div>'+
+    '<div class="sec-h">'+(wide?'':'<button class="chip-link" data-act="ntBack">كل الأفكار</button>')+'<span class="lbl">'+(n.created?"أُنشئت "+esc(fFull(keyOf(new Date(n.created)))):"")+(n.updated&&n.created&&keyOf(new Date(n.updated))!==keyOf(new Date(n.created))?" · آخر تعديل "+esc(fShort(keyOf(new Date(n.updated)))):"")+'</span>'+
+      '</div><div class="row"><select id="nt-g" class="sel nsel" aria-label="المجموعة"><option value="">بدون مجموعة</option>'+S.ngroups.map(g=>'<option value="'+g.id+'"'+(n.g===g.id?" selected":"")+'>'+esc(g.name)+'</option>').join("")+'</select><button class="btn sm" data-act="ntPin">'+(n.pinned?"إلغاء التثبيت":"تثبيت في الأعلى")+'</button></div>'+
     '<input id="nt-title" class="keep nt-title" maxlength="120" placeholder="العنوان" value="'+esc(n.title||"")+'" aria-label="العنوان">'+
     '<textarea id="nt-body" class="keep nt-body" rows="14" placeholder="اكتب فكرتك أو ملاحظتك" aria-label="النص">'+esc(n.body||"")+'</textarea>'+
     '<div class="row" style="justify-content:space-between"><span class="lbl">يُحفظ تلقائياً أثناء الكتابة</span><button class="btn sm danger" data-act="ntDel">حذف الفكرة</button></div>'+
   '</section>';
 }
+function openNgroup(g){
+  openSheet('<h2>'+(g?"تعديل مجموعة الأفكار":"مجموعة أفكار جديدة")+'</h2><form class="f" id="ng-form"><div class="fld"><label for="ng-name">الاسم</label><input id="ng-name" name="name" maxlength="40" required value="'+esc(g?g.name:"")+'" placeholder="مثال: مشاريع"></div>'+
+    '<p class="err" id="ng-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div>'+
+    (g?'<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn sm danger" type="button" data-act="ngDel" data-id="'+g.id+'">حذف المجموعة</button></div><p class="lbl" style="margin:0">حذف المجموعة لا يحذف أفكارها، بل تصبح بدون مجموعة.</p>':"")+'</form>',fd=>{
+    const name=String(fd.get("name")||"").trim();if(!name){const e=$("#ng-err");e.textContent="اكتب اسماً للمجموعة.";e.hidden=false;return}
+    const cur=g&&S.ngroups.find(x=>x.id===g.id);if(cur)cur.name=name;else{const ng={id:uid(),name:name};S.ngroups.push(ng);S.nt.g=ng.id}
+    saveConfig();closeSheet();render();
+  });
+}
 function vNotes(){
   const n=S.nt.sel&&S.notes[S.nt.sel]?S.notes[S.nt.sel]:null,wide=isWide();
   let s='<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الأفكار والملاحظات</h2><button class="btn pri sm" data-act="ntNew">فكرة جديدة</button></section>';
-  const list='<section class="sec"><input id="nt-q" class="keep search" type="search" placeholder="ابحث في أفكارك" value="'+esc(S.nt.q)+'" aria-label="بحث"><div id="nt-list" class="mlist"></div></section>';
+  const cnt=f=>Object.values(S.notes).filter(x=>((x.title||"").trim()||(x.body||"").trim())&&(!f||(f==="_none"?!ngName(x.g):x.g===f))).length;
+  const chip=(f,lbl)=>'<button class="nchip'+(S.nt.g===f?" on":"")+'" data-act="ngPick" data-g="'+f+'">'+esc(lbl)+' <span class="num">'+cnt(f)+'</span></button>';
+  const chips='<div class="nchips">'+chip("","الكل")+S.ngroups.map(g=>chip(g.id,g.name)).join("")+(S.ngroups.length&&cnt("_none")?chip("_none","بدون مجموعة"):"")+'<button class="nchip add" data-act="ngNew">+ مجموعة</button>'+
+    (S.nt.g&&S.nt.g!=="_none"?'<button class="chip-link" data-act="ngEdit" data-id="'+S.nt.g+'">تعديل المجموعة</button>':"")+'</div>';
+  const list='<section class="sec">'+chips+'<input id="nt-q" class="keep search" type="search" placeholder="ابحث في أفكارك" value="'+esc(S.nt.q)+'" aria-label="بحث"><div id="nt-list" class="mlist"></div></section>';
   if(!wide)return s+(n?noteEditorHTML(n):list);
   return s+'<div class="cols">'+list+(n?noteEditorHTML(n):'<section class="panel empty"><h2>اختر فكرة</h2><p class="muted small" style="margin:0">افتح فكرة من القائمة لتعديلها، أو أنشئ واحدة جديدة.</p></section>')+'</div>';
 }
@@ -1401,7 +1450,7 @@ function openLog(g){
 
 /* ---------- export ---------- */
 function doExport(){
-  const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal},null,1);
+  const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,ngroups:S.ngroups,todos:S.todos},null,1);
   try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download="daftar-backup-"+todayK()+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}catch(e){}
   S.lastBackup=new Date().toISOString();saveConfig();render();
 }
@@ -1430,6 +1479,8 @@ async function applyImport(o){
   if(o.days&&typeof o.days==="object")Object.keys(o.days).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;const v=clone(o.days[k]),cur=S.days[k]||{};
     S.days[k]=Object.assign({},cur,v,{d:k,h:Object.assign({},cur.h||{},v.h||{})});ops.push({path:"days/"+k,data:S.days[k]})});
   if(o.goals&&typeof o.goals==="object")Object.keys(o.goals).forEach(id=>{S.goals[id]=clone(o.goals[id]);ops.push({path:"goals/"+id,data:S.goals[id]})});
+  if(Array.isArray(o.ngroups)){const ids=new Set(S.ngroups.map(g=>g.id));o.ngroups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.ngroups.push(clone(g))});ops[0].data=cfgDoc()}
+  if(o.todos&&typeof o.todos==="object")Object.keys(o.todos).forEach(id=>{S.todos[id]=clone(o.todos[id]);ops.push({path:"todos/"+id,data:S.todos[id]})});
   if(o.notes&&typeof o.notes==="object")Object.keys(o.notes).forEach(id=>{const n=clone(o.notes[id]);if(!(n.title||"").trim()&&!(n.body||"").trim())return;S.notes[id]=n;ops.push({path:"notes/"+id,data:n})});
   if(S.mode==="local"){persistLocal();return}
   if(DB&&DB.batch){pendingN++;setSync();try{await DB.batch(ops)}finally{pendingN--;setSync()}}
@@ -1468,8 +1519,12 @@ document.addEventListener("click",e=>{
     case "editGroup":{const g=S.groups.find(x=>x.id===id);if(g)openGroup(g);break}
     case "grMove":{const i=S.groups.findIndex(x=>x.id===id),j=i+(+b.dataset.n);if(i>=0&&j>=0&&j<S.groups.length){const t2=S.groups[i];S.groups[i]=S.groups[j];S.groups[j]=t2;saveConfig();card.innerHTML=groupForm(S.groups[j]);render()}break}
     case "grDel":{if(confirmArm[a+id]){S.groups=S.groups.filter(x=>x.id!==id);S.habits.forEach(h=>{if(h.g===id)delete h.g});saveConfig();closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف المجموعة"},4000)}break}
-    case "ntNew":{if(S.nt.sel)cleanupNote(S.nt.sel);const nid=uid(),now=new Date().toISOString();S.notes[nid]={id:nid,title:"",body:"",created:now,updated:now};S.nt.sel=nid;render(true);const ti=$("#nt-title");if(ti)ti.focus();break}
+    case "ntNew":{if(S.nt.sel)cleanupNote(S.nt.sel);const nid=uid(),now=new Date().toISOString();S.notes[nid]={id:nid,title:"",body:"",created:now,updated:now};if(S.nt.g&&S.nt.g!=="_none"&&ngName(S.nt.g))S.notes[nid].g=S.nt.g;S.nt.sel=nid;render(true);const ti=$("#nt-title");if(ti)ti.focus();break}
     case "ntOpen":openNote(id);break;
+    case "ngPick":S.nt.g=b.dataset.g;render();break;
+    case "ngNew":openNgroup(null);break;
+    case "ngEdit":{const g=S.ngroups.find(x=>x.id===id);if(g)openNgroup(g);break}
+    case "ngDel":{if(confirmArm[a+id]){S.ngroups=S.ngroups.filter(x=>x.id!==id);Object.values(S.notes).forEach(n=>{if(n.g===id){delete n.g;saveNote(n.id)}});if(S.nt.g===id)S.nt.g="";saveConfig();closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف المجموعة"},4000)}break}
     case "ntBack":cleanupNote(S.nt.sel);S.nt.sel=null;render(true);break;
     case "ntPin":{const n=S.notes[S.nt.sel];if(n){n.pinned=!n.pinned;n.saved=true;saveNote(n.id);render(true)}break}
     case "ntDel":{const nid=S.nt.sel;if(!nid)break;if(confirmArm[a+nid]){delete S.notes[nid];saveNote(nid);S.nt.sel=null;delete confirmArm[a+nid];render(true)}else{confirmArm[a+nid]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+nid];if(b.isConnected)b.textContent="حذف الفكرة"},4000)}break}
@@ -1486,11 +1541,13 @@ document.addEventListener("click",e=>{
     case "signOut":closeSheet();flushAll();if(FB)FB.UM.signOut(FB.auth);break;
     case "authUp":doAuth("up");break;
     case "authReset":doAuth("reset");break;
-    case "localOnly":try{localStorage.setItem("dt-localonly","1")}catch(er){}S.mode="local";loadLocal();setSync();render(true);break;
+    case "localOnly":try{localStorage.setItem("dt-localonly","1")}catch(er){}S.mode="local";loadLocal();migrateX();setSync();render(true);break;
     case "syncSetup":try{localStorage.removeItem("dt-localonly")}catch(er){}location.reload();break;
     case "resetCfg":{if(confirmArm[a]){try{localStorage.removeItem("dt-fbcfg")}catch(er){}location.reload()}else{confirmArm[a]=1;b.textContent="اضغط مرة أخرى للتأكيد";setTimeout(()=>{delete confirmArm[a]},4000)}break}
     case "impGo":{if(!IMP)break;b.disabled=true;b.textContent="جارٍ الاستيراد…";applyImport(IMP).then(()=>{IMP=null;closeSheet();render(true)}).catch(er=>{const e2=$("#imp-err2");if(e2){e2.textContent="تعذّر الاستيراد: "+((er&&er.code)||"خطأ");e2.hidden=false}b.disabled=false;b.textContent="استيراد"});break}
-    case "xtoggle":{const d=ensureDay(S.cur),x=(d.x||[]).find(q=>q.id===id);if(x){x.done=!x.done;saveDay(S.cur);render()}break}
+    case "tdo":{const t=S.todos[id];if(t){t.doneAt=t.doneAt?null:S.cur;saveTodo(id);render()}break}
+    case "tdAll":TD_ALL=!TD_ALL;render();break;
+    case "tdel":{if(confirmArm[a+id]){delete S.todos[id];saveTodo(id);delete confirmArm[a+id];render()}else{confirmArm[a+id]=1;b.textContent="؟";b.classList.add("arm");setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected){b.textContent="×";b.classList.remove("arm")}},3000)}break}
     case "xdel":{const d=ensureDay(S.cur);d.x=(d.x||[]).filter(q=>q.id!==id);if(!d.x.length)delete d.x;saveDay(S.cur);render();break}
     case "tkRange":S.tk.range=b.dataset.r;S.tk.sel=null;render();break;
     case "wtRange":S.wt.range=b.dataset.r;render();break;
@@ -1514,10 +1571,10 @@ document.addEventListener("submit",e=>{
     if(!c){S.setupErr="لم أجد apiKey و projectId و appId في النص. انسخ الكتلة كاملة.";render(true);return}
     try{localStorage.setItem("dt-fbcfg",JSON.stringify(c))}catch(er){}location.reload();return}
   if(e.target.id==="xadd"){e.preventDefault();
-    const nm=$("#xa-name"),pt=$("#xa-pts"),err=$("#xa-err"),name=(nm.value||"").trim(),p=parseInt(pt.value,10);
+    const nm=$("#xa-name"),pt=$("#xa-pts"),err=$("#xa-err"),name=(nm.value||"").trim(),p=pt.value===""?0:parseInt(pt.value,10);
     if(!name){err.textContent="اكتب اسم المهمة.";err.hidden=false;nm.focus();return}
-    if(!Number.isFinite(p)||p<1||p>1000){err.textContent="النقاط رقم صحيح من 1 إلى 1000.";err.hidden=false;pt.focus();return}
-    const d=ensureDay(S.cur);if(!d.x)d.x=[];d.x.push({id:uid(),name:name,pts:p,done:false});saveDay(S.cur);render(true);
+    if(!Number.isFinite(p)||p<0||p>1000){err.textContent="النقاط رقم صحيح من 0 إلى 1000.";err.hidden=false;pt.focus();return}
+    const tid=uid();S.todos[tid]={id:tid,name:name,pts:p,created:new Date().toISOString(),doneAt:null};saveTodo(tid);render(true);
     const n2=$("#xa-name");if(n2)n2.focus();return}
   if(e.target.id==="wgform"){e.preventDefault();const v=parseFloat($("#wg-v").value);if(!Number.isFinite(v)||v<20||v>400){S.wt.msg="أدخل الهدف رقماً بين 20 و 400 كغم.";render(true);return}S.wgoal=Math.round(v*10)/10;S.wt.msg="";saveConfig();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
   if(e.target.id==="wform"){e.preventDefault();
@@ -1535,6 +1592,7 @@ document.addEventListener("change",e=>{
   if(e.target.name==="kind"&&e.target.closest("#habit-form")){const bx=$("#hf-qbox");if(bx)bx.hidden=e.target.value!=="q";return}
   if(e.target.name==="fr"&&e.target.closest("#habit-form")){const w=e.target.value==="wk";$("#hf-daysbox").hidden=w;$("#hf-wkbox").hidden=!w;return}
   if(e.target.name==="qm"&&e.target.closest("#habit-form")){const hp=$("#hf-qhelp");if(hp)hp.textContent=e.target.value==="max"?"نقاط كاملة إذا بقيت تحت الحد، وتنقص بالنسبة كلما تجاوزته حتى تصبح صفراً عند ضعف الحد.":"النقاط بنسبة ما أنجزته من الهدف: نصف الهدف يعطي نصف النقاط.";return}
+  if(e.target.id==="nt-g"){const n=S.notes[S.nt.sel];if(n){if(e.target.value)n.g=e.target.value;else delete n.g;n.saved=true;n.updated=new Date().toISOString();saveNote(n.id);drawNotesList()}return}
   if(e.target.id==="hf-g"){const ni=$("#hf-gnew");if(ni){ni.hidden=e.target.value!=="__new";if(!ni.hidden)ni.focus()}return}
   if(e.target.id==="wf-d"){const k=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&k<=todayK()){S.wt.sel=k;S.wt.msg="";e.target.blur();render(true)}return}
   if(e.target.id==="me-pick"){const k=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&k<=todayK()){S.mem.sel=k;if(k<memRangeStart())S.mem.range="all";e.target.blur();render(true)}}
