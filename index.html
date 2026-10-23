@@ -885,7 +885,7 @@ function vToday(){
         '<div class="gbar"><i style="width:'+(gs.max?Math.round(Math.min(1,gs.got/gs.max)*100):0)+'%"></i></div>'+
         (closed?"":vis.length?'<div class="hlist">'+vis.map(x=>taskRow(x,k)).join("")+'</div>':'<p class="muted small" style="margin:0">'+(items.length?"كل مهام هذه المجموعة منجزة.":"لا مهام في هذه المجموعة بعد.")+'</p>')+'</div>'}).join("");
     const anyOff=live.some(x=>!isSched(x,k)&&!isWk(x));
-    main=summary+weekSpark(k)+'<section class="sec"><div class="sec-h" style="flex-wrap:wrap"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="hideDone" aria-pressed="'+HIDE_DONE+'">'+(HIDE_DONE?"إظهار المنجز"+(nHidden?" ("+nHidden+")":""):"إخفاء المنجز")+'</button><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div><div class="tl">'+blocks+'</div>'+
+    main=summary+'<section class="sec"><div class="sec-h" style="flex-wrap:wrap"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="hideDone" aria-pressed="'+HIDE_DONE+'">'+(HIDE_DONE?"إظهار المنجز"+(nHidden?" ("+nHidden+")":""):"إخفاء المنجز")+'</button><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div><div class="tl">'+blocks+'</div>'+
       (anyOff&&!off?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'</section>';
   }
   const side=todoPanel(k);
