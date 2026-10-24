@@ -823,16 +823,20 @@ async function init(){
     userEmail=user.email||"";startDB(mkDB(M,fs,user.uid));
   });
 }
-const AUTH_ERR={"auth/invalid-credential":"البريد أو كلمة المرور غير صحيحة.","auth/wrong-password":"كلمة المرور غير صحيحة.","auth/user-not-found":"لا يوجد حساب بهذا البريد. اضغط «إنشاء حساب» أولاً.",
+const AUTH_ERR={"auth/invalid-credential":"البريد أو كلمة المرور غير صحيحة. إن لم يكن عندك حساب بعد، اضغط «أنشئ حساباً جديداً».","auth/password-does-not-meet-requirements":"كلمة المرور لا تحقق شروط المشروع.","auth/wrong-password":"كلمة المرور غير صحيحة.","auth/user-not-found":"لا يوجد حساب بهذا البريد. اضغط «إنشاء حساب» أولاً.",
   "auth/email-already-in-use":"هذا البريد مسجّل مسبقاً. اضغط «دخول».","auth/weak-password":"كلمة المرور قصيرة، استخدم 6 أحرف على الأقل.","auth/invalid-email":"صيغة البريد غير صحيحة.",
   "auth/network-request-failed":"لا يوجد اتصال بالإنترنت.","auth/too-many-requests":"محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة.","auth/operation-not-allowed":"تسجيل الدخول بالبريد غير مفعّل في المشروع. راجع الخطوة الثانية من الإعداد.",
   "auth/admin-restricted-operation":"إنشاء الحسابات معطّل في المشروع."};
+S.authMode="in";S.authMail="";
 function authHTML(){
-  return '<section class="panel sec gate"><h2>تسجيل الدخول</h2><p class="muted small" style="margin:0">ادخل بالبريد وكلمة المرور نفسيهما على كل أجهزتك لتتزامن بياناتك. في أول مرة اضغط «إنشاء حساب».</p>'+
-  '<form id="auth-form" class="f" autocomplete="on"><div class="fld"><label for="au-mail">البريد</label><input id="au-mail" class="ltr" type="email" autocomplete="username" required></div>'+
-  '<div class="fld"><label for="au-pass">كلمة المرور</label><input id="au-pass" class="ltr" type="password" autocomplete="current-password" minlength="6" required></div>'+
+  const up=S.authMode==="up";
+  return '<section class="panel sec gate"><h2>'+(up?"إنشاء حساب جديد":"تسجيل الدخول")+'</h2><p class="muted small" style="margin:0">'+(up?"اكتب بريدك واختر كلمة مرور من 6 أحرف أو أكثر. بعدها تدخل بنفس البريد وكلمة المرور على أي جهاز.":"ادخل بالبريد وكلمة المرور نفسيهما على كل أجهزتك لتتزامن بياناتك.")+'</p>'+
+  '<form id="auth-form" class="f" autocomplete="on"><div class="fld"><label for="au-mail">البريد</label><input id="au-mail" class="ltr" type="email" autocomplete="'+(up?"email":"username")+'" autocapitalize="none" autocorrect="off" spellcheck="false" required value="'+esc(S.authMail)+'"></div>'+
+  '<div class="fld"><label for="au-pass">كلمة المرور</label><input id="au-pass" class="ltr" type="password" autocomplete="'+(up?"new-password":"current-password")+'" minlength="6" required></div>'+
+  (up?'<div class="fld"><label for="au-pass2">أعد كتابة كلمة المرور</label><input id="au-pass2" class="ltr" type="password" autocomplete="new-password" minlength="6" required></div>':"")+
   '<p class="err" id="au-err"'+(S.authMsg?"":" hidden")+'>'+esc(S.authMsg||"")+'</p>'+
-  '<div class="row"><button class="btn pri" type="submit" data-mode="in">دخول</button><button class="btn" type="button" data-act="authUp">إنشاء حساب</button><button class="chip-link" type="button" data-act="authReset">نسيت كلمة المرور</button></div></form></section>';
+  '<button class="btn pri" type="submit">'+(up?"إنشاء الحساب":"دخول")+'</button>'+
+  '<div class="row" style="gap:18px">'+(up?'<button class="chip-link" type="button" data-act="authMode" data-m="in">عندي حساب، رجوع للدخول</button>':'<button class="chip-link" type="button" data-act="authMode" data-m="up">ليس عندك حساب؟ أنشئ حساباً جديداً</button><button class="chip-link" type="button" data-act="authReset">نسيت كلمة المرور</button>')+'</div></form></section>';
 }
 function setupHTML(){
   return '<section class="panel sec gate"><h2>إعداد المزامنة</h2>'+
@@ -842,14 +846,16 @@ function setupHTML(){
   '<div class="row"><button class="btn pri" type="submit">حفظ ومتابعة</button><button class="btn" type="button" data-act="localOnly">استخدام بدون مزامنة</button></div></form></section>';
 }
 async function doAuth(kind){
-  const mail=($("#au-mail")||{}).value||"",pass=($("#au-pass")||{}).value||"";S.authMsg="";
+  const mail=($("#au-mail")||{}).value||"",pass=($("#au-pass")||{}).value||"",pass2=($("#au-pass2")||{}).value||"";S.authMsg="";S.authMail=mail.trim();
   if(!FB)return;
   try{
     if(kind==="reset"){if(!mail){S.authMsg="اكتب بريدك أولاً.";render(true);return}await FB.UM.sendPasswordResetEmail(FB.auth,mail.trim());S.authMsg="أرسلنا رابط تغيير كلمة المرور إلى بريدك.";render(true);return}
     if(!mail||pass.length<6){S.authMsg="اكتب البريد وكلمة مرور من 6 أحرف على الأقل.";render(true);return}
+    if(kind==="up"&&pass!==pass2){S.authMsg="كلمتا المرور غير متطابقتين.";render(true);return}
+    const btn=$("#auth-form button[type=submit]");if(btn){btn.disabled=true;btn.textContent=kind==="up"?"جارٍ إنشاء الحساب…":"جارٍ الدخول…"}const er=$("#au-err");if(er)er.hidden=true;
     if(kind==="up")await FB.UM.createUserWithEmailAndPassword(FB.auth,mail.trim(),pass);
     else await FB.UM.signInWithEmailAndPassword(FB.auth,mail.trim(),pass);
-  }catch(e){S.authMsg=AUTH_ERR[e&&e.code]||("تعذّر تسجيل الدخول ("+((e&&e.code)||"خطأ غير معروف")+").");render(true);const m=$("#au-mail");if(m)m.value=mail}
+  }catch(e){const c=(e&&e.code)||"خطأ غير معروف";S.authMsg=(AUTH_ERR[c]||"تعذّر "+(kind==="up"?"إنشاء الحساب":"تسجيل الدخول")+".")+" ["+c+"]";render(true)}
 }
 
 /* ---------- habit math ---------- */
@@ -2866,6 +2872,7 @@ document.addEventListener("click",e=>{
     case "settings":openSheet(settingsHTML(),settingsSubmit);break;
     case "signOut":closeSheet();flushAll();if(FB)FB.UM.signOut(FB.auth);break;
     case "authUp":doAuth("up");break;
+    case "authMode":{const m=$("#au-mail");if(m)S.authMail=m.value.trim();S.authMode=b.dataset.m==="up"?"up":"in";S.authMsg="";render(true);const f=$(S.authMail?"#au-pass":"#au-mail");if(f)f.focus();break}
     case "authReset":doAuth("reset");break;
     case "localOnly":try{localStorage.setItem("dt-localonly","1")}catch(er){}S.mode="local";loadLocal();migrateX();setSync();render(true);break;
     case "syncSetup":try{localStorage.removeItem("dt-localonly")}catch(er){}location.reload();break;
@@ -2932,7 +2939,7 @@ document.addEventListener("click",e=>{
 document.addEventListener("submit",e=>{
   if(e.target.closest&&e.target.closest("#sheet"))return;
   lastKeep=0;
-  if(e.target.id==="auth-form"){e.preventDefault();doAuth("in");return}
+  if(e.target.id==="auth-form"){e.preventDefault();doAuth(S.authMode==="up"?"up":"in");return}
   if(e.target.id==="setup-form"){e.preventDefault();const c=parseCfg($("#su-cfg").value);
     if(!c){S.setupErr="لم أجد apiKey و projectId و appId في النص. انسخ الكتلة كاملة.";render(true);return}
     try{localStorage.setItem("dt-fbcfg",JSON.stringify(c))}catch(er){}location.reload();return}
@@ -3019,7 +3026,7 @@ document.addEventListener("input",e=>{
     if(e.target.value===""){delete d.sleep}else if(Number.isFinite(v)&&v>=0&&v<=16){d.sleep=Math.round(v*4)/4}else return;
     saveDay(S.cur)}
 });
-let rz=null;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{if(S.tab!=="today")render()},200)});
+let rz=null;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{if(S.tab!=="today"&&(S.mode==="db"||S.mode==="local"))render()},200)});
 // roll the date over at midnight if the page stays open
 let lastToday=todayK();setInterval(()=>{const t=todayK();if(t!==lastToday){if(S.cur===lastToday)S.cur=t;lastToday=t;render()}},60000);
 
