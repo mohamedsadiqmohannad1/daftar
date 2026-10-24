@@ -589,6 +589,7 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
   --g1:#ff7aab;--g2:#f0a566;--g3:#5fcf93;--g4:#c39af0;--g5:#ff7d8a;--g6:#7fb6f0;--g7:#e2c45a;--g8:#f08ac9;
   --sblue:#ff7aab;--sblue-bg:#45192c;--sred:#ff7d8a;--sred-bg:#46181f;--sgreen:#48c983;--sgreen-bg:#133024;--snote:#3d3014;--snote-ink:#f2d27a;--spill:#352029;color-scheme:dark}
 :root[data-pal="pink"] .brand::after{content:" ♡";color:var(--accent);font-family:var(--f-body);font-size:.8em}
+.hrow.gyrow:disabled{cursor:default;opacity:1}.hrow.gyrow .pts{font-size:13px}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -1804,14 +1805,12 @@ const MEALS=["الفطور","الغداء","العشاء","وجبات خفيفة
 const KCAL_PER_KG=7700; // energy per kg of body-weight change, the usual approximation
 // net walking cost per kg per km at a moderate pace: Compendium 2024 code 17190 (2.8 to 3.4 mph) = 3.8 MET, minus 1 MET of rest, at 3.1 mph
 const WALK_NET=(3.8-1)*3.5*60*5/1000/(3.1*1.609344);
+// step length: 41.2 km over 62,016 steps from Mo's own phone readings = 0.664 m; editable in settings
+const STRIDE_DEF=0.664;
+const strideM=()=>{const v=+NUT().stride;return v>=0.4&&v<=1.2?v:STRIDE_DEF};
 // MET values from the 2024 Adult Compendium of Physical Activities (code, MET, name)
 const ACTS=[
- ["المشي والركض",[["17170",3.0,"مشي 4 كم/س"],["17190",3.8,"مشي 4.5 إلى 5.5 كم/س"],["17200",4.8,"مشي سريع 5.6 إلى 6.3 كم/س"],["17220",5.5,"مشي سريع جداً 6.4 إلى 7.1 كم/س"],["17034",5.3,"مشي صعوداً بميل 1 إلى 5%"],["17035",7.0,"مشي صعوداً بميل 6 إلى 10%"],["17082",5.3,"مشي في الطبيعة (هايكنغ)"],["17131",6.8,"صعود الدرج"],
-   ["12020",7.5,"هرولة بالسرعة التي تريحك"],["12028",6.5,"ركض 6.4 إلى 6.8 كم/س"],["12030",8.5,"ركض 8 إلى 8.4 كم/س"],["12045",9.0,"ركض 8.9 إلى 9.3 كم/س"],["12050",9.3,"ركض 9.7 إلى 10.1 كم/س"],["12060",10.5,"ركض 10.8 كم/س"],["12070",11.0,"ركض 11.3 كم/س"],["12080",11.8,"ركض 12.1 كم/س"],["12090",12.0,"ركض 12.9 كم/س"],["12110",13.0,"ركض 14.5 كم/س"],["12120",14.8,"ركض 16.1 كم/س"]]],
- ["السباحة",[["18240",5.8,"سباحة حرة بطيئة، ترفيهية"],["18290",8.0,"سباحة حرة متوسطة، نحو 46 متراً في الدقيقة"],["18280",10.5,"سباحة حرة سريعة، نحو 69 متراً في الدقيقة"],["18265",5.3,"سباحة صدر ترفيهية"],["18260",10.3,"سباحة صدر، تدريب"],["18255",4.8,"سباحة ظهر ترفيهية"],["18250",9.5,"سباحة ظهر، تدريب"],["18270",13.8,"سباحة فراشة"],["18310",6.0,"سباحة حرة في المسبح بلا أشواط"],["18350",3.5,"طفو في الماء، جهد متوسط"],["18355",5.5,"تمارين هوائية في الماء"]]],
- ["الدراجة",[["01200",6.8,"دراجة ثابتة، عام"],["01214",4.0,"دراجة ثابتة 50 واط"],["01220",6.0,"دراجة ثابتة 90 إلى 100 واط"],["01228",8.0,"دراجة ثابتة 126 إلى 150 واط"],["01232",10.3,"دراجة ثابتة 151 إلى 199 واط"],["01270",9.0,"صف دراجات (سبين)"],["01020",6.8,"دراجة 16 إلى 19 كم/س"],["01030",8.0,"دراجة 19 إلى 22 كم/س"],["01040",10.0,"دراجة 22.5 إلى 25.6 كم/س"]]],
- ["أجهزة وتمارين",[["02048",5.0,"إليبتكال، جهد متوسط"],["02049",9.0,"إليبتكال، جهد شديد"],["02071",5.0,"جهاز تجديف أقل من 100 واط"],["02072",7.5,"جهاز تجديف 100 إلى 149 واط"],["02073",11.0,"جهاز تجديف 150 إلى 199 واط"],["02065",9.3,"جهاز الدرج"],["02068",11.0,"حبل القفز"],["02210",7.0,"تمارين متقطعة عالية الشدة، جهد متوسط"],["02214",11.0,"تمارين متقطعة شديدة جداً (بيربي، تاباتا)"],["02035",5.0,"تمارين دائرية، جهد متوسط"],["02040",7.5,"تمارين دائرية شديدة"],["02022",3.8,"تمارين وزن الجسم، جهد متوسط"],["02020",7.5,"تمارين وزن الجسم، جهد شديد"],["02050",6.0,"أوزان، جهد شديد (خارج سجل الجم)"],["02054",3.5,"أوزان، تمارين متعددة 8 إلى 15 عدة"],["02175",2.3,"يوغا"],["02101",2.3,"تمدد خفيف"]]],
- ["الرياضات",[["15610",7.0,"كرة قدم ترفيهية"],["15605",9.5,"كرة قدم تنافسية"],["15055",7.5,"كرة سلة"],["15040",8.0,"مباراة كرة سلة"],["15710",4.0,"كرة طائرة"],["15711",6.0,"كرة طائرة تنافسية في صالة"],["15690",8.0,"تنس فردي"],["15680",6.0,"تنس زوجي"],["15660",4.0,"تنس طاولة"],["15030",5.5,"ريشة طائرة ترفيهية"],["15025",9.0,"ريشة طائرة، مباراة"],["15110",5.8,"ملاكمة على الكيس"],["15120",7.8,"ملاكمة، نزال تدريبي"],["15430",10.3,"فنون قتالية بإيقاع متوسط"],["15652",7.3,"سكواش"]]]
+ ["السباحة",[["18240",5.8,"سباحة حرة بطيئة، ترفيهية"],["18290",8.0,"سباحة حرة متوسطة، نحو 46 متراً في الدقيقة"],["18280",10.5,"سباحة حرة سريعة، نحو 69 متراً في الدقيقة"],["18265",5.3,"سباحة صدر ترفيهية"],["18260",10.3,"سباحة صدر، تدريب"],["18255",4.8,"سباحة ظهر ترفيهية"],["18250",9.5,"سباحة ظهر، تدريب"],["18270",13.8,"سباحة فراشة"],["18310",6.0,"سباحة حرة في المسبح بلا أشواط"],["18350",3.5,"طفو في الماء، جهد متوسط"],["18355",5.5,"تمارين هوائية في الماء"]]]
 ];
 const ACT_BY={};ACTS.forEach(g=>g[1].forEach(a=>{ACT_BY[a[0]]=a}));
 
@@ -1823,7 +1822,7 @@ function NUT(){if(!S.nut||typeof S.nut!=="object")S.nut=nutDef();const n=S.nut;[
 function nDay(k){if(!S.nutri[k])S.nutri[k]={d:k,it:[]};const d=S.nutri[k];if(!Array.isArray(d.it))d.it=[];if(!Array.isArray(d.act))d.act=[];d.d=k;return d}
 function saveN(k){
   const d=S.nutri[k];
-  if(d&&!(d.it||[]).length&&!(d.act||[]).length&&!(+d.steps>0)&&!(+d.km>0)&&!d.st){delete S.nutri[k];queueWrite("nutri/"+k,null)}
+  if(d&&!(d.it||[]).length&&!(d.act||[]).length&&!(d.gx||[]).length&&!(+d.steps>0)&&!(+d.km>0)&&!d.st){delete S.nutri[k];queueWrite("nutri/"+k,null)}
   else queueWrite("nutri/"+k,d?JSON.parse(JSON.stringify(d)):null);
   enReset();
 }
@@ -1934,13 +1933,24 @@ function gymMet(w){
   return {met:3.5+2.5*t,r:r,fixed:false}; // between Compendium 02054 (3.5, 8 to 15 reps at varied resistance) and 02050 (6.0, vigorous body building) by closeness to failure
 }
 const netK=(met,min,W,bmr)=>Math.max(0,(met*3.5*W/200-bmr/1440)*min);
+// a gym day picked by hand: average duration and intensity of its last 5 logged sessions, or from its sets and rest times if never logged
+function groupEst(gid,k,W,bmr){
+  const g=findG(gid);if(!g)return null;
+  const hs=doneWos().filter(w=>w.gid===gid&&w.date<=k).slice(0,5);let min,met,src;
+  if(hs.length){min=avg(hs.map(w=>Math.max(0,Math.min(240,(new Date(w.end)-new Date(w.start))/60000))));met=avg(hs.map(w=>gymMet(w).met));src="متوسط آخر "+hs.length+" "+(hs.length===1?"جلسة":"جلسات")+" لهذه المجموعة"}
+  else{const sec=g.ex.reduce((a,e)=>a+(+e.sets||3)*((+e.rest||S.gym.rest)+40),0);min=sec/60;const gm=+NUT().gmet,t=Math.max(0,Math.min(1,(4-TR())/4));met=gm>0?gm:3.5+2.5*t;src="من عدد جولاتها وأوقات الراحة، بلا جلسات سابقة"}
+  return {n:g.name,min:min,met:met,src:src,kc:netK(met,min,W,bmr)};
+}
 function energyOn(k){
   if(EN_C[k])return EN_C[k];
   const p=nProf(),b=bmrOn(k);if(!b)return null;
   const d=S.nutri[k]||{},W=b.W,neat=0.15*b.v;
-  let km=+d.km>0?+d.km:0,est=false;if(!km&&+d.steps>0){km=d.steps*(+p.h/100)*(p.sex==="f"?0.413:0.415)/1000;est=true}
+  const km=+d.steps>0?d.steps*strideM()/1000:0,est=false;
   const stepsK=km*W*WALK_NET;
-  const gym=doneWos().filter(w=>w.date===k).map(w=>{const min=Math.max(0,Math.min(240,(new Date(w.end)-new Date(w.start))/60000)),g=gymMet(w);return {id:w.id,n:w.gname,min:min,met:g.met,r:g.r,fixed:g.fixed,kc:netK(g.met,min,W,b.v)}});
+  const logged=doneWos().filter(w=>w.date===k);
+  const gym=logged.map(w=>{const min=Math.max(0,Math.min(240,(new Date(w.end)-new Date(w.start))/60000)),g=gymMet(w);return {id:w.id,n:w.gname,min:min,met:g.met,r:g.r,fixed:g.fixed,kc:netK(g.met,min,W,b.v)}});
+  const lg=new Set(logged.map(w=>w.gid));
+  (Array.isArray(d.gx)?d.gx:[]).forEach(gid=>{if(lg.has(gid))return;const x=groupEst(gid,k,W,b.v);if(x)gym.push(Object.assign(x,{id:"gx:"+gid,gid:gid,pick:true}))});
   const act=(d.act||[]).map(a=>({id:a.id,n:a.n,min:+a.min||0,met:+a.met||0,c:a.c,kc:+a.kc>0?+a.kc:netK(+a.met||0,+a.min||0,W,b.v),watch:+a.kc>0}));
   const ex=gym.reduce((s,x)=>s+x.kc,0)+act.reduce((s,x)=>s+x.kc,0);
   const sub=b.v+neat+stepsK+ex,total=sub/0.9;
@@ -2043,25 +2053,39 @@ function recentActs(k){
   return Array.from(seen.values()).slice(0,4);
 }
 const actShort=a=>(+a.kc>0?"من الساعة "+Math.round(a.kc)+" سعرة":String(a.n).split("،")[0]+" · "+Math.round(+a.min||0)+" د");
+function lastSwimC(k){const ks=Object.keys(S.nutri).filter(x=>x<k).sort().reverse();for(const x of ks){const a=(S.nutri[x].act||[]).find(q=>ACT_BY[q.c]);if(a)return a.c}return "18240"}
+function swimLine(en,sw){if(!sw)return "اكتب دقائق السباحة الفعلية إن سبحت اليوم.";const x=en&&en.act.find(q=>q.id===sw.id);return x?"= "+L(kc0(x.kc))+" سعرة فوق الراحة.":"السعرات تظهر بعد إعداد الهدف وتسجيل الوزن."}
 function actHTML(k){
-  const d=S.nutri[k]||{},en=energyOn(k),gyms=doneWos().filter(w=>w.date===k);
-  let s='<section class="panel sec"><div class="sec-h"><h2>النشاط</h2>'+(en?'<span class="lbl">'+L(kc0(en.stepsK+en.ex))+' سعرة فوق الراحة</span>':"")+'</div>'+
-    '<div class="two"><div class="fld"><label for="nu-steps">الخطوات</label><input id="nu-steps" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(+d.steps>0?d.steps:"")+'" placeholder="0"></div>'+
-    '<div class="fld"><label for="nu-km">المسافة (كم)</label><input id="nu-km" data-k="'+k+'" class="keep ltr" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="'+(+d.km>0?d.km:"")+'" placeholder="اختياري"></div></div>'+
-    '<span class="lbl" id="nu-stk">'+stepsLine(en)+'</span>';
-  if(gyms.length)s+='<div class="fld"><span class="lbl2">من سجل الجم</span>'+gyms.map(w=>{const g=en&&en.gym.find(x=>x.id===w.id),min=(new Date(w.end)-new Date(w.start))/60000;return '<div class="erow"><span>'+esc(w.gname)+' <span class="lbl">'+Math.round(min)+' دقيقة'+(g?' · '+L(num(g.met,1))+' MET':"")+'</span></span><b class="num">'+(g?L(kc0(g.kc)):"–")+'</b></div>'}).join("")+'</div>';
-  const acts=d.act||[];
-  if(acts.length)s+='<div class="fld"><span class="lbl2">جلسات أخرى</span>'+acts.map((a,i)=>{const x=en&&en.act[i];return '<div class="erow"><span>'+esc(a.n)+' <span class="lbl">'+(+a.kc>0?"من الساعة":Math.round(+a.min||0)+' دقيقة · '+L(num(+a.met,1))+' MET')+'</span></span><span class="row" style="gap:6px;flex-wrap:nowrap"><b class="num">'+(x?L(kc0(x.kc)):"–")+'</b><button class="iconbtn sm2" data-act="nActDel" data-k="'+k+'" data-id="'+a.id+'" aria-label="حذف الجلسة">×</button></span></div>'}).join("")+'</div>';
-  const rec=recentActs(k);
-  s+='<div class="nchips"><button class="btn sm" data-act="nAct" data-k="'+k+'">إضافة جلسة</button>'+rec.map((a,i)=>'<button class="nchip" data-act="nActRep" data-k="'+k+'" data-i="'+i+'">+ '+esc(actShort(a))+'</button>').join("")+'</div>'+
-    (rec.length?'<span class="lbl">الأزرار تكرر جلسة سجلتها سابقاً بنفس المدة.</span>':"")+
+  const d=S.nutri[k]||{},en=energyOn(k),gyms=doneWos().filter(w=>w.date===k),picked=Array.isArray(d.gx)?d.gx:[],lg=new Set(gyms.map(w=>w.gid));
+  let s='<section class="panel sec"><div class="sec-h"><h2>النشاط</h2>'+(en?'<span class="lbl" id="nu-tot">'+L(kc0(en.stepsK+en.ex))+' سعرة فوق الراحة</span>':"")+'</div>';
+  // steps
+  s+='<div class="fld"><label for="nu-steps">الخطوات</label><input id="nu-steps" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(+d.steps>0?d.steps:"")+'" placeholder="0"></div>'+
+    '<span class="lbl" id="nu-stk">'+stepsLine(en,+d.steps||0)+'</span>';
+  // swimming: one fixed entry per day
+  const sw=(d.act||[]).find(a=>a.id==="swim")||null,swc=sw?sw.c:lastSwimC(k);
+  s+='<div class="two" style="margin-top:4px"><div class="fld"><label for="nu-swm">السباحة (دقائق)</label><input id="nu-swm" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(sw?sw.min:"")+'" placeholder="0"></div>'+
+    '<div class="fld"><label for="nu-swc">نوعها</label><select id="nu-swc" data-k="'+k+'" class="sel">'+ACTS[0][1].map(a=>'<option value="'+a[0]+'"'+(a[0]===swc?" selected":"")+'>'+esc(a[2])+'</option>').join("")+'</select></div></div>'+
+    '<span class="lbl" id="nu-swk">'+swimLine(en,sw)+'</span>';
+  (d.act||[]).filter(a=>a.id!=="swim").forEach(a=>{const x=en&&en.act.find(q=>q.id===a.id);s+='<div class="erow"><span>'+esc(a.n)+' <span class="lbl">'+(+a.kc>0?"من الساعة":Math.round(+a.min||0)+' دقيقة')+'</span></span><span class="row" style="gap:6px;flex-wrap:nowrap"><b class="num">'+(x?L(kc0(x.kc)):"–")+'</b><button class="iconbtn sm2" data-act="nActDel" data-k="'+k+'" data-id="'+a.id+'" aria-label="حذف">×</button></span></div>'});
+  // gym: every day group always listed; logged sessions come from the gym log
+  s+='<div class="fld" style="margin-top:4px"><span class="lbl2">التمرين</span><div class="hlist">';
+  const rows=S.gym.groups.map(g=>({id:g.id,n:g.name})).concat(gyms.filter(w=>!findG(w.gid)).map(w=>({id:w.gid||w.id,n:w.gname,orphan:true})));
+  rows.forEach(r=>{
+    const log=gyms.find(w=>w.gid===r.id||(r.orphan&&w.id===r.id)),on=!!log||picked.includes(r.id);
+    let kc=null,sub="";
+    if(log){const g=en&&en.gym.find(x=>x.id===log.id);kc=g?g.kc:null;sub="مسجلة في قسم الجم · "+Math.round((new Date(log.end)-new Date(log.start))/60000)+" دقيقة"}
+    else if(en){const x=on?en.gym.find(q=>q.id==="gx:"+r.id):groupEst(r.id,k,en.W,en.b.v);if(x){kc=x.kc;sub=Math.round(x.min)+" دقيقة تقريباً"}}
+    s+='<button class="hrow gyrow'+(on?" on":"")+'" data-act="nGymT" data-k="'+k+'" data-g="'+esc(r.id)+'"'+(log?" disabled":"")+' aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm"><bdi>'+esc(r.n)+'</bdi></span>'+(sub?'<span class="st">'+sub+'</span>':"")+'</span><span class="pts">'+(kc!=null?L(kc0(kc)):"–")+'</span></button>'});
+  if(!rows.length)s+='<p class="muted small" style="margin:0">لا مجموعات تمارين بعد في قسم الجم.</p>';
+  s+='</div><span class="lbl">علّم المجموعة التي أكملتها. الرقم سعرات الجلسة فوق الراحة، من متوسط آخر جلساتها المسجلة.</span></div>'+
     (!en?'<span class="lbl">السعرات تظهر بعد إعداد الهدف في قسم التغذية وتسجيل وزنك.</span>':"")+'</section>';
   return s;
 }
-function stepsLine(en){
-  if(!en)return "تُحسب سعرات المشي بعد إعداد الهدف وتسجيل الوزن.";
-  if(!(en.km>0))return "أدخل خطوات اليوم من تطبيق الصحة في هاتفك. المسافة التي يعرضها التطبيق أدق من الخطوات إن أدخلتها.";
-  return "نحو "+L(num(en.km,1))+" كم"+(en.est?" مقدّرة من طولك":"")+" = "+L(kc0(en.stepsK))+" سعرة فوق الراحة.";
+function stepsLine(en,steps){
+  const st=strideM();
+  if(!(steps>0))return "أدخل خطوات اليوم من تطبيق الصحة في هاتفك. المسافة تُحسب بطول خطوتك "+L(num(st*100,1))+" سم.";
+  const km=steps*st/1000;
+  return "نحو "+L(num(km,1))+" كم بطول خطوتك "+L(num(st*100,1))+" سم"+(en?" = "+L(kc0(en.stepsK))+" سعرة فوق الراحة":"")+".";
 }
 
 /* ---------- nutrition: food sheet ---------- */
@@ -2241,16 +2265,13 @@ function openSaveMeal(k,m){
   });
 }
 function openAct(k){
-  openSheet('<h2>إضافة نشاط</h2><form class="f" id="ac-form" autocomplete="off"><div class="fld"><label for="ac-c">النشاط</label><select id="ac-c" name="c" class="sel">'+ACTS.map(g=>'<optgroup label="'+g[0]+'">'+g[1].map(a=>'<option value="'+a[0]+'">'+esc(a[2])+' · '+a[1]+' MET</option>').join("")+'</optgroup>').join("")+'<option value="watch">سعرات نشطة من الساعة الذكية</option></select></div>'+
-    '<div class="fld" id="ac-minbox"><label for="ac-min">المدة بالدقائق</label><input id="ac-min" name="min" class="ltr" type="number" inputmode="numeric" min="1" max="600" step="1" placeholder="30"></div>'+
-    '<div class="fld" id="ac-kbox" hidden><label for="ac-k">السعرات النشطة كما تعرضها الساعة</label><input id="ac-k" name="k" class="ltr" type="number" inputmode="numeric" min="1" max="5000" step="1"><span class="lbl">السعرات النشطة في الساعة تحسب فوق الراحة، فتُضاف كما هي.</span></div>'+
-    '<p class="lbl" style="margin:0">قيم MET من دليل الأنشطة البدنية للبالغين 2024. المشي والركض الذي يحسبه هاتفك ضمن الخطوات لا تضفه هنا حتى لا يُحسب مرتين. جلسات الجم تُحسب تلقائياً من سجلها.</p>'+
+  openSheet('<h2>إضافة سباحة</h2><form class="f" id="ac-form" autocomplete="off"><div class="fld"><label for="ac-c">النوع</label><select id="ac-c" name="c" class="sel">'+ACTS[0][1].map(a=>'<option value="'+a[0]+'">'+esc(a[2])+' · '+a[1]+' MET</option>').join("")+'</select></div>'+
+    '<div class="fld"><label for="ac-min">المدة بالدقائق</label><input id="ac-min" name="min" class="ltr" type="number" inputmode="numeric" min="1" max="600" step="1" placeholder="30"></div>'+
+    '<p class="lbl" style="margin:0">قيم MET من دليل الأنشطة البدنية للبالغين 2024. احسب وقت السباحة الفعلي بدون فترات الوقوف الطويلة.</p>'+
     '<p class="err" id="ac-err" hidden></p><div class="row"><button class="btn pri" type="submit">إضافة</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{
     const c=String(fd.get("c")||""),err=$("#ac-err"),bad=m=>{err.textContent=m;err.hidden=false};
-    const d=nDay(k);
-    if(c==="watch"){const kc=parseFloat(fd.get("k"));if(!(kc>0&&kc<=5000))return bad("أدخل السعرات رقماً بين 1 و 5000.");d.act.push({id:uid(),c:"watch",n:"نشاط من الساعة الذكية",kc:Math.round(kc)})}
-    else{const a=ACT_BY[c],mn=parseFloat(fd.get("min"));if(!a)return bad("اختر نشاطاً.");if(!(mn>0&&mn<=600))return bad("المدة من 1 إلى 600 دقيقة.");d.act.push({id:uid(),c:a[0],n:a[2],met:a[1],min:Math.round(mn)})}
-    saveN(k);closeSheet();render();
+    const a=ACT_BY[c],mn=parseFloat(fd.get("min"));if(!a)return bad("اختر النوع.");if(!(mn>0&&mn<=600))return bad("المدة من 1 إلى 600 دقيقة.");
+    const d=nDay(k);d.act.push({id:uid(),c:a[0],n:a[2],met:a[1],min:Math.round(mn)});saveN(k);closeSheet();render();
   });
 }
 function energyHTML(k){
@@ -2260,8 +2281,8 @@ function energyHTML(k){
   return '<h2>تفاصيل الحرق · '+esc(fShort(k))+'</h2><div class="f"><div class="entries" style="max-height:none">'+
     row("الأيض الأساسي",L(kc0(e.b.v)),(e.b.m==="katch"?"معادلة كاتش ماكاردل من كتلتك الخالية من الدهون "+L(num(e.b.lbm,1))+" كغم (دهون "+L(num(e.b.c.bf,1)+"%")+"، قياس "+esc(fShort(e.b.c.k))+")":"معادلة ميفلين سان جيور، لعدم وجود قياس دهون")+" · وزن "+L(num(e.W,1))+" · عمر "+e.b.age)+
     row("النشاط العام في اليوم",L(kc0(e.neat)),"15% من الأيض الأساسي، تقدير أولي تصححه المعايرة")+
-    row("المشي",L(kc0(e.stepsK)),e.km>0?L(num(e.km,1))+" كم"+(e.est?" من "+e.steps.toLocaleString("en")+" خطوة":""):"لم تُسجل خطوات")+
-    e.gym.map(g=>row(esc(g.n),L(kc0(g.kc)),Math.round(g.min)+" دقيقة · "+L(num(g.met,1))+" MET"+(g.fixed?" (قيمة ثابتة من الإعدادات)":g.r!=null?" من متوسط عدات باقية "+L(num(g.r,1)):""))).join("")+
+    row("المشي",L(kc0(e.stepsK)),e.km>0?e.steps.toLocaleString("en")+" خطوة × "+L(num(strideM()*100,1))+" سم = "+L(num(e.km,1))+" كم":"لم تُسجل خطوات")+
+    e.gym.map(g=>row("<bdi>"+esc(g.n)+"</bdi>",L(kc0(g.kc)),Math.round(g.min)+" دقيقة · "+L(num(g.met,1))+" MET"+(g.pick?" · "+esc(g.src):g.fixed?" (قيمة ثابتة من الإعدادات)":g.r!=null?" من متوسط عدات باقية "+L(num(g.r,1)):""))).join("")+
     e.act.map(a=>row(esc(a.n),L(kc0(a.kc)),a.watch?"من الساعة":Math.round(a.min)+" دقيقة · "+L(num(a.met,1))+" MET")).join("")+
     row("هضم الطعام",L(kc0(e.tef)),"نحو 10% من المجموع")+
     row("<b>المجموع بالمعادلة</b>",L(kc0(e.total)))+
@@ -2288,6 +2309,7 @@ function vNutSet(){
     '<span class="lbl">الباقي من السعرات يذهب للكربوهيدرات. البروتين بين 1.6 و 2.2 غ لكل كغم هو المدى الذي تذكره الدراسات لمن يتمرن بالأوزان.</span>'+
     '<div class="fld"><span class="lbl2">طريقة الهدف اليومي</span><div class="seg2"><label><input type="radio" name="tmode" value="avg"'+(N.tmode!=="day"?" checked":"")+'><span>ثابت من متوسط أسبوعين</span></label><label><input type="radio" name="tmode" value="day"'+(N.tmode==="day"?" checked":"")+'><span>يتغير مع نشاط اليوم</span></label></div>'+
       '<span class="lbl">الثابت يعطيك رقماً واحداً كل يوم ويوزع حرق تمارينك على الأسبوع. المتغير يرفع الهدف في يوم التمرين ويخفضه في يوم الراحة.</span></div>'+
+    '<div class="fld"><label for="np-st">طول خطوتك (سم)</label><input id="np-st" name="stride" class="ltr" type="number" inputmode="decimal" min="40" max="120" step="0.1" value="'+num(strideM()*100,1)+'" style="max-width:160px"><span class="lbl">القيمة الافتراضية 66.4 سم محسوبة من 7 قراءات من هاتفك: 41.2 كم في 62,016 خطوة. لتحديثها اقسم مسافة يوم على خطواته من تطبيق الصحة.</span></div>'+
     '<div class="fld"><label for="np-gm">شدة جلسة الجم (MET)</label><input id="np-gm" name="gmet" class="ltr" type="number" inputmode="decimal" min="0" max="9" step="0.1" value="'+(+N.gmet>0?N.gmet:"")+'" placeholder="تلقائي من العدات الباقية" style="max-width:240px"><span class="lbl">اتركه فارغاً ليُحسب لكل جلسة: 6 MET إذا وصلت للفشل، وتنخفض حتى 3.5 كلما بقيت عدات أكثر.</span></div>'+
     '<p class="err" id="np-err"'+(S.nu.msg?"":" hidden")+'>'+esc(S.nu.msg||"")+'</p><div class="row"><button class="btn pri" type="submit">حفظ</button></div></form>';
   const k=todayK(),tg=targetOn(k),e=energyOn(k);
@@ -2786,6 +2808,9 @@ document.addEventListener("click",e=>{
     case "nAct":openAct(b.dataset.k||S.nu.cur);break;
     case "nActDel":{const k=b.dataset.k||S.nu.cur,d=S.nutri[k];if(d){d.act=(d.act||[]).filter(a=>a.id!==id);saveN(k);render()}break}
     case "nActRep":{const k=b.dataset.k||S.nu.cur,a2=recentActs(k)[+b.dataset.i];if(a2){const d=nDay(k);d.act.push(Object.assign(JSON.parse(JSON.stringify(a2)),{id:uid()}));saveN(k);render()}break}
+    case "nGymT":{const k=b.dataset.k||S.nu.cur,d=nDay(k),g=b.dataset.g,cur=Array.isArray(d.gx)?d.gx:[];d.gx=cur.includes(g)?cur.filter(x=>x!==g):cur.concat([g]);if(!d.gx.length)delete d.gx;saveN(k);render();break}
+    case "nGym":{const k=b.dataset.k||S.nu.cur,d=nDay(k);d.gx=(Array.isArray(d.gx)?d.gx:[]).filter(x=>x!==b.dataset.g).concat([b.dataset.g]);saveN(k);render();break}
+    case "nGymDel":{const k=b.dataset.k||S.nu.cur,d=S.nutri[k];if(d){d.gx=(d.gx||[]).filter(x=>x!==b.dataset.g);if(!d.gx.length)delete d.gx;saveN(k);render()}break}
     case "bcPick":S.bc.sel=b.dataset.k;S.bc.msg="";render(true);break;
     case "bcDel":{const k=b.dataset.k;if(confirmArm[a+k]){const d=ensureDay(k);["waist","neck","hip","bf"].forEach(x=>delete d[x]);saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف قياس هذا اليوم"},4000)}break}
     case "nEnergy":openSheet(energyHTML(S.nu.view?todayK():S.nu.cur),null);break;
@@ -2843,6 +2868,7 @@ document.addEventListener("submit",e=>{
     if(!(pkg>=0.8&&pkg<=3.5))return bad("البروتين بين 0.8 و 3.5 غ لكل كغم.");
     if(!(fp>=15&&fp<=50))return bad("نسبة الدهون من السعرات بين 15 و 50.");
     if(gm&&!(gm>=2&&gm<=9))return bad("شدة جلسة الجم بين 2 و 9، أو اتركها فارغة.");
+    const stc=parseFloat(fd.get("stride"));if(!(stc>=40&&stc<=120))return bad("طول الخطوة بين 40 و 120 سم.");N.stride=Math.round(stc*10)/1000;
     N.prof={sex:fd.get("sex")==="f"?"f":"m",by:by,h:h};
     N.rate=Number.isFinite(rate)?rate:0;N.pkg=pkg;N.fpct=fp;N.tmode=fd.get("tmode")==="day"?"day":"avg";N.gmet=gm||0;
     S.nu.msg="";saveConfig();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
@@ -2856,10 +2882,10 @@ document.addEventListener("submit",e=>{
 document.addEventListener("change",e=>{
   if(e.target.id==="an-ex"){S.anEx=e.target.value;render(true);return}
   if(e.target.id==="fs-u"&&FS&&FS.f){const g=fsGrams(),ni=+e.target.value,units=[["غرام",1]].concat(FS.f.u||[]),u=units[ni]||units[0];FS.ui=ni;FS.qty=g>0?Math.round(g/(+u[1])*1000)/1000:FS.qty;const n=$("#fs-n");if(n)n.value=FS.qty;const t2=$("#fs-tot");if(t2)t2.innerHTML=fsTotHTML();return}
+  if(e.target.id==="nu-swc"){const k=e.target.dataset.k||S.nu.cur,d=S.nutri[k],sw=d&&(d.act||[]).find(a=>a.id==="swim"),a2=ACT_BY[e.target.value];if(sw&&a2){sw.c=a2[0];sw.n=a2[2];sw.met=a2[1];saveN(k);render(true)}return}
   if(e.target.id==="bc-d"){const k=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&k<=todayK()){S.bc.sel=k;S.bc.msg="";e.target.blur();render(true)}return}
   if(e.target.id==="fs-raw"&&FS){FS.raw=e.target.checked;fsResults();return}
   if(e.target.name==="basis"&&e.target.closest("#cf-form")){const bx=$("#cf-svbox");if(bx)bx.hidden=e.target.value!=="sv";return}
-  if(e.target.id==="ac-c"){const w=e.target.value==="watch";$("#ac-minbox").hidden=w;$("#ac-kbox").hidden=!w;return}
   if((e.target.name==="pal"||e.target.name==="thm")&&e.target.closest("#sheet")){S.ui[e.target.name]=e.target.value;saveUiLocal();applyTheme();saveConfig();return}
   if(e.target.id==="imp-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
     r.onload=()=>{let o=null;try{o=JSON.parse(r.result)}catch(er){}
@@ -2884,9 +2910,12 @@ document.addEventListener("input",e=>{
   if(id==="nt-q"){S.nt.q=e.target.value;drawNotesList();return}
   if(id==="fs-q"&&FS){FS.q=e.target.value;if(/[a-z]/i.test(FS.q))loadFDB();fsResults();return}
   if(id==="fs-n"&&FS&&FS.f){const v=parseFloat(e.target.value);FS.qty=Number.isFinite(v)?v:null;const t2=$("#fs-tot");if(t2)t2.innerHTML=fsTotHTML();return}
+  if(id==="nu-swm"){const k=e.target.dataset.k||S.nu.cur,d=nDay(k),raw=e.target.value,v=parseInt(raw,10),sel=$("#nu-swc"),a2=ACT_BY[sel?sel.value:"18240"]||ACT_BY["18240"];
+    d.act=(d.act||[]).filter(a=>a.id!=="swim");if(raw!==""&&!(v>=0&&v<=600))return;if(v>0)d.act.push({id:"swim",c:a2[0],n:a2[2],met:a2[1],min:v});
+    saveN(k);lastKeep=Date.now();const en=energyOn(k),el=$("#nu-swk");if(el)el.innerHTML=swimLine(en,d.act.find(a=>a.id==="swim"));const t2=$("#nu-tot");if(t2&&en)t2.innerHTML=L(kc0(en.stepsK+en.ex))+" سعرة فوق الراحة";return}
   if(id==="nu-steps"||id==="nu-km"){const k=e.target.dataset.k||S.nu.cur,d=nDay(k),raw=e.target.value,key=id==="nu-steps"?"steps":"km",mx=id==="nu-steps"?100000:100;
     if(raw==="")delete d[key];else{const v=id==="nu-steps"?parseInt(raw,10):parseFloat(raw);if(!Number.isFinite(v)||v<0||v>mx)return;if(v>0)d[key]=id==="nu-steps"?v:Math.round(v*100)/100;else delete d[key]}
-    saveN(k);if(key==="steps")syncStepsHabit(k);lastKeep=Date.now();const el=$("#nu-stk");if(el)el.innerHTML=stepsLine(energyOn(k));return}
+    saveN(k);if(key==="steps")syncStepsHabit(k);lastKeep=Date.now();const en2=energyOn(k),el=$("#nu-stk");if(el)el.innerHTML=stepsLine(en2,+d.steps||0);const t2=$("#nu-tot");if(t2&&en2)t2.innerHTML=L(kc0(en2.stepsK+en2.ex))+" سعرة فوق الراحة";return}
   if(id==="wn"){const w=activeWo();if(w){w.note=e.target.value;lastKeep=Date.now();saveWo(w.id)}return}
   if(id&&id.indexOf("xn-")===0){setExNote(id.slice(3),e.target.value);lastKeep=Date.now();return}
   if(id&&id.indexOf("ws-")===0){const w=activeWo();if(!w)return;const p=id.split("-"),ex=w.ex[+p[1]],st=ex&&ex.sets[+p[2]];if(!st)return;st[p[3]]=e.target.value;e.target.classList.remove("need");lastKeep=Date.now();saveWo(w.id);return}
