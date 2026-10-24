@@ -459,6 +459,13 @@ nav.tabs button{font-size:11px}
 .sw-big.red{background:var(--sred-bg);color:var(--sred)}
 .mlist2 .btn{text-align:start}
 @media (max-width:420px){.sw-r{grid-template-columns:40px minmax(0,1.4fr) 64px 54px 42px;gap:6px}.sw-p{font-size:12.5px}}
+.sw-sug{background:var(--sblue-bg);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.65}
+.sw-sug b{color:var(--sblue)}
+.sw-rir{display:flex;align-items:center;gap:6px;padding:4px 14px 8px;background:var(--sgreen-bg);flex-wrap:wrap}
+.sw-rir span{font-size:12px;color:var(--muted);margin-inline-end:4px}
+.sw-rir button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 11px;font-size:13px;font-family:var(--f-num);color:var(--ink)}
+.sw-rir button.on{background:var(--sgreen);border-color:var(--sgreen);color:#fff;font-weight:600}
+.sw-r.done{padding-bottom:4px}
 /* memories */
 .rng{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
 .rng button{border:0;background:transparent;border-radius:7px;padding:5px 11px;font-size:13px;color:var(--muted)}
@@ -1463,6 +1470,107 @@ function gymStatsHTML(){
   '</section>';
 }
 
+/* ---------- gym: effort, suggestions, analysis ---------- */
+// Strength from a set = weight × (1 + (reps + reps-in-reserve) / 30), the Epley estimate with reserve counted as reps
+const TR=()=>Number.isFinite(+S.gym.tr)?+S.gym.tr:0;
+function exCfg(eid){for(const g of S.gym.groups){const e=g.ex.find(x=>x.id===eid);if(e)return e}return null}
+function rng(eid){const c=exCfg(eid)||{},lo=+c.lo>0?+c.lo:8,hi=+c.hi>=lo?+c.hi:Math.max(lo,12);return {lo:lo,hi:hi,step:+c.step>0?+c.step:2.5}}
+const hasRir=s=>s.rir!==undefined&&s.rir!==null&&s.rir!==""&&Number.isFinite(+s.rir);
+const rirOf=s=>hasRir(s)?+s.rir:0;
+const eff=s=>(+s.r||0)+rirOf(s);
+const e1x=(w,er)=>(+w||0)*(1+er/30);
+function fatigue(eid,name){ // average loss of reps-to-failure between consecutive sets at the same weight, from this exercise's history
+  let sum=0,n=0;
+  exHistory(eid,name).slice(0,12).forEach(x=>{const ss=x.e.sets;for(let i=1;i<ss.length;i++){if(+ss[i].w>0&&+ss[i].w===+ss[i-1].w){sum+=eff(ss[i-1])-eff(ss[i]);n++}}});
+  return n>=3?Math.max(0,Math.min(4,sum/n)):1.5;
+}
+const fresh=(s,i,d)=>e1x(s.w,eff(s)+i*d); // what set i says about strength before fatigue
+function sessStrength(sets,d){const v=sets.map((s,i)=>+s.w>0&&+s.r>0?fresh(s,i,d):0).filter(x=>x>0);return v.length?avg(v):0}
+function suggestEx(w,e){
+  const h=exHistory(e.eid,e.name).filter(x=>x.w.start<w.start);if(!h.length)return null;
+  const d=fatigue(e.eid,e.name),R=rng(e.eid),t=TR(),prevE=sessStrength(h[0].e.sets,d);if(!(prevE>0))return null;
+  const doneE=sessStrength(e.sets.map(s=>s.done?s:{w:0,r:0}),d),E=doneE>0?doneE:prevE,last=h[0].e.sets;
+  let up=false,down=false;
+  const sets=e.sets.map((s,i)=>{
+    const ref=last[Math.min(i,last.length-1)];let W=+ref.w||0;if(!(W>0))return null;
+    const reps=x=>30*(E/x-1)-i*d-t;let k=0;
+    while(reps(W)>R.hi+.5&&k<10){W+=R.step;k++}
+    while(reps(W)<R.lo-.5&&W-R.step>0&&k>-10){W-=R.step;k--}
+    if(k>0)up=true;if(k<0)down=true;
+    W=Math.round(W*100)/100;return {w:W,r:Math.max(1,Math.round(reps(W)))};
+  });
+  return {E:E,prevE:prevE,today:doneE>0,d:d,R:R,sets:sets,up:up,down:down};
+}
+function sugText(sg){
+  if(!sg)return "";
+  let t=sg.today?'من أدائك اليوم قوتك المقدّرة '+L(num(sg.E,1))+' كغم، مقابل '+L(num(sg.prevE,1))+' في الجلسة السابقة.':'قوتك المقدّرة من الجلسة السابقة '+L(num(sg.E,1))+' كغم.';
+  if(sg.up)t+=' رفعت الوزن لأنك قادر على أكثر من '+sg.R.hi+' عدة.';
+  if(sg.down)t+=' خففت الوزن لأن المتوقع أقل من '+sg.R.lo+' عدات.';
+  t+=(TR()?' الاقتراح على أن يبقى عندك '+TR()+' في كل جولة':' الاقتراح حتى الفشل في كل جولة')+(sg.d>=.3?'، مع نقص '+L(num(sg.d,1))+' عدة تقريباً بين الجولات بحسب تاريخك.':'.');
+  return t;
+}
+/* analysis */
+S.gview="";S.anEx="";
+function anKeys(){const m=new Map();doneWos().forEach(w=>(w.ex||[]).forEach(e=>{if(!m.has(e.name))m.set(e.name,e.eid)}));return Array.from(m.entries()).sort((a,b)=>a[0].localeCompare(b[0]))}
+function regress(xy){const n=xy.length;if(n<2)return null;const mx=avg(xy.map(p=>p[0])),my=avg(xy.map(p=>p[1]));let nu=0,de=0;xy.forEach(p=>{nu+=(p[0]-mx)*(p[1]-my);de+=(p[0]-mx)*(p[0]-mx)});if(!(de>0))return null;const b=nu/de;return {b:b,a:my-b*mx}}
+function niceTicks(mn,mx){const span=mx-mn||1,raw=span/3,p=Math.pow(10,Math.floor(Math.log10(raw))),st=[1,2,2.5,5,10].map(m=>m*p).find(v=>v>=raw)||raw;const out=[];for(let v=Math.ceil(mn/st)*st;v<=mx+1e-9;v+=st)out.push([v,num(v,st<1?1:0)]);return out}
+function exChart(pts,opt){ // pts [[x,y,dateKey]]
+  if(pts.length){const x0=pts[0][0];pts=pts.map(p=>[p[0]-x0,p[1],p[2]])}
+  return chart(W=>{if(pts.length<1)return "";let mn=Math.min.apply(null,pts.map(p=>p[1])),mx=Math.max.apply(null,pts.map(p=>p[1]));if(opt.y0!=null)mn=Math.min(mn,opt.y0);if(opt.y1!=null)mx=Math.max(mx,opt.y1);
+    if(mx-mn<1e-9){mn-=1;mx+=1}const pad=(mx-mn)*.1;mn=opt.y0!=null?opt.y0:mn-pad;mx+=pad;
+    const xm=Math.max(1,pts[pts.length-1][0]),ser=[{pts:pts.map(p=>[p[0],p[1]]),cls:opt.cls||"a"}];
+    if(opt.trend){const r=regress(pts);if(r)ser.push({pts:[[0,r.a],[xm,r.a+r.b*xm]],cls:"p",dots:false})}
+    const mid=Math.round(xm/2);
+    return lineChart({w:W,h:170,xMin:0,xMax:xm,yMin:mn,yMax:mx,series:ser,yTicks:niceTicks(mn,mx),xTicks:[[0,fNum(pts[0][2])],[mid,fNum(addD(pts[0][2],mid))],[xm,fNum(pts[pts.length-1][2])]],label:opt.label||""})});
+}
+function multiLines(weeks,series,label){ // weekly lines per group, coloured by group
+  return chart(W=>{const H=180,P={l:40,r:10,t:10,b:24},iw=W-P.l-P.r,ih=H-P.t-P.b,n=weeks.length;let mx=0;series.forEach(s=>s.v.forEach(v=>{mx=Math.max(mx,v)}));if(!(mx>0))mx=1;
+    const tk=niceTicks(0,mx),top=Math.max(mx,tk.length?tk[tk.length-1][0]:mx),X=i=>P.l+(n<2?iw/2:i/(n-1)*iw),Y=v=>P.t+ih-v/top*ih;
+    let s='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(label)+'">';
+    tk.forEach(t=>{s+='<line class="grid" x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(t[0]).toFixed(1)+'" y2="'+Y(t[0]).toFixed(1)+'"/><text class="ax" x="'+(P.l-6)+'" y="'+(Y(t[0])+4).toFixed(1)+'" text-anchor="end">'+esc(t[1])+'</text>'});
+    [0,Math.floor((n-1)/2),n-1].forEach((i,j)=>{s+='<text class="ax" x="'+X(i).toFixed(1)+'" y="'+(H-6)+'" text-anchor="'+(j===0?"start":j===2?"end":"middle")+'">'+fNum(weeks[i])+'</text>'});
+    series.forEach(se=>{s+='<polyline fill="none" stroke-width="2" stroke-linejoin="round" style="stroke:'+se.c+'" points="'+se.v.map((v,i)=>X(i).toFixed(1)+","+Y(v).toFixed(1)).join(" ")+'"/>';
+      const li=se.v.length-1;s+='<circle r="3.5" style="fill:'+se.c+'" cx="'+X(li).toFixed(1)+'" cy="'+Y(se.v[li]).toFixed(1)+'"/>'});
+    return s+'</svg>'});
+}
+function countBars(weeks,vals,target,label){
+  return chart(W=>{const H=150,P={l:30,r:6,t:10,b:24},iw=W-P.l-P.r,ih=H-P.t-P.b,n=weeks.length,bw=iw/n,top=Math.max(7,Math.max.apply(null,vals)),Y=v=>P.t+ih-v/top*ih;
+    let s='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(label)+'">';
+    [0,Math.round(top/2),top].forEach(v=>{s+='<line class="grid" x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'"/><text class="ax" x="'+(P.l-6)+'" y="'+(Y(v)+4).toFixed(1)+'" text-anchor="end">'+v+'</text>'});
+    s+='<line class="ln t" x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(target).toFixed(1)+'" y2="'+Y(target).toFixed(1)+'"/>';
+    vals.forEach((v,i)=>{const x=P.l+i*bw+bw*.2,w=bw*.6;if(v>0)s+='<rect class="barr" x="'+x.toFixed(1)+'" y="'+Y(v).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+(ih*v/top).toFixed(1)+'" rx="3"/>';
+      if(i===0||i===n-1||i===Math.floor((n-1)/2))s+='<text class="ax" x="'+(x+w/2).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+fNum(weeks[i])+'</text>'});
+    return s+'</svg>'});
+}
+function vGymAn(){
+  const keys=anKeys();
+  let s='<section class="sec-h"><h2 class="dsp">تحليل الأداء</h2><button class="btn sm" data-act="gview" data-v="">رجوع</button></section>';
+  if(!keys.length)return s+'<section class="panel empty"><h2>لا توجد جلسات بعد</h2><p class="muted small" style="margin:0">بعد أن تسجّل جلساتك تظهر هنا منحنيات قوتك وحجمك ومدى وصولك للفشل في كل تمرين.</p></section>';
+  if(!keys.some(k=>k[0]===S.anEx))S.anEx=keys[0][0];
+  const eid=keys.find(k=>k[0]===S.anEx)[1],d=fatigue(eid,S.anEx),h=exHistory(eid,S.anEx).slice().reverse(),d0=h[0].w.date;
+  const rows=h.map(x=>{const ss=x.e.sets,rs=ss.filter(hasRir);return {k:x.w.date,x:diffD(d0,x.w.date),E:sessStrength(ss,d),top:Math.max.apply(null,ss.map(q=>+q.w||0)),vol:ss.reduce((a,q)=>a+(+q.w||0)*(+q.r||0),0),rir:rs.length?avg(rs.map(q=>+q.rir)):null}}).filter(r=>r.E>0);
+  const last=rows[rows.length-1],best=rows.reduce((a,r)=>r.E>a.E?r:a,rows[0]),rg=regress(rows.filter(r=>diffD(r.k,todayK())<=90).map(r=>[r.x,r.E]));
+  const mPct=rg&&last?rg.b*30/last.E*100:null,rr=rows.filter(r=>r.rir!==null).slice(-3),rAvg=rr.length?avg(rr.map(r=>r.rir)):null;
+  s+='<section class="panel sec"><div class="fld"><label for="an-ex">التمرين</label><select id="an-ex" class="sel">'+keys.map(k=>'<option value="'+esc(k[0])+'"'+(k[0]===S.anEx?" selected":"")+'>'+esc(k[0])+'</option>').join("")+'</select></div>'+
+    '<div class="kv"><div><b>'+L(num(last.E,1))+'</b><span>القوة المقدّرة الآن (كغم)</span></div><div><b>'+(mPct===null?"–":L(signed(mPct,1)+"%"))+'</b><span>التقدم الشهري</span></div>'+
+    '<div><b>'+L(num(best.E,1))+'</b><span>أفضل قوة · '+esc(fShort(best.k))+'</span></div><div><b>'+(rAvg===null?"–":L(num(rAvg,1)))+'</b><span>متوسط العدات الباقية، آخر 3 جلسات</span></div></div>'+
+    '<p class="lbl" style="margin:0">القوة المقدّرة هي أقصى وزن تقدر عليه لتكرار واحد، محسوبة من الوزن والعدات والعدات الباقية. التقدم الشهري من اتجاه آخر 90 يوماً. العدات الباقية: صفر يعني وصلت للفشل.</p></section>';
+  s+='<section class="panel sec"><div class="sec-h"><h2>القوة المقدّرة</h2><span class="lbl">'+rows.length+' جلسة</span></div>'+exChart(rows.map(r=>[r.x,r.E,r.k]),{trend:true,label:"القوة المقدّرة"})+'<div class="legend"><span><i style="background:var(--accent)"></i>كل جلسة</span><span><i style="background:var(--accent);opacity:.6"></i>الاتجاه</span></div></section>';
+  s+='<div class="cols"><section class="panel sec"><div class="sec-h"><h2>أثقل جولة</h2><span class="lbl">كغم</span></div>'+exChart(rows.map(r=>[r.x,r.top,r.k]),{label:"أثقل جولة"})+'</section>'+
+    '<section class="panel sec"><div class="sec-h"><h2>حجم الجلسة</h2><span class="lbl">كغم × عدات</span></div>'+exChart(rows.map(r=>[r.x,r.vol,r.k]),{cls:"w",label:"حجم الجلسة",y0:0})+'</section></div>';
+  const rp=rows.filter(r=>r.rir!==null);
+  s+='<section class="panel sec"><div class="sec-h"><h2>قربك من الفشل</h2><span class="lbl">متوسط العدات الباقية · الأقل أفضل لهدفك</span></div>'+
+    (rp.length?exChart(rp.map(r=>[r.x,r.rir,r.k]),{cls:"w",y0:0,y1:4,label:"متوسط العدات الباقية"}):'<p class="muted small" style="margin:0">يظهر هذا المنحنى بعد أن تقيّم العدات الباقية في جولاتك.</p>')+'</section>';
+  // weekly, by day group
+  const cw=weekStartK(todayK()),weeks=[];for(let i=11;i>=0;i--)weeks.push(addD(cw,-7*i));
+  const ws=doneWos(),gids=[...new Set(ws.map(w=>w.gid))].filter(id=>findG(id));
+  const series=gids.map(id=>({c:gColorId(id),name:findG(id).name,v:weeks.map(wk=>ws.filter(w=>w.gid===id&&weekStartK(w.date)===wk).reduce((a,w)=>a+woVol(w),0)/1000)}));
+  const cnt=weeks.map(wk=>new Set(ws.filter(w=>weekStartK(w.date)===wk).map(w=>w.date)).size);
+  s+='<section class="panel sec"><div class="sec-h"><h2>الحجم الأسبوعي لكل يوم</h2><span class="lbl">طن · 12 أسبوعاً</span></div>'+(series.length?multiLines(weeks,series,"الحجم الأسبوعي")+'<div class="legend">'+series.map(x=>'<span><i style="background:'+x.c+'"></i>'+esc(x.name)+'</span>').join("")+'</div>':'<p class="muted small" style="margin:0">لا جلسات في آخر 12 أسبوعاً.</p>')+'</section>';
+  s+='<section class="panel sec"><div class="sec-h"><h2>أيام التمرين في الأسبوع</h2><span class="lbl">الخط المنقط هدفك ('+gymWk()+')</span></div>'+countBars(weeks,cnt,gymWk(),"أيام التمرين")+'</section>';
+  return s;
+}
+
 let NOTE_OPEN=new Set();
 const IC_TMR='<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5"/></svg>';
 const IC_DOTS='<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
@@ -1473,15 +1581,17 @@ function woView(w){
     '<div class="sw-time num" id="wk-el">'+fmtDur((Date.now()-new Date(w.start))/1000)+'</div>'+
     '<input id="wn" class="keep sw-notes" maxlength="200" value="'+esc(w.note||"")+'" placeholder="ملاحظات" aria-label="ملاحظات الجلسة"></div>';
   w.ex.forEach((e,ei)=>{
-    const prev=prevSets(e.eid,e.name,w.start),nt=exNote(e.eid),showN=nt||NOTE_OPEN.has(e.eid);
+    const prev=prevSets(e.eid,e.name,w.start),nt=exNote(e.eid),showN=nt||NOTE_OPEN.has(e.eid),sg=suggestEx(w,e);
     s+='<section class="sw-ex"><div class="sw-exh"><button class="sw-exn" data-act="exHist" data-eid="'+e.eid+'" data-n="'+esc(e.name)+'">'+esc(e.name)+'</button><button class="sw-dots sm" data-act="exMenu" data-e="'+ei+'" aria-label="خيارات التمرين">'+IC_DOTS+'</button></div>'+
       (showN?'<label class="sw-note"><input id="xn-'+e.eid+'" class="keep" maxlength="160" value="'+esc(nt)+'" placeholder="ملاحظة ثابتة لهذا التمرين"><span class="sw-pin">'+IC_PIN+'</span></label>':"")+
+      (sg&&e.sets.some(x=>!x.done)?'<div class="sw-sug"><b>اقتراح اليوم</b> '+sugText(sg)+'</div>':"")+
       '<div class="sw-tbl"><div class="sw-r sw-hd"><span>الجولة</span><span>السابق</span><span>كغم</span><span>العدات</span><span>'+ICON.check+'</span></div>'+
-      e.sets.map((st,si)=>{const p=prev&&prev[si],ids="ws-"+ei+"-"+si;
+      e.sets.map((st,si)=>{const p=prev&&prev[si],ids="ws-"+ei+"-"+si,q=sg&&sg.sets[si],ph=q||(p?{w:p.w,r:p.r}:null);
         return '<div class="sw-r'+(st.done?" done":"")+'"><span class="sw-n num">'+(si+1)+'</span><span class="sw-p num">'+(p?L(num(+p.w,2)+" × "+p.r):"—")+'</span>'+
-          '<input id="'+ids+'-w" class="keep ltr sw-in" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'" placeholder="'+(p?esc(p.w):"")+'" aria-label="الوزن">'+
-          '<input id="'+ids+'-r" class="keep ltr sw-in" type="number" inputmode="numeric" step="1" min="0" value="'+esc(st.r)+'" placeholder="'+(p?esc(p.r):"")+'" aria-label="العدات">'+
-          '<button class="sw-ck" data-act="setDone" data-e="'+ei+'" data-s="'+si+'" aria-pressed="'+!!st.done+'" aria-label="إنهاء الجولة">'+ICON.check+'</button></div>'}).join("")+
+          '<input id="'+ids+'-w" class="keep ltr sw-in" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'" placeholder="'+(ph?esc(ph.w):"")+'" aria-label="الوزن">'+
+          '<input id="'+ids+'-r" class="keep ltr sw-in" type="number" inputmode="numeric" step="1" min="0" value="'+esc(st.r)+'" placeholder="'+(ph?esc(ph.r):"")+'" aria-label="العدات">'+
+          '<button class="sw-ck" data-act="setDone" data-e="'+ei+'" data-s="'+si+'" aria-pressed="'+!!st.done+'" aria-label="إنهاء الجولة">'+ICON.check+'</button></div>'+
+          (st.done?'<div class="sw-rir"><span>عدات باقية</span>'+[0,1,2,3,4].map(v=>'<button class="'+(rirOf(st)===v&&hasRir(st)?"on":"")+'" data-act="rir" data-e="'+ei+'" data-s="'+si+'" data-v="'+v+'">'+(v===0?"0 فشل":v===4?"4+":v)+'</button>').join("")+'</div>':"")}).join("")+
       '</div><button class="sw-add" data-act="setAdd" data-e="'+ei+'">+ إضافة جولة</button></section>';
   });
   s+='<button class="sw-big blue" data-act="woAddEx">إضافة تمارين</button><button class="sw-big red" data-act="woCancel">إلغاء التمرين</button></div>';
@@ -1506,7 +1616,8 @@ function openWoMenu(w){
 function vGym(){
   const w=activeWo();
   if(w)return woView(w);
-  let s='<section class="sec-h"><h2 class="dsp">الجم</h2>'+(w?'':'<div class="row"><button class="btn sm" data-act="gymSet">الإعدادات</button><button class="btn pri sm" data-act="wgNew">مجموعة جديدة</button></div>')+'</section>';
+  if(S.gview==="an")return vGymAn();
+  let s='<section class="sec-h"><h2 class="dsp">الجم</h2>'+(w?'':'<div class="row"><button class="btn sm" data-act="gview" data-v="an">التحليل</button><button class="btn sm" data-act="gymSet">الإعدادات</button><button class="btn pri sm" data-act="wgNew">مجموعة جديدة</button></div>')+'</section>';
   if(w)return s+woView(w);
   const last=S.gsel&&S.wos[S.gsel]&&S.wos[S.gsel].end?S.wos[S.gsel]:null;
   if(last)s+='<section class="panel wdone"><div class="sec-h"><h2>أنهيت '+esc(last.gname)+'</h2><button class="chip-link" data-act="gselClose">إغلاق</button></div><div class="kv"><div><b class="num">'+fmtDur((new Date(last.end)-new Date(last.start))/1000)+'</b><span>المدة</span></div><div><b class="num">'+woSets(last)+'</b><span>الجولات</span></div><div><b class="num">'+L(num(woVol(last),0))+'</b><span>الحجم (كغم)</span></div></div></section>';
@@ -1538,6 +1649,10 @@ function openExForm(g,e){
     '<div class="two"><div class="fld"><label for="ex-sets">عدد الجولات</label><input class="ltr" id="ex-sets" name="sets" type="number" inputmode="numeric" min="1" max="20" step="1" required value="'+(e?+e.sets||3:3)+'"></div>'+
     '<div class="fld"><label for="ex-rest">الراحة بالثواني</label><input class="ltr" id="ex-rest" name="rest" type="number" inputmode="numeric" min="0" max="900" step="5" value="'+(e&&+e.rest?+e.rest:"")+'" placeholder="'+S.gym.rest+'"></div></div>'+
     '<span class="lbl">اترك الراحة فارغة لاستخدام المدة الافتراضية ('+S.gym.rest+' ثانية).</span>'+
+    '<div class="three"><div class="fld"><label for="ex-lo">أقل عدات</label><input class="ltr" id="ex-lo" name="lo" type="number" inputmode="numeric" min="1" max="50" value="'+(e&&+e.lo?+e.lo:8)+'"></div>'+
+    '<div class="fld"><label for="ex-hi">أعلى عدات</label><input class="ltr" id="ex-hi" name="hi" type="number" inputmode="numeric" min="1" max="50" value="'+(e&&+e.hi?+e.hi:12)+'"></div>'+
+    '<div class="fld"><label for="ex-step">خطوة الوزن (كغم)</label><input class="ltr" id="ex-step" name="step" type="number" inputmode="decimal" min="0.25" max="50" step="any" value="'+(e&&+e.step?+e.step:2.5)+'"></div></div>'+
+    '<span class="lbl">مدى العدات وخطوة الوزن يُستخدمان في اقتراح الجلسة القادمة: إذا تجاوزت أعلى العدات يُرفع الوزن خطوة.</span>'+
     '<div class="fld"><label for="ex-note">ملاحظة ثابتة (اختياري)</label><input id="ex-note" name="note" maxlength="160" value="'+esc(e?exNote(e.id):"")+'" placeholder="مثال: المقعد على الرقم 4، قبضة واسعة"><span class="lbl">تظهر لك تحت التمرين في كل جلسة.</span></div>'+
     '<p class="err" id="ex-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div>'+
     (e?'<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn sm" type="button" data-act="exMove" data-g="'+g.id+'" data-id="'+e.id+'" data-n="-1"'+(i<=0?" disabled":"")+'>نقل للأعلى</button><button class="btn sm" type="button" data-act="exMove" data-g="'+g.id+'" data-id="'+e.id+'" data-n="1"'+(i>=g.ex.length-1?" disabled":"")+'>نقل للأسفل</button><button class="btn sm danger" type="button" data-act="exDel" data-g="'+g.id+'" data-id="'+e.id+'">حذف التمرين</button></div>':"")+'</form>',fd=>{
@@ -1547,19 +1662,25 @@ function openExForm(g,e){
     if(rest!==null&&(!Number.isFinite(rest)||rest<0||rest>900)){err.textContent="الراحة من 0 إلى 900 ثانية.";err.hidden=false;return}
     const gg=findG(g.id);if(!gg){closeSheet();render();return}
     const cur=e&&gg.ex.find(x=>x.id===e.id);
-    const note=String(fd.get("note")||"");let eid;
+    const note=String(fd.get("note")||""),lo=parseInt(fd.get("lo"),10),hi=parseInt(fd.get("hi"),10),step=parseFloat(fd.get("step"));
+    if(!(lo>=1&&hi>=lo&&hi<=50)){err.textContent="مدى العدات غير صحيح: الأقل من 1، والأعلى أكبر من الأقل أو يساويه.";err.hidden=false;return}
+    if(!(step>0&&step<=50)){err.textContent="خطوة الوزن رقم أكبر من صفر.";err.hidden=false;return}
+    let eid;
     if(cur){cur.name=name;cur.sets=sets;if(rest)cur.rest=rest;else delete cur.rest;eid=cur.id}else{const ne={id:uid(),name:name,sets:sets};if(rest)ne.rest=rest;gg.ex.push(ne);eid=ne.id}
+    const tgt=gg.ex.find(x=>x.id===eid);if(tgt){tgt.lo=lo;tgt.hi=hi;tgt.step=step}
     setExNote(eid,note);closeSheet();render();
   });
 }
 function openGymSet(){
   openSheet('<h2>إعدادات الجم</h2><form class="f" id="gs-form"><div class="fld"><label for="gs-rest">مدة الراحة الافتراضية بالثواني</label><input class="ltr" id="gs-rest" name="rest" type="number" inputmode="numeric" min="10" max="900" step="5" value="'+S.gym.rest+'" style="max-width:140px"></div>'+
     '<div class="fld"><label for="gs-wk">هدف أيام التمرين في الأسبوع</label><input class="ltr" id="gs-wk" name="wk" type="number" inputmode="numeric" min="1" max="7" step="1" value="'+gymWk()+'" style="max-width:140px"><span class="lbl">يُستخدم لحساب سلسلة الأسابيع. الأسبوع يبدأ بالسبت.</span></div>'+
+    '<div class="fld"><label for="gs-tr">العدات الباقية المستهدفة في كل جولة</label><input class="ltr" id="gs-tr" name="tr" type="number" inputmode="numeric" min="0" max="3" step="1" value="'+TR()+'" style="max-width:140px"><span class="lbl">صفر يعني أن الاقتراح يحسب كل جولة حتى الفشل.</span></div>'+
     '<p class="lbl" style="margin:0">تُستخدم لكل تمرين لم تحدد له راحة خاصة. عند انتهاء المؤقت يصدر البرنامج صوتاً إن كان مفتوحاً على الشاشة.</p>'+
     '<p class="err" id="gs-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{
     const r=parseInt(fd.get("rest"),10);if(!Number.isFinite(r)||r<10||r>900){const e=$("#gs-err");e.textContent="المدة من 10 إلى 900 ثانية.";e.hidden=false;return}
     const wk=parseInt(fd.get("wk"),10);if(!Number.isFinite(wk)||wk<1||wk>7){const e=$("#gs-err");e.textContent="هدف الأسبوع من 1 إلى 7 أيام.";e.hidden=false;return}
-    S.gym.rest=r;S.gym.wk=wk;saveConfig();closeSheet();render();
+    const tr=parseInt(fd.get("tr"),10);if(!Number.isFinite(tr)||tr<0||tr>3){const e=$("#gs-err");e.textContent="العدات الباقية المستهدفة من 0 إلى 3.";e.hidden=false;return}
+    S.gym.rest=r;S.gym.wk=wk;S.gym.tr=tr;saveConfig();closeSheet();render();
   });
 }
 function openAddEx(){
@@ -1900,12 +2021,12 @@ document.addEventListener("click",e=>{
     case "exDel":{if(confirmArm[a+id]){const g=findG(b.dataset.g);if(g){g.ex=g.ex.filter(x=>x.id!==id);saveConfig()}closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف التمرين"},4000)}break}
     case "gymSet":openGymSet();break;
     case "setDone":{const w=activeWo();if(!w)break;const ei=+b.dataset.e,si=+b.dataset.s,ex=w.ex[ei],st=ex&&ex.sets[si];if(!st)break;
-      if(!st.done){const prev=prevSets(ex.eid,ex.name,w.start),p=prev&&prev[si],wi=$("#ws-"+ei+"-"+si+"-w"),ri=$("#ws-"+ei+"-"+si+"-r");
+      if(!st.done){const prev=prevSets(ex.eid,ex.name,w.start),sg=suggestEx(w,ex),p=(sg&&sg.sets[si])||(prev&&prev[si]),wi=$("#ws-"+ei+"-"+si+"-w"),ri=$("#ws-"+ei+"-"+si+"-r");
         if(wi&&wi.value!=="")st.w=wi.value;if(ri&&ri.value!=="")st.r=ri.value;
         if(st.w===""&&p)st.w=String(p.w);if(st.r===""&&p)st.r=String(p.r);
         if(st.r===""||!(+st.r>0)){if(ri){ri.classList.add("need");ri.focus()}clickForce=false;break}
         if(st.w==="")st.w="0";
-        st.done=true;unlockAudio();sndSet();startRest(+ex.rest||S.gym.rest)}else st.done=false;
+        st.done=true;if(!hasRir(st))st.rir=TR();unlockAudio();sndSet();startRest(+ex.rest||S.gym.rest)}else st.done=false;
       saveWo(w.id);render();break}
     case "setAdd":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];if(ex){ex.sets.push({w:"",r:"",done:false});saveWo(w.id);render()}break}
     case "setDel":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];if(ex&&ex.sets.length>1){ex.sets.pop();saveWo(w.id);closeSheet();render()}break}
@@ -1921,6 +2042,8 @@ document.addEventListener("click",e=>{
     case "woDel":{if(confirmArm[a+id]){delete S.wos[id];saveWo(id);if(S.gsel===id)S.gsel=null;closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف الجلسة"},4000)}break}
     case "exHist":openSheet(exHistHTML(b.dataset.eid,b.dataset.n),null);break;
     case "gselClose":S.gsel=null;render();break;
+    case "rir":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e],st=ex&&ex.sets[+b.dataset.s];if(st){st.rir=+b.dataset.v;saveWo(w.id);render()}break}
+    case "gview":S.gview=b.dataset.v||"";render();window.scrollTo(0,0);break;
     case "tmrBtn":unlockAudio();if(TMR)stopRest();else startRest(S.gym.rest);render();break;
     case "woMenu":{const w=activeWo();if(w)openWoMenu(w);break}
     case "exMenu":{const w=activeWo();if(w&&w.ex[+b.dataset.e])openSheet(exMenuHTML(w,+b.dataset.e),null);break}
@@ -2011,6 +2134,7 @@ document.addEventListener("submit",e=>{
     document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
 });
 document.addEventListener("change",e=>{
+  if(e.target.id==="an-ex"){S.anEx=e.target.value;render(true);return}
   if(e.target.id==="imp-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
     r.onload=()=>{let o=null;try{o=JSON.parse(r.result)}catch(er){}
       if(!o||typeof o!=="object"||!(o.days||o.habits||o.notes||o.gym||o.wos||o.todos||o.goals)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
