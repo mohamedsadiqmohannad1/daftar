@@ -591,6 +591,16 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
 :root[data-pal="pink"] .brand::after{content:" ♡";color:var(--accent);font-family:var(--f-body);font-size:.8em}
 .hrow.gyrow:disabled{cursor:default;opacity:1}.hrow.gyrow .pts{font-size:13px}
 
+
+.cmpbox{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.cmprows{display:flex;flex-direction:column;gap:6px}
+.cmprow{display:grid;grid-template-columns:minmax(0,1.3fr) auto auto;gap:4px 14px;align-items:center;font-size:14px}
+.cmprow>span{display:flex;flex-direction:column}
+.cmprow .cmpn{flex-direction:row;align-items:center;gap:8px;font-weight:600;min-width:0}
+.cmprow .cmpst{grid-column:1/-1;flex-direction:row}
+.cmpdot{width:12px;height:12px;border-radius:50%;flex:none;background:var(--accent)}
+.cmpdot.w{background:var(--warm)}.cmpdot.c3{background:var(--g4)}.cmpdot.c4{background:var(--g6)}.cmpdot.c5{background:var(--g5)}
+.ln.c3{stroke:var(--g4)}.dot.c3{fill:var(--g4)}.ln.c4{stroke:var(--g6)}.dot.c4{fill:var(--g6)}.ln.c5{stroke:var(--g5)}.dot.c5{fill:var(--g5)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -707,7 +717,7 @@ function persistLocal(){
 function loadLocal(){
   try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.ggroups=o.ggroups||[];S.todos=o.todos||{};S.gym=o.gym&&Array.isArray(o.gym.groups)?o.gym:{groups:[],rest:90};S.wos=o.wos||{};S.nutri=o.nutri||{};S.nut=o.nut||null;if(o.ui){S.ui=o.ui;applyTheme()}}}catch(e){}
 }
-const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.ui&&(S.ui.pal||S.ui.thm))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
+const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.cmp&&S.cmp.length)o.cmp=S.cmp;if(S.ui&&(S.ui.pal||S.ui.thm))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
 const saveConfig=()=>queueWrite("app/config",cfgDoc());
 const saveNote=id=>queueWrite("notes/"+id,S.notes[id]||null);
 const saveTodoX=0;const saveTodo=id=>queueWrite("todos/"+id,S.todos[id]||null);
@@ -733,18 +743,22 @@ function mkDB(M,fs,uid){
   return {
     doc:p=>{const r=M.doc(fs,base+p);return {set:d=>M.setDoc(r,d),delete:()=>M.deleteDoc(r),onSnapshot:(n,e)=>M.onSnapshot(r,s=>n(wrap(s)),e)}},
     collection:p=>query(M.collection(fs,base+p)),
+    uid:uid,
+    shareSet:d=>M.setDoc(M.doc(fs,"shares/"+uid),d),
+    shareWatch:(fu,n,e)=>M.onSnapshot(M.doc(fs,"shares/"+fu),x=>n(x.exists()?x.data():null),e),
     batch:async ops=>{for(let i=0;i<ops.length;i+=400){const b=M.writeBatch(fs);ops.slice(i,i+400).forEach(o=>{const r=M.doc(fs,base+o.path);if(o.data===null)b.delete(r);else b.set(r,o.data)});await b.commit()}}
   };
 }
 let unsubs=[];
 function startDB(db){
+  stopFriends();SH_LAST="";SH_ERR="";
   DB=db;S.mode="loading";render();
   unsubs.forEach(u=>{try{u()}catch(e){}});unsubs=[];
   let got={c:false,d:false,g:false,n:false,t:false,w:false,u:false};
   const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&got.w&&got.u&&S.mode==="loading"){S.mode="db";setSync();migrateX()}render()};
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
-    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};saveUiLocal();applyTheme()}}
+    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];setTimeout(watchFriends,0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};saveUiLocal();applyTheme()}}
     got.c=true;ready();
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -784,7 +798,7 @@ function startDB(db){
     S.notes=nn;got.n=true;ready();
   },onErr));
 }
-function resetState(){S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){stopFriends();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
@@ -1133,7 +1147,8 @@ function vHabits(){
   let best=null;Object.keys(S.days).forEach(k=>{if(k>t)return;const g=dayScore(k).got;if(g>0&&(!best||g>best.v))best={k:k,v:g}});
   s+='<section class="panel sec"><div class="sec-h" style="flex-wrap:wrap"><h2>نقاط كل يوم</h2>'+rangeChips("tkRange",S.tk.range)+'</div>'+
     '<div class="kv"><div><b>'+num(avg(last7),0)+'</b><span>متوسط آخر 7 أيام</span></div><div><b>'+num(wk.reduce((a,b)=>a+b,0),1)+'</b><span>مجموع هذا الأسبوع</span></div><div><b>'+(best?num(best.v,1):"–")+'</b><span>'+(best?"أعلى يوم · "+esc(fShort(best.k)):"أعلى يوم")+'</span></div></div>'+
-    '<div id="tk-chart" class="chart"></div><div class="legend"><span><i style="background:var(--accent)"></i>النقاط المجموعة</span><span><i style="background:var(--muted);opacity:.6"></i>أقصى نقاط ممكنة</span></div></section>';
+    '<div id="tk-chart" class="chart"></div><div class="legend"><span><i style="background:var(--accent)"></i>النقاط المجموعة</span><span><i style="background:var(--muted);opacity:.6"></i>أقصى نقاط ممكنة</span></div>'+
+    '<div class="row"><button class="btn sm" data-act="cmpTog" aria-pressed="'+CMP_ON+'">'+(CMP_ON?"إخفاء المقارنة":"مقارنة مع صديق")+'</button></div>'+(CMP_ON?cmpHTML():"")+'</section>';
   if(!live.length&&!arch.length&&!S.groups.length)return s+vEmpty();
   s+=groupAnalysis()+taskAnalysis();
   if(live.length)s+='<div class="heat-legend"><span><i style="background:var(--accent)"></i>منجزة</span><span><i style="background:color-mix(in srgb,var(--accent) 45%,var(--miss))"></i>جزئياً</span><span><i style="background:var(--miss)"></i>فائتة</span><span><i style="background:var(--off);box-shadow:inset 0 0 0 1px var(--line)"></i>غير مجدولة</span><span>كل عمود أسبوع يبدأ بالسبت، والأحدث يميناً</span></div>';
@@ -2385,6 +2400,78 @@ function vNutAn(){
   return s;
 }
 
+/* ---------- comparison with friends ---------- */
+// Each account publishes shares/{uid} = {readers:[uids it accepted], pct:{date: % of possible points}}. Only the daily percentage leaves the account,
+// never task names or anything else. A friend's sheet is readable once he has added your code, and you see his once you add his.
+S.cmp=[];S.fr={};
+let CMP_ON=false;try{CMP_ON=localStorage.getItem("dt-cmp")==="1"}catch(e){}
+let SH_LAST="",SH_T=null,FR_UNS={},SH_ERR="";
+const FR_CLS=["w","c3","c4","c5"];
+function dayPct(k){const sc=dayScore(k);return sc.max>0?Math.min(100,Math.round(sc.got/sc.max*1000)/10):null}
+function sharePct(){
+  const fk=firstLogKey(),t=todayK(),o={};if(!fk)return o;
+  let k=fk>addD(t,-400)?fk:addD(t,-400);for(;k<=t;k=addD(k,1)){const v=dayPct(k);if(v!==null)o[k]=v}
+  return o;
+}
+function queueShare(){
+  if(!DB||!DB.shareSet||S.mode!=="db")return;
+  clearTimeout(SH_T);SH_T=setTimeout(()=>{
+    const readers=S.cmp.map(c=>c.uid),d={readers:readers,pct:readers.length?sharePct():{},updated:new Date().toISOString()},j=JSON.stringify([d.readers,d.pct]);
+    if(j===SH_LAST)return;SH_LAST=j;
+    DB.shareSet(d).then(()=>{if(SH_ERR){SH_ERR="";refreshSettings()}}).catch(e=>{SH_LAST="";SH_ERR=(e&&e.code)||"err";refreshSettings()});
+  },2500);
+}
+function stopFriends(){Object.keys(FR_UNS).forEach(u=>{try{FR_UNS[u]&&FR_UNS[u]()}catch(e){}});FR_UNS={};S.fr={}}
+function watchFriends(){
+  if(!DB||!DB.shareWatch||S.mode==="local")return;
+  const want=new Set(S.cmp.map(c=>c.uid));
+  Object.keys(FR_UNS).forEach(u=>{if(!want.has(u)){try{FR_UNS[u]&&FR_UNS[u]()}catch(e){}delete FR_UNS[u];delete S.fr[u]}});
+  want.forEach(u=>{if(FR_UNS[u])return;
+    FR_UNS[u]=DB.shareWatch(u,d=>{S.fr[u]=d?{pct:d.pct&&typeof d.pct==="object"?d.pct:{},updated:d.updated||""}:{none:true};if(S.tab==="habits"&&CMP_ON)render();refreshSettings()},
+      e=>{S.fr[u]={err:(e&&e.code)||"err"};FR_UNS[u]=null;if(S.tab==="habits"&&CMP_ON)render();refreshSettings();setTimeout(()=>{if(FR_UNS[u]===null){delete FR_UNS[u];watchFriends()}},60000)})});
+}
+function frStatus(c){
+  const f=S.fr[c.uid];
+  if(!f)return "جارٍ الاتصال…";
+  if(f.err)return f.err==="permission-denied"?"بانتظار أن يضيف "+c.name+" رمزك عنده":"تعذّر الوصول ("+f.err+")";
+  if(f.none)return "لم يفتح "+c.name+" النسخة الجديدة من البرنامج بعد";
+  const n=Object.keys(f.pct).length;return n?"متصل · "+n+" يوماً":"متصل · لا نقاط مسجلة بعد";
+}
+function cmpHTML(){
+  if(!S.cmp.length)return '<div class="cmpbox"><p class="small" style="margin:0">لم تضف أحداً للمقارنة بعد. من الإعدادات (زر الترس) انسخ رمزك وأرسله لصديقك، وأضف رمزه عندك.</p><div class="row"><button class="btn sm" data-act="settings">فتح الإعدادات</button></div></div>';
+  const t=todayK(),st=rangeStartFor(S.tk.range,d=>!!(d&&d.h&&Object.keys(d.h).length)),n=Math.max(1,diffD(st,t));
+  const people=[{name:"أنت",cls:"a",get:k=>dayPct(k)}].concat(S.cmp.map((c,i)=>({name:c.name,cls:FR_CLS[i%FR_CLS.length],get:k=>{const f=S.fr[c.uid];const v=f&&f.pct?f.pct[k]:undefined;return Number.isFinite(+v)&&v!==null&&v!==undefined?+v:null},c:c})));
+  people.forEach(p=>{p.pts=[];for(let i=0;i<=n;i++){const v=p.get(addD(st,i));if(v!==null)p.pts.push([i,v])}
+    const last7=[];for(let i=0;i<7;i++){const v=p.get(addD(t,-i));if(v!==null)last7.push(v)}p.a7=last7.length?avg(last7):null;p.aR=p.pts.length?avg(p.pts.map(q=>q[1])):null});
+  const any=people.some(p=>p.pts.length);
+  let s='<div class="cmpbox"><div class="sec-h"><h3 style="font-size:15px;font-weight:600">المقارنة بنسبة الإنجاز</h3><span class="lbl">من أقصى النقاط الممكنة لكل يوم</span></div>';
+  s+=any?chart(W=>lineChart({w:W,h:200,xMin:0,xMax:n,yMin:0,yMax:100,gap:1.5,series:people.map(p=>({pts:p.pts,cls:p.cls})),yTicks:[[0,"0%"],[50,"50%"],[100,"100%"]],
+      xTicks:[[0,fNum(st)],[Math.round(n/2),fNum(addD(st,Math.round(n/2)))],[n,fNum(t)]],label:"مقارنة نسبة الإنجاز اليومية"})):'<p class="muted small" style="margin:0">لا نقاط في هذه الفترة بعد.</p>';
+  s+='<div class="cmprows">'+people.map(p=>'<div class="cmprow"><span class="cmpn"><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi></span><span><b class="num">'+(p.a7===null?"–":L(Math.round(p.a7)+"%"))+'</b><span class="lbl">آخر 7 أيام</span></span><span><b class="num">'+(p.aR===null?"–":L(Math.round(p.aR)+"%"))+'</b><span class="lbl">الفترة المعروضة</span></span>'+(p.c?'<span class="lbl cmpst">'+esc(frStatus(p.c))+'</span>':"")+'</div>').join("")+'</div>';
+  return s+'<p class="lbl" style="margin:0">كل شخص له مهامه ونقاطه، فالمقارنة بالنسبة: نقاط اليوم ÷ أقصى نقاط ممكنة في ذلك اليوم. لا يُشارك إلا هذا الرقم.</p></div>';
+}
+function cmpSettingsHTML(){
+  if(S.mode!=="db"||!DB||!DB.uid)return "";
+  return '<div class="fld"><span class="lbl2">المقارنة مع صديق</span>'+
+    '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:8px"><span class="small">رمزك</span><code class="code" dir="ltr" style="flex:1;min-width:0;overflow-x:auto;white-space:nowrap">'+esc(DB.uid)+'</code><button class="btn sm" type="button" data-act="cmpCopy">نسخ</button></div>'+
+    (S.cmp.length?'<div class="entries" style="max-height:none">'+S.cmp.map(c=>'<div><span><bdi>'+esc(c.name)+'</bdi> <span class="lbl">'+esc(frStatus(c))+'</span></span><button class="chip-link" type="button" data-act="cmpDel" data-u="'+esc(c.uid)+'">إزالة</button></div>').join("")+'</div>':"")+
+    '<form id="cmp-form" class="two" autocomplete="off"><div class="fld"><label for="cmp-n">اسم صديقك</label><input id="cmp-n" name="n" maxlength="24"></div><div class="fld"><label for="cmp-u">رمزه</label><input id="cmp-u" name="u" class="ltr" maxlength="64" spellcheck="false" autocapitalize="off"></div>'+
+    '<button class="btn sm" type="submit" style="align-self:flex-end">إضافة</button></form><p class="err" id="cmp-err" hidden></p>'+
+    (SH_ERR?'<p class="err" style="margin:0">'+(SH_ERR==="permission-denied"?"قاعدة البيانات لا تسمح بالمشاركة بعد. حدّث قواعد الأمان في لوحة Firebase.":"تعذّر نشر نسبتك ("+esc(SH_ERR)+").")+'</p>':"")+
+    '<span class="lbl">كل واحد يضيف رمز الآخر. عندها يرى كل منكما نسبة إنجاز الآخر اليومية فقط في قسم المهام، لا المهام نفسها ولا أي بيانات أخرى. الإزالة توقف المشاركة فوراً.</span></div>';
+}
+function refreshSettings(){const box=$("#sheet-card");if(!sheet.hidden&&box&&box.querySelector("#cmp-form")){const y=box.scrollTop;box.innerHTML=settingsHTML();box.scrollTop=y}}
+function settingsSubmit(fd,form){
+  if(form.id!=="cmp-form")return;
+  const n=String(fd.get("n")||"").trim(),u=String(fd.get("u")||"").trim(),err=$("#cmp-err"),bad=m=>{err.textContent=m;err.hidden=false};
+  if(!n)return bad("اكتب اسم صديقك.");
+  if(!/^[A-Za-z0-9]{20,64}$/.test(u))return bad("الرمز غير صحيح. انسخه كما هو من إعدادات صديقك.");
+  if(DB&&u===DB.uid)return bad("هذا رمزك أنت.");
+  if(S.cmp.some(c=>c.uid===u))return bad("هذا الصديق مضاف مسبقاً.");
+  if(S.cmp.length>=4)return bad("الحد أربعة أصدقاء.");
+  S.cmp.push({uid:u,name:n});saveConfig();SH_LAST="";queueShare();watchFriends();refreshSettings();
+}
+
 /* ---------- appearance ---------- */
 S.ui={pal:"",thm:""};try{const u=JSON.parse(localStorage.getItem("dt-ui")||"{}");S.ui={pal:u.pal==="pink"?"pink":"",thm:u.thm==="light"||u.thm==="dark"?u.thm:""}}catch(e){}
 function saveUiLocal(){try{localStorage.setItem("dt-ui",JSON.stringify(S.ui))}catch(e){}}
@@ -2474,6 +2561,7 @@ function render(force){
   if(S.tab==="habits")drawTaskChart();
   if(S.tab==="weight")drawWeightChart();
   if(S.tab==="notes")drawNotesList();
+  queueShare();
 }
 let pendingRender=false;
 document.addEventListener("focusout",e=>{if(e.target&&e.target.classList&&e.target.classList.contains("keep")&&pendingRender){setTimeout(()=>{const a=document.activeElement;if(!(a&&a.classList&&a.classList.contains("keep")))render()},0)}});
@@ -2649,6 +2737,7 @@ function settingsHTML(){
     '<div class="fld"><span class="lbl2">المظهر</span><div class="seg2" role="radiogroup" aria-label="الألوان"><label><input type="radio" name="pal" value=""'+(S.ui.pal!=="pink"?" checked":"")+'><span>الألوان الأصلية</span></label><label><input type="radio" name="pal" value="pink"'+(S.ui.pal==="pink"?" checked":"")+'><span>وردي</span></label></div>'+
       '<div class="seg2" role="radiogroup" aria-label="الإضاءة"><label><input type="radio" name="thm" value=""'+(!S.ui.thm?" checked":"")+'><span>حسب الجهاز</span></label><label><input type="radio" name="thm" value="light"'+(S.ui.thm==="light"?" checked":"")+'><span>فاتح</span></label><label><input type="radio" name="thm" value="dark"'+(S.ui.thm==="dark"?" checked":"")+'><span>داكن</span></label></div>'+
       '<span class="lbl">يُحفظ مع حسابك فيظهر بنفس الشكل على كل أجهزتك.</span></div>'+
+    cmpSettingsHTML()+
     '<div class="fld"><span class="lbl2">نسخة احتياطية</span><div class="row"><button class="btn sm" data-act="export">تصدير ملف</button><label class="btn sm filebtn">استيراد ملف<input id="imp-file" type="file" accept=".json,application/json"></label></div>'+
       '<span class="lbl">الاستيراد يضيف محتوى الملف إلى بياناتك الحالية ولا يحذف شيئاً منها. استخدمه لنقل بياناتك من النسخة القديمة.</span><p class="err" id="imp-err" hidden></p></div>'+
     (!embedded&&S.mode==="db"?'<div class="fld"><span class="lbl2">مشروع المزامنة</span><div class="row"><button class="btn sm danger" data-act="resetCfg">تغيير إعدادات المشروع على هذا الجهاز</button></div></div>':"")+
@@ -2774,7 +2863,7 @@ document.addEventListener("click",e=>{
     case "delGoal":{if(confirmArm[a+id]){delete S.goals[id];saveGoal(id);closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف الهدف"},4000)}break}
     case "delEntry":{const g=S.goals[id];if(g){g.entries=(g.entries||[]).filter(x=>x.d!==b.dataset.d);saveGoal(id);card.innerHTML=logForm(g);render()}break}
     case "closeSheet":closeSheet();break;
-    case "settings":openSheet(settingsHTML(),null);break;
+    case "settings":openSheet(settingsHTML(),settingsSubmit);break;
     case "signOut":closeSheet();flushAll();if(FB)FB.UM.signOut(FB.auth);break;
     case "authUp":doAuth("up");break;
     case "authReset":doAuth("reset");break;
@@ -2797,6 +2886,10 @@ document.addEventListener("click",e=>{
     case "memClearVal":setHappy(S.mem.sel,null);render(true);break;
     case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
+    case "cmpTog":CMP_ON=!CMP_ON;try{localStorage.setItem("dt-cmp",CMP_ON?"1":"0")}catch(er){}render();break;
+    case "cmpCopy":{const u=DB&&DB.uid;if(!u)break;const done=()=>{b.textContent="نُسخ ✓";setTimeout(()=>{if(b.isConnected)b.textContent="نسخ"},2000)};
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done).catch(()=>{const c=card.querySelector("code");if(c){const r=document.createRange();r.selectNodeContents(c);const sl=getSelection();sl.removeAllRanges();sl.addRange(r)}});else done();break}
+    case "cmpDel":{const u=b.dataset.u;if(confirmArm[a+u]){S.cmp=S.cmp.filter(c=>c.uid!==u);saveConfig();SH_LAST="";queueShare();watchFriends();delete confirmArm[a+u];refreshSettings();render()}else{confirmArm[a+u]=1;b.textContent="اضغط مرة أخرى";setTimeout(()=>{delete confirmArm[a+u];if(b.isConnected)b.textContent="إزالة"},4000)}break}
     case "nView":S.nu.view=b.dataset.v||"";S.nu.msg="";render(true);window.scrollTo(0,0);break;
     case "nDay":{let k=addD(S.nu.cur,+b.dataset.n);if(k>todayK())k=todayK();S.nu.cur=k;render();break}
     case "nToday":S.nu.cur=todayK();render();break;
