@@ -406,6 +406,59 @@ nav.tabs button{font-size:11px}
 .gc.w{background:var(--gc);color:#fff;font-weight:600;cursor:pointer}
 .gc.w .num{color:#fff}
 .gx{position:absolute;bottom:4px;width:5px;height:5px;border-radius:50%;background:#fff}
+
+/* strong-style session */
+:root{--sblue:#2f7fe0;--sblue-bg:#e6f0fd;--sred:#e0483d;--sred-bg:#fdeceb;--sgreen:#22b35e;--sgreen-bg:#e5f6ec;--snote:#fbefc6;--snote-ink:#8a6a12;--spill:#eef0f2}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sblue:#5aa2ff;--sblue-bg:#16263b;--sred:#ff6b60;--sred-bg:#3a1c1a;--sgreen:#36c975;--sgreen-bg:#12301f;--snote:#3a3115;--snote-ink:#f0cf6e;--spill:#1e2a30}}
+:root[data-theme="dark"]{--sblue:#5aa2ff;--sblue-bg:#16263b;--sred:#ff6b60;--sred-bg:#3a1c1a;--sgreen:#36c975;--sgreen-bg:#12301f;--snote:#3a3115;--snote-ink:#f0cf6e;--spill:#1e2a30}
+.sw{max-width:600px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px;background:var(--surface);border-radius:18px;padding:12px 14px 18px;box-sizing:border-box;border:1px solid var(--line)}
+.sw-top{display:flex;justify-content:space-between;align-items:center;position:sticky;top:env(safe-area-inset-top,0px);background:var(--surface);z-index:6;padding-block:4px}
+.sw-tmr{width:46px;height:38px;border-radius:10px;border:0;background:var(--spill);display:grid;place-items:center;color:var(--ink)}
+.sw-tmr svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+.sw-tmr.on{background:var(--sblue-bg);color:var(--sblue)}
+.sw-fin{border:0;background:var(--sgreen);color:#fff;font-weight:700;font-size:16px;border-radius:10px;padding:9px 22px}
+.sw-head{display:flex;flex-direction:column;gap:2px}
+.sw-tl{display:flex;align-items:center;gap:10px}
+.sw-tl h2{font-size:26px;font-weight:700;margin:0}
+.sw-dots{width:34px;height:28px;border-radius:8px;border:0;background:var(--spill);display:grid;place-items:center;color:var(--ink);flex:none}
+.sw-dots svg{width:18px;height:18px;fill:currentColor}
+.sw-dots.sm{background:var(--sblue-bg);color:var(--sblue)}
+.sw-time{font-size:16px;color:var(--ink)}
+.sw-notes{border:0;background:transparent;padding:2px 0;font-size:15px;color:var(--ink);width:100%}
+.sw-notes::placeholder{color:var(--muted);opacity:.7}
+.sw-notes:focus{outline:none}
+.sw-ex{display:flex;flex-direction:column;gap:6px}
+.sw-exh{display:flex;justify-content:space-between;align-items:center}
+.sw-exn{border:0;background:none;padding:0;color:var(--sblue);font-weight:700;font-size:17px;text-align:start}
+.sw-note{display:flex;align-items:center;gap:8px;background:var(--snote);border-radius:8px;padding:6px 10px;margin-inline:-14px;border-radius:0}
+.sw-note input{flex:1;min-width:0;border:0;background:transparent;color:var(--snote-ink);font-size:15px;font-weight:500;padding:4px 0}
+.sw-note input::placeholder{color:var(--snote-ink);opacity:.6}
+.sw-note input:focus{outline:none}
+.sw-pin{width:30px;height:26px;border-radius:7px;background:color-mix(in srgb,var(--snote-ink) 22%,transparent);display:grid;place-items:center;flex:none}
+.sw-pin svg{width:15px;height:15px;stroke:var(--snote-ink);fill:none;stroke-width:2}
+.sw-tbl{display:flex;flex-direction:column;margin-inline:-14px}
+.sw-r{display:grid;grid-template-columns:52px minmax(0,1.5fr) 72px 64px 46px;gap:8px;align-items:center;padding:6px 14px}
+.sw-hd{font-weight:700;font-size:14px;color:var(--ink);padding-block:4px}
+.sw-hd span{text-align:center}
+.sw-hd span:nth-child(2){text-align:center}
+.sw-hd svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:3;display:block;margin:0 auto}
+.sw-n{justify-self:center;min-width:30px;height:28px;border-radius:7px;background:var(--spill);display:grid;place-items:center;font-weight:600;font-size:15px}
+.sw-p{text-align:center;color:var(--muted);opacity:.75;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sw-in{width:100%;box-sizing:border-box;border:0;border-radius:7px;background:var(--spill);text-align:center;font-family:var(--f-num);font-size:16px;font-weight:600;padding:6px 2px;color:var(--ink)}
+.sw-in::placeholder{color:var(--muted);opacity:.55;font-weight:400}
+.sw-in.need{box-shadow:0 0 0 2px var(--sred)}
+.sw-ck{justify-self:center;width:40px;height:30px;border-radius:7px;border:0;background:var(--spill);display:grid;place-items:center}
+.sw-ck svg{width:18px;height:18px;stroke:var(--ink);stroke-width:3;fill:none}
+.sw-r.done{background:var(--sgreen-bg)}
+.sw-r.done .sw-n,.sw-r.done .sw-in{background:transparent}
+.sw-r.done .sw-ck{background:var(--sgreen)}
+.sw-r.done .sw-ck svg{stroke:#fff}
+.sw-add{border:0;background:var(--spill);border-radius:8px;padding:7px;font-weight:600;font-size:15px;color:var(--ink)}
+.sw-big{border:0;border-radius:10px;padding:11px;font-weight:700;font-size:16px}
+.sw-big.blue{background:var(--sblue-bg);color:var(--sblue);margin-top:10px}
+.sw-big.red{background:var(--sred-bg);color:var(--sred)}
+.mlist2 .btn{text-align:start}
+@media (max-width:420px){.sw-r{grid-template-columns:40px minmax(0,1.4fr) 64px 54px 42px;gap:6px}.sw-p{font-size:12.5px}}
 /* memories */
 .rng{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
 .rng button{border:0;background:transparent;border-radius:7px;padding:5px 11px;font-size:13px;color:var(--muted)}
@@ -1410,27 +1463,49 @@ function gymStatsHTML(){
   '</section>';
 }
 
+let NOTE_OPEN=new Set();
+const IC_TMR='<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2h5"/></svg>';
+const IC_DOTS='<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
+const IC_PIN='<svg viewBox="0 0 24 24"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3zM12 14v7"/></svg>';
 function woView(w){
-  let s='<section class="panel wo-h"><div class="sec-h" style="flex-wrap:wrap"><div><h2 class="dsp">'+esc(w.gname)+'</h2><div class="lbl">'+esc(fLong(w.date))+' · المدة <span class="num" id="wk-el">'+fmtDur((Date.now()-new Date(w.start))/1000)+'</span> · <span class="num">'+woSets(w)+'</span> '+(woSets(w)===1?"جولة":woSets(w)===2?"جولة":woSets(w)<=10?"جولات":"جولة")+' منجزة</div></div><button class="btn pri" data-act="woFinish">إنهاء التمرين</button></div></section>';
+  let s='<div class="sw"><div class="sw-top"><button class="sw-tmr'+(TMR?" on":"")+'" data-act="tmrBtn" aria-label="مؤقت الراحة">'+IC_TMR+'</button><button class="sw-fin" data-act="woFinish">إنهاء</button></div>'+
+    '<div class="sw-head"><div class="sw-tl"><h2>'+esc(w.gname)+'</h2><button class="sw-dots" data-act="woMenu" aria-label="خيارات الجلسة">'+IC_DOTS+'</button></div>'+
+    '<div class="sw-time num" id="wk-el">'+fmtDur((Date.now()-new Date(w.start))/1000)+'</div>'+
+    '<input id="wn" class="keep sw-notes" maxlength="200" value="'+esc(w.note||"")+'" placeholder="ملاحظات" aria-label="ملاحظات الجلسة"></div>';
   w.ex.forEach((e,ei)=>{
-    const prev=prevSets(e.eid,e.name,w.start);
-    s+='<section class="panel wo-ex"><div class="sec-h"><h3>'+esc(e.name)+'</h3><button class="chip-link" data-act="exHist" data-eid="'+e.eid+'" data-n="'+esc(e.name)+'">السجل</button></div>'+
-      '<input id="xn-'+e.eid+'" class="keep exnote" maxlength="160" value="'+esc(exNote(e.eid))+'" placeholder="ملاحظة ثابتة لهذا التمرين، مثل رقم المقعد" aria-label="ملاحظة التمرين">'+
-      '<div class="wtbl"><div class="wr wh"><span>الجولة</span><span>المرة السابقة</span><span>كغم</span><span>العدات</span><span></span></div>'+
+    const prev=prevSets(e.eid,e.name,w.start),nt=exNote(e.eid),showN=nt||NOTE_OPEN.has(e.eid);
+    s+='<section class="sw-ex"><div class="sw-exh"><button class="sw-exn" data-act="exHist" data-eid="'+e.eid+'" data-n="'+esc(e.name)+'">'+esc(e.name)+'</button><button class="sw-dots sm" data-act="exMenu" data-e="'+ei+'" aria-label="خيارات التمرين">'+IC_DOTS+'</button></div>'+
+      (showN?'<label class="sw-note"><input id="xn-'+e.eid+'" class="keep" maxlength="160" value="'+esc(nt)+'" placeholder="ملاحظة ثابتة لهذا التمرين"><span class="sw-pin">'+IC_PIN+'</span></label>':"")+
+      '<div class="sw-tbl"><div class="sw-r sw-hd"><span>الجولة</span><span>السابق</span><span>كغم</span><span>العدات</span><span>'+ICON.check+'</span></div>'+
       e.sets.map((st,si)=>{const p=prev&&prev[si],ids="ws-"+ei+"-"+si;
-        return '<div class="wr'+(st.done?" done":"")+'"><span class="num sn">'+(si+1)+'</span><span class="num muted pv">'+(p?L(num(+p.w,2)+" × "+p.r):"–")+'</span>'+
-          '<input id="'+ids+'-w" class="keep ltr win" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'" placeholder="'+(p?esc(p.w):"0")+'" aria-label="الوزن">'+
-          '<input id="'+ids+'-r" class="keep ltr win" type="number" inputmode="numeric" step="1" min="0" value="'+esc(st.r)+'" placeholder="'+(p?esc(p.r):"0")+'" aria-label="العدات">'+
-          '<button class="wchk" data-act="setDone" data-e="'+ei+'" data-s="'+si+'" aria-pressed="'+!!st.done+'" aria-label="إنهاء الجولة">'+ICON.check+'</button></div>'}).join("")+
-      '</div><div class="row"><button class="btn sm" data-act="setAdd" data-e="'+ei+'">+ جولة</button>'+(e.sets.length>1?'<button class="btn sm" data-act="setDel" data-e="'+ei+'">− جولة</button>':"")+
-      '<span class="lbl">الراحة بعد كل جولة '+fmtS(+e.rest||S.gym.rest)+'</span><button class="chip-link" data-act="restNow" data-e="'+ei+'">بدء المؤقت</button></div></section>';
+        return '<div class="sw-r'+(st.done?" done":"")+'"><span class="sw-n num">'+(si+1)+'</span><span class="sw-p num">'+(p?L(num(+p.w,2)+" × "+p.r):"—")+'</span>'+
+          '<input id="'+ids+'-w" class="keep ltr sw-in" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'" placeholder="'+(p?esc(p.w):"")+'" aria-label="الوزن">'+
+          '<input id="'+ids+'-r" class="keep ltr sw-in" type="number" inputmode="numeric" step="1" min="0" value="'+esc(st.r)+'" placeholder="'+(p?esc(p.r):"")+'" aria-label="العدات">'+
+          '<button class="sw-ck" data-act="setDone" data-e="'+ei+'" data-s="'+si+'" aria-pressed="'+!!st.done+'" aria-label="إنهاء الجولة">'+ICON.check+'</button></div>'}).join("")+
+      '</div><button class="sw-add" data-act="setAdd" data-e="'+ei+'">+ إضافة جولة</button></section>';
   });
-  s+='<div class="row"><button class="btn" data-act="woAddEx">إضافة تمرين لهذه الجلسة</button><button class="btn danger" data-act="woCancel">إلغاء الجلسة</button></div>'+
-    '<p class="lbl" style="margin:0">اضغط علامة الصح بعد كل جولة، فتُحفظ ويبدأ مؤقت الراحة. إذا تركت الوزن أو العدات فارغة تُؤخذ أرقام المرة السابقة.</p>';
+  s+='<button class="sw-big blue" data-act="woAddEx">إضافة تمارين</button><button class="sw-big red" data-act="woCancel">إلغاء التمرين</button></div>';
   return s;
+}
+function exMenuHTML(w,ei){
+  const e=w.ex[ei];
+  return '<h2>'+esc(e.name)+'</h2><div class="f mlist2">'+
+    '<button class="btn" data-act="exHist" data-eid="'+e.eid+'" data-n="'+esc(e.name)+'">السجل والتطور</button>'+
+    '<button class="btn" data-act="exNoteOpen" data-eid="'+e.eid+'">'+(exNote(e.eid)?"تعديل الملاحظة الثابتة":"إضافة ملاحظة ثابتة")+'</button>'+
+    '<button class="btn" data-act="restNow" data-e="'+ei+'">بدء مؤقت الراحة ('+fmtS(+e.rest||S.gym.rest)+')</button>'+
+    (e.sets.length>1?'<button class="btn" data-act="setDel" data-e="'+ei+'">حذف آخر جولة</button>':"")+
+    '<button class="btn danger" data-act="exRm" data-e="'+ei+'">إزالة التمرين من هذه الجلسة</button>'+
+    '<button class="btn" data-act="closeSheet">إغلاق</button></div>';
+}
+function openWoMenu(w){
+  openSheet('<h2>خيارات الجلسة</h2><form class="f" id="wm-form"><div class="fld"><label for="wm-name">اسم الجلسة</label><input id="wm-name" name="name" maxlength="60" value="'+esc(w.gname)+'"></div>'+
+    '<div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إغلاق</button></div></form>',fd=>{
+    const a=activeWo();if(a){const n=String(fd.get("name")||"").trim();if(n){a.gname=n;saveWo(a.id)}}closeSheet();render();
+  });
 }
 function vGym(){
   const w=activeWo();
+  if(w)return woView(w);
   let s='<section class="sec-h"><h2 class="dsp">الجم</h2>'+(w?'':'<div class="row"><button class="btn sm" data-act="gymSet">الإعدادات</button><button class="btn pri sm" data-act="wgNew">مجموعة جديدة</button></div>')+'</section>';
   if(w)return s+woView(w);
   const last=S.gsel&&S.wos[S.gsel]&&S.wos[S.gsel].end?S.wos[S.gsel]:null;
@@ -1833,10 +1908,10 @@ document.addEventListener("click",e=>{
         st.done=true;unlockAudio();sndSet();startRest(+ex.rest||S.gym.rest)}else st.done=false;
       saveWo(w.id);render();break}
     case "setAdd":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];if(ex){ex.sets.push({w:"",r:"",done:false});saveWo(w.id);render()}break}
-    case "setDel":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];if(ex&&ex.sets.length>1){ex.sets.pop();saveWo(w.id);render()}break}
-    case "restNow":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];unlockAudio();startRest(ex&&+ex.rest||S.gym.rest);break}
+    case "setDel":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];if(ex&&ex.sets.length>1){ex.sets.pop();saveWo(w.id);closeSheet();render()}break}
+    case "restNow":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];unlockAudio();startRest(ex&&+ex.rest||S.gym.rest);closeSheet();render();break}
     case "rtAdj":if(TMR){TMR.end+=(+b.dataset.n)*1000;TMR.total=Math.max(TMR.total,TMR.end-Date.now());if(TMR.end>Date.now())TMR.done=false;saveTmr();tickRest()}break;
-    case "rtSkip":stopRest();break;
+    case "rtSkip":stopRest();render();break;
     case "woFinish":{const w=activeWo();if(!w)break;const n=woSets(w);
       if(!n){if(confirmArm.woF){delete confirmArm.woF;delete S.wos[w.id];saveWo(w.id);stopRest();render()}else{confirmArm.woF=1;b.textContent="لا جولات منجزة، اضغط مرة أخرى للإلغاء";setTimeout(()=>{delete confirmArm.woF;if(b.isConnected)b.textContent="إنهاء التمرين"},4000)}break}
       w.ex=w.ex.map(x=>Object.assign({},x,{sets:x.sets.filter(q=>q.done)})).filter(x=>x.sets.length);w.end=new Date().toISOString();saveWo(w.id);stopRest();unlockAudio();sndFinish();markTraining(w.date);S.gsel=w.id;render();window.scrollTo(0,0);break}
@@ -1846,6 +1921,11 @@ document.addEventListener("click",e=>{
     case "woDel":{if(confirmArm[a+id]){delete S.wos[id];saveWo(id);if(S.gsel===id)S.gsel=null;closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف الجلسة"},4000)}break}
     case "exHist":openSheet(exHistHTML(b.dataset.eid,b.dataset.n),null);break;
     case "gselClose":S.gsel=null;render();break;
+    case "tmrBtn":unlockAudio();if(TMR)stopRest();else startRest(S.gym.rest);render();break;
+    case "woMenu":{const w=activeWo();if(w)openWoMenu(w);break}
+    case "exMenu":{const w=activeWo();if(w&&w.ex[+b.dataset.e])openSheet(exMenuHTML(w,+b.dataset.e),null);break}
+    case "exNoteOpen":{NOTE_OPEN.add(b.dataset.eid);closeSheet();render(true);const f=$("#xn-"+b.dataset.eid);if(f)f.focus();break}
+    case "exRm":{const w=activeWo(),ei=+b.dataset.e;if(!w||!w.ex[ei])break;if(confirmArm.exRm===ei){delete confirmArm.exRm;w.ex.splice(ei,1);saveWo(w.id);closeSheet();render()}else{confirmArm.exRm=ei;b.textContent="اضغط مرة أخرى للتأكيد";setTimeout(()=>{delete confirmArm.exRm},4000)}break}
     case "gmNav":{let m=S.gm.m+(+b.dataset.n),y=S.gm.y;if(m<0){m=11;y--}if(m>11){m=0;y++}const n=new Date();if(y>n.getFullYear()||(y===n.getFullYear()&&m>n.getMonth()))break;S.gm={y:y,m:m};render();break}
     case "gAll":S.gall=!S.gall;render();break;
     case "dayOff":{const d=ensureDay(S.cur);if(d.off)delete d.off;else d.off=true;saveDay(S.cur);render();break}
@@ -1952,6 +2032,7 @@ document.addEventListener("input",e=>{
   if(id==="mem-q"){S.mem.q=e.target.value;drawMemList();return}
   if(id==="nt-title"||id==="nt-body"){const n=S.notes[S.nt.sel];if(!n)return;n[id==="nt-title"?"title":"body"]=e.target.value;n.updated=new Date().toISOString();n.saved=true;saveNote(n.id);lastKeep=Date.now();drawNotesList();return}
   if(id==="nt-q"){S.nt.q=e.target.value;drawNotesList();return}
+  if(id==="wn"){const w=activeWo();if(w){w.note=e.target.value;lastKeep=Date.now();saveWo(w.id)}return}
   if(id&&id.indexOf("xn-")===0){setExNote(id.slice(3),e.target.value);lastKeep=Date.now();return}
   if(id&&id.indexOf("ws-")===0){const w=activeWo();if(!w)return;const p=id.split("-"),ex=w.ex[+p[1]],st=ex&&ex.sets[+p[2]];if(!st)return;st[p[3]]=e.target.value;e.target.classList.remove("need");lastKeep=Date.now();saveWo(w.id);return}
   if(id==="wf-v"||id==="wg-v"){const btn=$(id==="wf-v"?"#wf-btn":"#wg-btn");if(btn){const sv=parseFloat(btn.dataset.saved),v=parseFloat(e.target.value),has=Number.isFinite(sv),same=has&&v===sv;
