@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="دفتر التطور">
+<script>try{var u=JSON.parse(localStorage.getItem("dt-ui")||"{}"),r=document.documentElement;if(u.pal==="pink")r.setAttribute("data-pal","pink");if(u.thm==="light"||u.thm==="dark")r.setAttribute("data-theme",u.thm)}catch(e){}</script>
 <style>html{color-scheme:light dark}:root{padding-top:env(safe-area-inset-top,0px)}body{margin:0;font:14px system-ui,sans-serif;-webkit-text-size-adjust:100%}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>دفتر التطور</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -516,6 +517,79 @@ textarea{font:inherit;color:inherit;border:1px solid var(--line);background:var(
 @media (max-width:420px){.stats{gap:6px}.stat b{font-size:18px}.datebar .d h1{font-size:21px}.wd .n{font-size:14px}}
 .hrow .nmw{flex:1;min-width:0;display:flex;flex-direction:column}
 .hrow .nmw .st{white-space:normal}
+/* nutrition */
+.nsum{display:flex;flex-direction:column;gap:12px}
+.nbig{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nbig>div:first-child b{font-family:var(--f-num);font-weight:500;font-size:34px;line-height:1.1}
+.nbig b.over{color:var(--bad)}
+.mac{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.mac>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.mac .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mac b{font-family:var(--f-num);font-weight:500;font-size:14px;white-space:nowrap}
+.mac .bar{height:6px}
+.mac .bar i{background:var(--mc)}
+.u.lbl{font-family:var(--f-body);font-weight:400}
+.nmeal{display:flex;flex-direction:column;gap:8px}
+.nmeal-h{display:flex;align-items:center;gap:10px}
+.nmeal-h h3{font-size:16px;font-weight:600;flex:1;min-width:0}
+.nrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;width:100%;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.nrow:hover{border-color:var(--accent)}
+.nrow .nn{text-align:right;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nrow .nk{font-family:var(--f-num);font-weight:500;white-space:nowrap}
+.nrow .nm2{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.nadd{border:1px dashed var(--line);background:transparent;border-radius:12px;padding:10px;color:var(--accent);font-weight:500;width:100%}
+.nadd:hover{border-color:var(--accent)}
+.erow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.erow:last-child{border-bottom:0}
+.erow b{font-weight:500;white-space:nowrap}
+.entries .erow{padding:7px 0}
+.fsres{display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow:auto;overscroll-behavior:contain}
+.fsi{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:start;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px;width:100%}
+.fsi:hover{border-color:var(--accent)}
+.fsi .t{display:flex;flex-direction:column;min-width:0;gap:1px}
+.fsi .t b{font-weight:500;overflow-wrap:anywhere}
+.fsi .t span{font-size:12px;color:var(--muted)}
+.fsi .k{font-family:var(--f-num);font-size:12px;color:var(--muted);white-space:nowrap;flex:none}
+.fsh{font-size:12px;color:var(--muted);font-weight:600;margin-top:6px}
+.p100{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;text-align:center}
+.p100 div{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 2px;display:flex;flex-direction:column}
+.p100 b{font-family:var(--f-num);font-weight:500;font-size:15px}
+.p100 span{font-size:11px;color:var(--muted)}
+.amt{display:grid;grid-template-columns:minmax(90px,130px) minmax(0,1fr);gap:10px}
+.ntot{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:14px}
+.ntot b{font-family:var(--f-num);font-weight:600;font-size:18px}
+.unitbox summary{cursor:pointer;list-style:none;display:inline-block}
+.unitbox summary::-webkit-details-marker{display:none}
+.unitbox[open] summary{margin-bottom:2px}
+.seg2.wrap{flex-wrap:wrap}
+@media (max-width:420px){.mac{grid-template-columns:repeat(2,minmax(0,1fr))}.p100 b{font-size:13px}.nbig>div:first-child b{font-size:30px}}
+
+/* nav with eight sections */
+nav.tabs .in{grid-template-columns:repeat(8,1fr)}
+@media (max-width:420px){nav.tabs button{font-size:10px;letter-spacing:-.01em}nav.tabs button svg{width:21px;height:21px}}
+:root[data-theme="light"]{color-scheme:light}
+
+/* pink theme: same layout, softer palette */
+:root[data-pal="pink"]{
+  --bg:#fff2f7; --surface:#ffffff; --ink:#3a1a29; --muted:#8c6474; --line:#f4d2e0;
+  --accent:#d6386f; --accent-ink:#ffffff; --accent-soft:#fde2ec; --warm:#c46a2c;
+  --good:#2e8f63; --bad:#c9384a; --miss:#f9e3ec; --off:#fdf4f8;
+  --g1:#d6386f;--g2:#c46a2c;--g3:#2e8f63;--g4:#8f5bc4;--g5:#c9384a;--g6:#3b82c4;--g7:#a07f12;--g8:#b0418e;
+  --sblue:#d6386f;--sblue-bg:#fde2ec;--sred:#c9384a;--sred-bg:#fde6ea;--sgreen:#2e9e68;--sgreen-bg:#e4f5ec;--snote:#fff0c9;--snote-ink:#8a6212;--spill:#fbecf2}
+@media (prefers-color-scheme: dark){:root[data-pal="pink"]:not([data-theme="light"]){
+  --bg:#1b0f15; --surface:#26141d; --ink:#f7e7ef; --muted:#c29bad; --line:#3e2431;
+  --accent:#ff7aab; --accent-ink:#2a0915; --accent-soft:#4a1e31; --warm:#f0a566;
+  --good:#5fcf93; --bad:#ff7d8a; --miss:#33202a; --off:#2a1821;
+  --g1:#ff7aab;--g2:#f0a566;--g3:#5fcf93;--g4:#c39af0;--g5:#ff7d8a;--g6:#7fb6f0;--g7:#e2c45a;--g8:#f08ac9;
+  --sblue:#ff7aab;--sblue-bg:#45192c;--sred:#ff7d8a;--sred-bg:#46181f;--sgreen:#48c983;--sgreen-bg:#133024;--snote:#3d3014;--snote-ink:#f2d27a;--spill:#352029}}
+:root[data-pal="pink"][data-theme="dark"]{
+  --bg:#1b0f15; --surface:#26141d; --ink:#f7e7ef; --muted:#c29bad; --line:#3e2431;
+  --accent:#ff7aab; --accent-ink:#2a0915; --accent-soft:#4a1e31; --warm:#f0a566;
+  --good:#5fcf93; --bad:#ff7d8a; --miss:#33202a; --off:#2a1821;
+  --g1:#ff7aab;--g2:#f0a566;--g3:#5fcf93;--g4:#c39af0;--g5:#ff7d8a;--g6:#7fb6f0;--g7:#e2c45a;--g8:#f08ac9;
+  --sblue:#ff7aab;--sblue-bg:#45192c;--sred:#ff7d8a;--sred-bg:#46181f;--sgreen:#48c983;--sgreen-bg:#133024;--snote:#3d3014;--snote-ink:#f2d27a;--spill:#352029;color-scheme:dark}
+:root[data-pal="pink"] .brand::after{content:" ♡";color:var(--accent);font-family:var(--f-body);font-size:.8em}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -532,6 +606,7 @@ textarea{font:inherit;color:inherit;border:1px solid var(--line);background:var(
     <button data-act="tab" data-t="memories" id="tab-memories"><svg viewBox="0 0 24 24"><path d="M3 17l4-6 4 3 4-7 6 8"/><path d="M3 21h18"/></svg>الذكريات</button>
     <button data-act="tab" data-t="habits" id="tab-habits"><svg viewBox="0 0 24 24"><path d="M5 7l2 2 3-3M5 15l2 2 3-3M13 8h6M13 16h6"/></svg>المهام</button>
     <button data-act="tab" data-t="gym" id="tab-gym"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>الجم</button>
+    <button data-act="tab" data-t="nutri" id="tab-nutri"><svg viewBox="0 0 24 24"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 20.5h8"/><path d="M12 7.5c0-2.2 1.3-3.6 3.5-4M8.5 8c-.4-1.6.3-3 1.7-3.6"/></svg>التغذية</button>
     <button data-act="tab" data-t="notes" id="tab-notes"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>الأفكار</button>
     <button data-act="tab" data-t="goals" id="tab-goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8"/></svg>الأهداف</button>
     <button data-act="tab" data-t="weight" id="tab-weight"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 9.5a5 5 0 0 1 7 0L12 13z"/></svg>الوزن</button>
@@ -584,8 +659,8 @@ const ICON={
 
 /* ---------- state ---------- */
 const S={gym:{groups:[],rest:90},wos:{},gsel:null,gall:false,habits:[],groups:[],ngroups:[],ggroups:[],todos:{},days:{},goals:{},notes:{},wgoal:null,lastBackup:null,mode:"loading",cur:todayK(),tab:"today"};
-try{const t=localStorage.getItem("dt-tab");if(t&&["today","memories","habits","gym","notes","goals","weight"].includes(t))S.tab=t}catch(e){}
-if(["today","memories","habits","gym","notes","goals","weight"].includes(location.hash.slice(1)))S.tab=location.hash.slice(1);
+try{const t=localStorage.getItem("dt-tab");if(t&&["today","memories","habits","gym","nutri","notes","goals","weight"].includes(t))S.tab=t}catch(e){}
+if(["today","memories","habits","gym","nutri","notes","goals","weight"].includes(location.hash.slice(1)))S.tab=location.hash.slice(1);
 
 /* ---------- storage ---------- */
 // Embedded sync settings. Leave null to use the in-app setup screen instead.
@@ -626,12 +701,12 @@ window.addEventListener("pagehide",flushAll);
 let localTimer=null;
 function persistLocal(){
   clearTimeout(localTimer);
-  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos}))}catch(e){}},250);
+  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos,nutri:S.nutri,nut:S.nut,ui:S.ui}))}catch(e){}},250);
 }
 function loadLocal(){
-  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.ggroups=o.ggroups||[];S.todos=o.todos||{};S.gym=o.gym&&Array.isArray(o.gym.groups)?o.gym:{groups:[],rest:90};S.wos=o.wos||{}}}catch(e){}
+  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.ggroups=o.ggroups||[];S.todos=o.todos||{};S.gym=o.gym&&Array.isArray(o.gym.groups)?o.gym:{groups:[],rest:90};S.wos=o.wos||{};S.nutri=o.nutri||{};S.nut=o.nut||null;if(o.ui){S.ui=o.ui;applyTheme()}}}catch(e){}
 }
-const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;return JSON.parse(JSON.stringify(o))};
+const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.ui&&(S.ui.pal||S.ui.thm))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
 const saveConfig=()=>queueWrite("app/config",cfgDoc());
 const saveNote=id=>queueWrite("notes/"+id,S.notes[id]||null);
 const saveTodoX=0;const saveTodo=id=>queueWrite("todos/"+id,S.todos[id]||null);
@@ -664,11 +739,11 @@ let unsubs=[];
 function startDB(db){
   DB=db;S.mode="loading";render();
   unsubs.forEach(u=>{try{u()}catch(e){}});unsubs=[];
-  let got={c:false,d:false,g:false,n:false,t:false,w:false};
-  const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&got.w&&S.mode==="loading"){S.mode="db";setSync();migrateX()}render()};
+  let got={c:false,d:false,g:false,n:false,t:false,w:false,u:false};
+  const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&got.w&&got.u&&S.mode==="loading"){S.mode="db";setSync();migrateX()}render()};
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
-    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90}
+    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};saveUiLocal();applyTheme()}}
     got.c=true;ready();
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -689,6 +764,12 @@ function startDB(db){
     Object.keys(S.wos).forEach(k=>{const it=dirty.get("workouts/"+k);if(!nw[k]&&it&&it.data!==null)nw[k]=S.wos[k]});
     S.wos=nw;got.w=true;ready();
   },onErr));
+  unsubs.push(DB.collection("nutri").orderBy("d","desc").limit(400).onSnapshot(snap=>{
+    const nn={};
+    snap.docs.forEach(doc=>{const p="nutri/"+doc.id;nn[doc.id]=isDirty(p)&&S.nutri[doc.id]?S.nutri[doc.id]:JSON.parse(JSON.stringify(doc.data()))});
+    Object.keys(S.nutri).forEach(k=>{const it=dirty.get("nutri/"+k);if(!nn[k]&&it&&it.data!==null)nn[k]=S.nutri[k]});
+    S.nutri=nn;got.u=true;ready();
+  },onErr));
   unsubs.push(DB.collection("todos").onSnapshot(snap=>{
     const nt={};
     snap.docs.forEach(doc=>{const p="todos/"+doc.id;nt[doc.id]=isDirty(p)&&S.todos[doc.id]?S.todos[doc.id]:JSON.parse(JSON.stringify(doc.data()))});
@@ -702,7 +783,7 @@ function startDB(db){
     S.notes=nn;got.n=true;ready();
   },onErr));
 }
-function resetState(){S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
@@ -1009,7 +1090,7 @@ function vToday(){
     main=summary+'<section class="sec"><div class="sec-h" style="flex-wrap:wrap"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="hideDone" aria-pressed="'+HIDE_DONE+'">'+(HIDE_DONE?"إظهار المنجز"+(nHidden?" ("+nHidden+")":""):"إخفاء المنجز")+'</button><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div><div class="tl">'+blocks+'</div>'+
       (anyOff&&!off?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'</section>';
   }
-  const side=todoPanel(k);
+  const side=todoPanel(k)+actHTML(k);
   return head+'<div class="tg"><div class="tg-main">'+main+'</div><div class="tg-side">'+side+'</div></div>';
 }
 function heat(h){
@@ -1257,6 +1338,7 @@ function vWeight(){
     tile("أقل وزن",mnK?kg(S.days[mnK].w):"–",mnK?esc(fShort(mnK)):"")+'</section>';
   s+='<section class="panel sec"><div class="sec-h" style="flex-wrap:wrap"><h2>منحني الوزن</h2>'+rangeChips("wtRange",S.wt.range)+'</div><div id="wt-chart" class="chart"></div>'+
     '<div class="legend"><span><i style="background:var(--accent)"></i>القراءات اليومية</span><span><i style="background:var(--warm)"></i>متوسط متحرك 7 أيام</span>'+(+S.wgoal>0?'<span><i style="background:var(--good)"></i>الهدف</span>':'')+'<span>اضغط على يوم لتعديل قراءته</span></div></section>';
+  s+=compHTML();
   if(keys.length){const allR=keys.slice().reverse(),rec=S.wt.all?allR:allR.slice(0,14);
     s+='<section class="sec"><div class="sec-h"><h2>القراءات</h2><span class="lbl">'+keys.length+' قراءة</span></div><div class="panel wlist">'+rec.map((k,i)=>{const prev=rec[i+1],d=prev?S.days[k].w-(S.days[prev]?S.days[prev].w:NaN):(allR[i+1]?S.days[k].w-S.days[allR[i+1]].w:NaN);
       return '<button class="wrow'+(k===sel?" sel":"")+'" data-act="wpick" data-k="'+k+'"><span>'+esc(fLong(k))+'</span><span class="num">'+L(num(S.days[k].w,1))+'</span><span class="num small '+(d<0?"down-good":d>0?"up-bad":"muted")+'">'+(Number.isFinite(d)?L(signed(d,1)):"")+'</span></button>'}).join("")+'</div>'+(allR.length>14?'<button class="chip-link" data-act="wall">'+(S.wt.all?"عرض آخر 14 قراءة فقط":"عرض كل القراءات ("+allR.length+")")+'</button>':"")+'</section>'}
@@ -1714,6 +1796,584 @@ function exHistHTML(eid,name){
   return s+'<div class="row"><button class="btn" data-act="closeSheet">إغلاق</button></div></div>';
 }
 
+/* ---------- nutrition: food data ---------- */
+// Values are USDA SR28 per 100 g of food as eaten (cooked where cooked). Common-foods row: [ndb, USDA name, category, Arabic search words, note, [kcal, protein, carbs, fat, fibre], [[unit, grams]]]
+const FOOD_AR=[["20445","Rice, white, long-grain, regular, unenriched, cooked without salt","نشويات","رز أبيض مطبوخ (حبة طويلة) تمن رز عنبر بسمتي ابيض","",[130,2.7,28.2,0.3,0.4],[["كوب",158.0]]],["20451","Rice, white, medium-grain, cooked, unenriched","نشويات","رز أبيض مطبوخ (حبة متوسطة) تمن رز عنبر","",[130,2.4,28.6,0.2,null],[["كوب",186.0]]],["20453","Rice, white, short-grain, cooked, unenriched","نشويات","رز أبيض مطبوخ (حبة قصيرة) تمن رز مصري","",[130,2.4,28.7,0.2,null],[["كوب",205.0]]],["20037","Rice, brown, long-grain, cooked","نشويات","رز بني مطبوخ تمن اسمر","",[123,2.7,25.6,1.0,1.6],[["كوب",202.0]]],["20447","Rice, white, long-grain, parboiled, unenriched, cooked","نشويات","رز نصف مسلوق (بارابويلد) مطبوخ تمن","",[123,2.9,26.1,0.4,0.9],[["كوب",158.0]]],["20013","Bulgur, cooked","نشويات","برغل مطبوخ برغل جريش","",[83,3.1,18.6,0.2,4.5],[["كوب",182.0],["ملعقة كبيرة",8.4]]],["20029","Couscous, cooked","نشويات","كسكس مطبوخ كسكسي","",[112,3.8,23.2,0.2,1.4],[["كوب",157.0]]],["20137","Quinoa, cooked","نشويات","كينوا مطبوخة كينوا","",[120,4.4,21.3,1.9,2.8],[["كوب",185.0]]],["20121","Pasta, cooked, enriched, without added salt","نشويات","معكرونة مطبوخة مكرونة سباكيتي باستا معجنات","",[158,5.8,30.9,0.9,1.8],[["كوب",124.0]]],["20310","Noodles, egg, cooked, enriched, with added salt","نشويات","نودلز البيض مطبوخة شعرية نودلز","",[138,4.5,25.2,2.1,1.2],[["كوب",160.0]]],["08121","Cereals, oats, regular and quick, unenriched, cooked with water (includes boiling and microwaving), without salt","نشويات","شوفان مطبوخ بالماء شوفان عصيدة","",[71,2.5,12.0,1.5,1.7],[["كوب",234.0],["ملعقة كبيرة",14.6]]],["11833","Potatoes, boiled, cooked without skin, flesh, with salt","نشويات","بطاطا مسلوقة بدون قشر بطاطس مسلوقة","",[86,1.7,20.0,0.1,2.0],[["نصف كوب",78.0],["حبة كبيرة",300.0]]],["11357","Potatoes, white, flesh and skin, baked","نشويات","بطاطا مشوية بالفرن مع القشر بطاطس فرن","",[94,2.1,21.1,0.1,2.1],[["حبة كبيرة",299.0],["حبة متوسطة",173.0]]],["11934","Potatoes, mashed, home-prepared, whole milk and butter added","نشويات","بطاطا مهروسة بالحليب والزبدة بطاطس مهروسة بيوريه","",[113,1.9,16.8,4.2,1.5],[["كوب",210.0]]],["21138","Fast foods, potato, french fried in vegetable oil","نشويات","بطاطا مقلية (مطاعم) جبس فرايز بطاطس مقلية","",[312,3.4,41.4,14.7,3.8],[["حصة صغيرة",71.0],["حصة متوسطة",117.0]]],["11875","Sweet potato, cooked, baked in skin, flesh, with salt","نشويات","بطاطا حلوة مشوية بطاطا حلوة","",[92,2.0,20.7,0.1,3.3],[["حبة متوسطة",114.0],["نصف كوب",100.0]]],["11510","Sweet potato, cooked, boiled, without skin","نشويات","بطاطا حلوة مسلوقة بطاطا حلوة","",[76,1.4,17.7,0.1,2.5],[["كوب",328.0],["حبة متوسطة",151.0]]],["11168","Corn, sweet, yellow, cooked, boiled, drained, without salt","نشويات","ذرة حلوة مسلوقة عرانيس ذرة","",[96,3.4,21.0,1.5,2.4],[["عرنوص صغير",89.0],["عرنوص متوسط",103.0]]],["18041","Bread, pita, white, enriched","خبز","خبز عربي أبيض (بيتا) خبز صمون تنور لبناني","",[275,9.1,55.7,1.2,2.2],[["رغيف كبير",60.0],["رغيف صغير",28.0]]],["18042","Bread, pita, whole-wheat","خبز","خبز عربي أسمر (بيتا) خبز اسمر","",[262,9.8,55.9,1.7,6.1],[["رغيف كبير",64.0],["رغيف صغير",28.0]]],["18029","Bread, french or vienna (includes sourdough)","خبز","صمون / خبز فرنسي صمون حجري باكيت","",[272,10.8,51.9,2.4,2.2],[]],["18069","Bread, white, commercially prepared (includes soft bread crumbs)","خبز","خبز توست أبيض توست","",[266,8.8,49.4,3.3,2.7],[["شريحة",29.0]]],["18075","Bread, whole-wheat, commercially prepared","خبز","خبز توست أسمر (قمح كامل) توست اسمر","",[252,12.4,42.7,3.5,6.0],[["شريحة",32.0]]],["18364","Tortillas, ready-to-bake or -fry, flour, refrigerated","خبز","خبز تورتيلا (طحين) تورتيلا لفة","",[306,8.2,49.4,8.0,3.5],[["رغيف",48.0]]],["16070","Lentils, mature seeds, cooked, boiled, without salt","بقوليات","عدس مسلوق عدس","",[116,9.0,20.1,0.4,7.9],[["كوب",198.0],["ملعقة كبيرة",12.3]]],["16057","Chickpeas (garbanzo beans, bengal gram), mature seeds, cooked, boiled, without salt","بقوليات","حمص مسلوق حمص حب لبلبي","",[164,8.9,27.4,2.6,7.6],[["كوب",164.0]]],["16033","Beans, kidney, red, mature seeds, cooked, boiled, without salt","بقوليات","فاصوليا حمراء مسلوقة فاصوليا حمراء لوبيا","",[127,8.7,22.8,0.5,7.4],[["كوب",177.0],["ملعقة كبيرة",11.0]]],["16050","Beans, white, mature seeds, cooked, boiled, without salt","بقوليات","فاصوليا بيضاء مسلوقة فاصوليا يابسة","",[139,9.7,25.1,0.3,6.3],[["كوب",179.0],["ملعقة كبيرة",11.2]]],["16053","Broadbeans (fava beans), mature seeds, cooked, boiled, without salt","بقوليات","فول مسلوق باقلاء يابسة فول مدمس","",[110,7.6,19.6,0.4,5.4],[["كوب",170.0]]],["16086","Peas, split, mature seeds, cooked, boiled, without salt","بقوليات","بازلاء مجروشة مسلوقة ماش بازلاء","",[118,8.3,21.1,0.4,8.3],[["كوب",196.0],["ملعقة كبيرة",12.2]]],["16081","Mung beans, mature seeds, cooked, boiled, without salt","بقوليات","ماش مسلوق ماش","",[105,7.0,19.1,0.4,7.6],[["كوب",202.0]]],["16063","Cowpeas, common (blackeyes, crowder, southern), mature seeds, cooked, boiled, without salt","بقوليات","لوبيا عين سوداء مسلوقة لوبيا","",[116,7.7,20.8,0.5,6.5],[["كوب",171.0]]],["16137","Hummus, home prepared","بقوليات","حمص بطحينة (منزلي) حمص طحينة","",[177,4.9,20.1,8.6,4.0],[["ملعقة كبيرة",15.0],["كوب",246.0]]],["16158","Hummus, commercial","بقوليات","حمص بطحينة (جاهز) حمص طحينة","",[166,7.9,14.3,9.6,6.0],[["ملعقة كبيرة",15.0],["كوب",246.0]]],["16138","Falafel, home-prepared","بقوليات","فلافل فلافل طعمية","",[333,13.3,31.8,17.8,null],[["قرص",17.0]]],["05064","Chicken, broilers or fryers, breast, meat only, cooked, roasted","دجاج","صدر دجاج مشوي بدون جلد صدر دجاج مشوي فرن","",[165,31.0,0.0,3.6,0.0],[["كوب",140.0]]],["05747","Chicken, broiler or fryers, breast, skinless, boneless, meat only, cooked, grilled","دجاج","صدر دجاج مشوي على الشواية صدر دجاج مشوي كريل","",[151,30.5,0.0,3.2,0.0],[["قطعة",196.0]]],["05098","Chicken, broilers or fryers, thigh, meat only, cooked, roasted","دجاج","فخذ دجاج مشوي بدون جلد فخذ دجاج ورك","",[179,24.8,0.0,8.2,0.0],[["فخذ بدون جلد",116.0],["فخذ مع الجلد",137.0]]],["05672","Chicken, broilers or fryers, dark meat, thigh, meat only, cooked, braised","دجاج","فخذ دجاج مطبوخ (مرق) بدون جلد فخذ دجاج مرق مطبوخ","",[176,24.6,0.0,8.6,0.0],[["فخذ بدون جلد",111.0],["فخذ مع الجلد",129.0]]],["05671","Chicken, broilers or fryers, dark meat, drumstick, meat only, cooked, braised","دجاج","دبوس دجاج مطبوخ بدون جلد دبوس دجاج ساق","",[149,23.9,0.0,6.0,0.0],[["دبوس بدون جلد",95.0],["دبوس مع الجلد",105.0]]],["05069","Chicken, broilers or fryers, drumstick, meat and skin, cooked, roasted","دجاج","دبوس دجاج مشوي مع الجلد دبوس دجاج","",[191,23.4,0.0,10.2,0.0],[["دبوس مع الجلد",105.0],["دبوس بدون جلد",96.0]]],["05107","Chicken, broilers or fryers, wing, meat only, cooked, roasted","دجاج","جناح دجاج مشوي (لحم فقط) جوانح جناح","",[203,30.5,0.0,8.1,0.0],[["جناح بدون عظم وجلد",21.0]]],["05009","Chicken, broilers or fryers, meat and skin, cooked, roasted","دجاج","دجاج مشوي مع الجلد (مختلط) دجاج مشوي كامل","",[239,27.3,0.0,13.6,0.0],[["كوب",140.0]]],["05012","Chicken, broilers or fryers, meat only, cooked, fried","دجاج","دجاج مقلي (لحم فقط) دجاج مقلي","",[219,30.6,1.7,9.1,0.1],[["كوب",140.0]]],["05014","Chicken, broilers or fryers, meat only, stewed","دجاج","دجاج مسلوق (لحم فقط) دجاج مسلوق مرق","",[177,27.3,0.0,6.7,0.0],[["كوب",140.0],["ملعقة كبيرة",8.7]]],["05065","Chicken, broilers or fryers, breast, meat only, cooked, stewed","دجاج","صدر دجاج مسلوق صدر دجاج مسلوق مرق","",[151,29.0,0.0,3.0,0.0],[["كوب",140.0]]],["05099","Chicken, broilers or fryers, thigh, meat only, cooked, stewed","دجاج","فخذ دجاج مسلوق بدون جلد فخذ دجاج مسلوق","",[195,25.0,0.0,9.8,0.0],[["كوب",140.0]]],["05661","Chicken, liver, all classes, cooked, pan-fried","دجاج","كبدة دجاج مقلية كبدة دجاج معلاك","",[172,25.8,1.1,6.4,0.0],[["كبدة واحدة",44.0]]],["05024","Chicken, gizzard, all classes, cooked, simmered","دجاج","قوانص دجاج مسلوقة قوانص","",[154,30.4,0.0,2.7,0.0],[["كوب",145.0]]],["23560","Beef, ground, 95% lean meat / 5% fat, crumbles, cooked, pan-browned","لحم بقر","لحم بقر مفروم مطبوخ 95% لحم قيمة مفروم لحم مثروم","",[193,29.2,0.0,7.6,0.0],[]],["23565","Beef, ground, 90% lean meat / 10% fat, crumbles, cooked, pan-browned","لحم بقر","لحم بقر مفروم مطبوخ 90% لحم قيمة مفروم لحم مثروم","",[230,28.4,0.0,12.0,0.0],[]],["23570","Beef, ground, 85% lean meat / 15% fat, crumbles, cooked, pan-browned","لحم بقر","لحم بقر مفروم مطبوخ 85% لحم قيمة مفروم لحم مثروم","",[256,27.7,0.0,15.3,0.0],[]],["23575","Beef, ground, 80% lean meat / 20% fat, crumbles, cooked, pan-browned","لحم بقر","لحم بقر مفروم مطبوخ 80% لحم قيمة مفروم لحم مثروم كفتة","",[272,27.0,0.0,17.4,0.0],[]],["13494","Beef, ground, 70% lean meat / 30% fat, crumbles, cooked, pan-browned","لحم بقر","لحم بقر مفروم مطبوخ 70% لحم قيمة مفروم لحم مثروم","",[270,25.6,0.0,17.9,0.0],[]],["13918","Beef, tenderloin, steak, separable lean and fat, trimmed to 1/8\" fat, all grades, cooked, broiled","لحم بقر","ستيك فيليه بقر مشوي تندرلوين ستيك فيليه","",[267,26.5,0.0,17.1,0.0],[["ستيك",104.0]]],["13930","Beef, top sirloin, steak, separable lean and fat, trimmed to 1/8\" fat, all grades, cooked, broiled","لحم بقر","ستيك سيرلوين بقر مشوي ستيك سيرلوين","",[243,27.0,0.0,14.2,0.0],[]],["23602","Beef, chuck, arm pot roast, separable lean only, trimmed to 1/8\" fat, all grades, cooked, braised","لحم بقر","لحم بقر مطبوخ قطع (لحم كتف) هبر فقط لحم مرق قطع هبر","",[214,34.7,0.0,7.4,0.0],[]],["13810","Beef, chuck, arm pot roast, separable lean and fat, trimmed to 1/8\" fat, all grades, cooked, braised","لحم بقر","لحم بقر مطبوخ قطع (لحم كتف) مع الدهن لحم مرق قطع","",[302,30.1,0.0,19.2,0.0],[]],["13892","Beef, round, top round, separable lean and fat, trimmed to 1/8\" fat, all grades, cooked, braised","لحم بقر","لحم بقر فخذ مطبوخ لحم فخذ","",[238,34.3,0.0,10.1,0.0],[]],["13327","Beef, variety meats and by-products, liver, cooked, pan-fried","لحم بقر","كبدة بقر مقلية كبدة معلاك","",[175,26.5,5.2,4.7,0.0],[["شريحة",82.0]]],["13340","Beef, variety meats and by-products, tongue, cooked, simmered","لحم بقر","لسان بقر مسلوق لسان","",[284,19.3,0.0,22.3,0.0],[]],["13322","Beef, variety meats and by-products, heart, cooked, simmered","لحم بقر","قلب بقر مسلوق قلب","",[165,28.5,0.1,4.7,0.0],[]],["17225","Lamb, ground, cooked, broiled","لحم غنم","لحم غنم مفروم مشوي كباب قيمة غنم مفروم","",[283,24.8,0.0,19.6,0.0],[]],["17231","Lamb, domestic, leg, whole (shank and sirloin), separable lean and fat, trimmed to 1/8\" fat, choice, cooked, roasted","لحم غنم","فخذ غنم مشوي فخذ غنم لحم","",[242,26.2,0.0,14.4,0.0],[]],["17247","Lamb, domestic, shoulder, arm, separable lean and fat, trimmed to 1/8\" fat, choice, cooked, braised","لحم غنم","كتف غنم مطبوخ (مرق) لحم غنم مرق كتف","",[337,31.1,0.0,22.6,0.0],[["ستيك",45.0]]],["17229","Lamb, domestic, foreshank, separable lean and fat, trimmed to 1/8\" fat, cooked, braised","لحم غنم","لحم غنم قطع مطبوخ (مرق) لحم غنم مرق","",[243,28.4,0.0,13.5,0.0],[]],["17240","Lamb, domestic, rib, separable lean and fat, trimmed to 1/8\" fat, choice, cooked, broiled","لحم غنم","ريش غنم مشوية ريش كستلاتة","",[340,23.1,0.0,26.8,0.0],[]],["17004","Lamb, domestic, composite of trimmed retail cuts, separable lean only, trimmed to 1/4\" fat, choice, cooked","لحم غنم","لحم غنم مطبوخ (معدل القطع) هبر فقط لحم غنم هبر","",[206,28.2,0.0,9.5,0.0],[]],["17227","Lamb, domestic, composite of trimmed retail cuts, separable lean and fat, trimmed to 1/8\" fat, choice, cooked","لحم غنم","لحم غنم مطبوخ (معدل القطع) مع الدهن لحم غنم","",[271,25.5,0.0,18.0,0.0],[]],["15009","Fish, carp, cooked, dry heat","أسماك","سمك كارب مشوي (مسكوف) سمك شبوط كارب مسكوف","",[162,22.9,0.0,7.2,0.0],[["شريحة فيليه",170.0]]],["15209","Fish, salmon, Atlantic, wild, cooked, dry heat","أسماك","سمك سلمون مشوي سلمون","",[182,25.4,0.0,8.1,0.0],[["نصف شريحة فيليه",154.0]]],["15016","Fish, cod, Atlantic, cooked, dry heat","أسماك","سمك قد (كود) مشوي سمك ابيض","",[105,22.8,0.0,0.9,0.0],[["شريحة فيليه",180.0]]],["15047","Fish, mackerel, Atlantic, cooked, dry heat","أسماك","سمك ماكريل مشوي ماكريل اسقمري","",[262,23.9,0.0,17.8,0.0],[["شريحة فيليه",88.0]]],["15121","Fish, tuna, light, canned in water, drained solids","أسماك","تونة معلبة بالماء (مصفاة) تونة تونا علبة","",[86,19.4,0.0,1.0,0.0],[]],["15119","Fish, tuna, light, canned in oil, drained solids","أسماك","تونة معلبة بالزيت (مصفاة) تونة تونا علبة","",[198,29.1,0.0,8.2,0.0],[["كوب",146.0]]],["15088","Fish, sardine, Atlantic, canned in oil, drained solids with bone","أسماك","سردين معلب بالزيت (مصفى) سردين","",[208,24.6,0.0,11.4,0.0],[["كوب",149.0]]],["15151","Crustaceans, shrimp, mixed species, cooked, moist heat (may have been previously frozen)","أسماك","روبيان مسلوق روبيان قريدس جمبري","",[119,22.8,1.5,1.7,0.0],[["4 حبات كبيرة",22.0]]],["15150","Crustaceans, shrimp, mixed species, cooked, breaded and fried","أسماك","روبيان مقلي بالبقسماط روبيان مقلي","",[242,21.4,11.5,12.3,0.4],[["4 حبات كبيرة",30.0]]],["01129","Egg, whole, cooked, hard-boiled","بيض","بيض مسلوق بيضة مسلوقة","",[155,12.6,1.1,10.6,0.0],[["حبة كبيرة",50.0],["كوب",136.0],["ملعقة كبيرة",8.5]]],["01128","Egg, whole, cooked, fried","بيض","بيض مقلي بيضة مقلية عيون","",[196,13.6,0.8,14.8,0.0],[["حبة كبيرة",46.0]]],["01132","Egg, whole, cooked, scrambled","بيض","بيض مخفوق (سكرامبل) بيض مخفوق","",[149,10.0,1.6,11.0,0.0],[["حبة كبيرة",61.0],["ملعقة كبيرة",13.7]]],["01130","Egg, whole, cooked, omelet","بيض","أومليت عجة اومليت","",[154,10.6,0.6,11.7,0.0],[["ملعقة كبيرة",15.0],["حبة كبيرة",61.0]]],["01131","Egg, whole, cooked, poached","بيض","بيض بوشيه (مسلوق بلا قشر) بيض بوشيه","",[143,12.5,0.7,9.5,0.0],[["حبة كبيرة",50.0]]],["01124","Egg, white, raw, fresh","بيض","بياض بيض بياض","",[52,10.9,0.7,0.2,0.0],[["حبة كبيرة",33.0],["كوب",243.0]]],["01077","Milk, whole, 3.25% milkfat, with added vitamin D","ألبان","حليب كامل الدسم 3.25% حليب","",[61,3.1,4.8,3.2,0.0],[["كوب",244.0]]],["01174","Milk, reduced fat, fluid, 2% milkfat, without added vitamin A and vitamin D","ألبان","حليب قليل الدسم 2% حليب","",[50,3.3,4.8,2.0,0.0],[["كوب",246.0]]],["01083","Milk, lowfat, fluid, 1% milkfat, with added nonfat milk solids, vitamin A and vitamin D","ألبان","حليب قليل الدسم 1% حليب","",[43,3.5,5.0,1.0,0.0],[["كوب",245.0]]],["01151","Milk, nonfat, fluid, without added vitamin A and vitamin D (fat free or skim)","ألبان","حليب خالي الدسم حليب","",[34,3.4,5.0,0.1,0.0],[["كوب",245.0]]],["01116","Yogurt, plain, whole milk, 8 grams protein per 8 ounce","ألبان","لبن (زبادي) كامل الدسم لبن روب زبادي","",[61,3.5,4.7,3.2,0.0],[["علبة 170 غ",170.0],["علبة 227 غ",227.0]]],["01117","Yogurt, plain, low fat, 12 grams protein per 8 ounce","ألبان","لبن (زبادي) قليل الدسم لبن روب زبادي","",[63,5.2,7.0,1.6,0.0],[["علبة 170 غ",170.0],["علبة 227 غ",227.0]]],["01293","Yogurt, Greek, plain, whole milk","ألبان","زبادي يوناني كامل الدسم لبن يوناني","",[97,9.0,4.0,5.0,0.0],[]],["01287","Yogurt, Greek, plain, lowfat","ألبان","زبادي يوناني قليل الدسم لبن يوناني","",[73,9.9,3.9,1.9,0.0],[["علبة 200 غ",200.0]]],["01256","Yogurt, Greek, plain, nonfat","ألبان","زبادي يوناني خالي الدسم لبن يوناني","",[59,10.2,3.6,0.4,0.0],[["علبة",170.0]]],["01230","Milk, buttermilk, fluid, whole","ألبان","شنينة شنينة لبن عيران","",[62,3.2,4.9,3.3,0.0],[["كوب",245.0]]],["01289","Kefir, lowfat, plain, LIFEWAY","ألبان","كفير قليل الدسم كفير","",[41,3.8,4.5,0.9,0.0],[]],["01019","Cheese, feta","ألبان","جبن أبيض (فيتا) جبن ابيض عرب فيتا","",[264,14.2,4.1,21.3,0.0],[["كوب",150.0]]],["01229","Cheese, white, queso blanco","ألبان","جبن أبيض طري (كيسو بلانكو) جبن ابيض","",[310,20.4,2.5,24.3,null],[["كوب",118.0]]],["01026","Cheese, mozzarella, whole milk","ألبان","جبن موزاريلا كامل الدسم موزريلا","",[300,22.2,2.2,22.4,0.0],[["كوب",112.0]]],["01028","Cheese, mozzarella, part skim milk","ألبان","جبن موزاريلا قليل الدسم موزريلا","",[254,24.3,2.8,15.9,0.0],[]],["01009","Cheese, cheddar","ألبان","جبن شيدر شيدر جبن اصفر","",[404,22.9,3.1,33.3,0.0],[["كوب",132.0]]],["01015","Cheese, cottage, lowfat, 2% milkfat","ألبان","جبن قريش (كوتج) 2% جبن قريش كوتج","",[81,10.4,4.8,2.3,0.0],[["كوب",226.0]]],["01012","Cheese, cottage, creamed, large or small curd","ألبان","جبن قريش (كوتج) كامل جبن قريش كوتج","",[98,11.1,3.4,4.3,0.0],[["كوب",210.0]]],["01017","Cheese, cream","ألبان","جبن كريمي جبن كريمي فيلادلفيا","",[350,6.2,5.5,34.4,0.0],[["ملعقة كبيرة",14.5],["كوب",232.0]]],["01036","Cheese, ricotta, whole milk","ألبان","جبن ريكوتا ريكوتا","",[174,11.3,3.0,13.0,0.0],[["نصف كوب",124.0],["كوب",246.0]]],["01032","Cheese, parmesan, grated","ألبان","جبن بارميزان مبشور بارميزان","",[420,28.4,13.9,27.8,0.0],[["كوب",100.0],["ملعقة كبيرة",5.0]]],["01053","Cream, fluid, heavy whipping","ألبان","قيمر / قشطة قيمر قشطة كريمة","",[340,2.8,2.7,36.1,0.0],[["كوب",238.0]]],["11279","Okra, cooked, boiled, drained, without salt","خضار مطبوخة","بامية مطبوخة (مسلوقة) باميا","",[22,1.9,4.5,0.2,2.5],[["نصف كوب",80.0],["8 قرنات",85.0]]],["11210","Eggplant, cooked, boiled, drained, without salt","خضار مطبوخة","باذنجان مطبوخ (مسلوق) بيتنجان","",[35,0.8,8.7,0.2,2.5],[["كوب",99.0]]],["11478","Squash, summer, zucchini, includes skin, cooked, boiled, drained, without salt","خضار مطبوخة","كوسا مطبوخة شجر كوسة","",[15,1.1,2.7,0.4,1.0],[["كوب",180.0],["نصف كوب",120.0]]],["11053","Beans, snap, green, cooked, boiled, drained, without salt","خضار مطبوخة","فاصوليا خضراء مطبوخة فاصوليا خضراء","",[35,1.9,7.9,0.3,3.2],[["كوب",125.0]]],["11305","Peas, green, cooked, boiled, drained, without salt","خضار مطبوخة","بازلاء خضراء مطبوخة بزاليا بازلاء","",[84,5.4,15.6,0.2,5.5],[["كوب",160.0]]],["11458","Spinach, cooked, boiled, drained, without salt","خضار مطبوخة","سبانخ مطبوخ سبانغ","",[23,3.0,3.8,0.3,2.4],[["كوب",180.0]]],["11125","Carrots, cooked, boiled, drained, without salt","خضار مطبوخة","جزر مطبوخ جزر","",[35,0.8,8.2,0.2,3.0],[["ملعقة كبيرة",9.7],["نصف كوب",78.0]]],["11136","Cauliflower, cooked, boiled, drained, without salt","خضار مطبوخة","قرنابيط مطبوخ قرنابيط زهرة","",[23,1.8,4.1,0.5,2.3],[["نصف كوب",62.0],["3 زهرات",54.0]]],["11091","Broccoli, cooked, boiled, drained, without salt","خضار مطبوخة","بروكلي مطبوخ بروكلي","",[35,2.4,7.2,0.4,3.3],[["نصف كوب",78.0]]],["11110","Cabbage, cooked, boiled, drained, without salt","خضار مطبوخة","لهانة (ملفوف) مطبوخة لهانة ملفوف","",[23,1.3,5.5,0.1,1.9],[["نصف كوب",75.0]]],["11283","Onions, cooked, boiled, drained, without salt","خضار مطبوخة","بصل مطبوخ (مسلوق) بصل","",[44,1.4,10.2,0.2,1.4],[["كوب",210.0],["ملعقة كبيرة",15.0]]],["11286","Onions, yellow, sauteed","خضار مطبوخة","بصل محمر بالزيت بصل مقلي","",[132,0.9,7.9,10.8,1.7],[["كوب",87.0]]],["11530","Tomatoes, red, ripe, cooked","خضار مطبوخة","طماطم مطبوخة طماطة","",[18,0.9,4.0,0.1,0.7],[["كوب",240.0],["حبتان متوسطتان",246.0]]],["11334","Peppers, sweet, green, cooked, boiled, drained, without salt","خضار مطبوخة","فلفل أخضر مطبوخ فلفل","",[28,0.9,6.7,0.2,1.2],[["كوب",135.0],["ملعقة كبيرة",11.6]]],["11261","Mushrooms, white, cooked, boiled, drained, without salt","خضار مطبوخة","فطر (مشروم) مطبوخ فطر مشروم","",[28,2.2,5.3,0.5,2.2],[["كوب",156.0],["ملعقة كبيرة",9.8]]],["11565","Turnips, cooked, boiled, drained, without salt","خضار مطبوخة","شلغم مطبوخ شلغم لفت","",[22,0.7,5.1,0.1,2.0],[["كوب",156.0]]],["11081","Beets, cooked, boiled, drained","خضار مطبوخة","شوندر مطبوخ شوندر شمندر","",[44,1.7,10.0,0.2,2.0],[["نصف كوب",85.0],["حبتان",100.0]]],["11529","Tomatoes, red, ripe, raw, year round average","خضار نيئة","طماطم طماطة بندورة","",[18,0.9,3.9,0.2,1.2],[["كوب",149.0]]],["11205","Cucumber, with peel, raw","خضار نيئة","خيار خيار","",[15,0.7,3.6,0.1,0.5],[["نصف كوب",52.0],["خيارة كاملة",301.0]]],["11251","Lettuce, cos or romaine, raw","خضار نيئة","خس روماني خس","",[17,1.2,3.3,0.3,2.1],[["كوب",47.0],["ورقة",6.0]]],["11252","Lettuce, iceberg (includes crisphead types), raw","خضار نيئة","خس آيسبيرغ خس","",[14,0.9,3.0,0.1,1.2],[["كوب",72.0]]],["11282","Onions, raw","خضار نيئة","بصل نيء بصل","",[40,1.1,9.3,0.1,1.7],[["كوب",160.0]]],["11291","Onions, spring or scallions (includes tops and bulb), raw","خضار نيئة","بصل أخضر بصل اخضر","",[32,1.8,7.3,0.2,2.6],[["كوب",100.0],["ملعقة كبيرة",6.0]]],["11124","Carrots, raw","خضار نيئة","جزر نيء جزر","",[41,0.9,9.6,0.2,2.8],[["كوب",128.0]]],["11333","Peppers, sweet, green, raw","خضار نيئة","فلفل أخضر حلو فلفل","",[20,0.9,4.6,0.2,1.7],[["كوب",149.0]]],["11821","Peppers, sweet, red, raw","خضار نيئة","فلفل أحمر حلو فلفل احمر","",[31,1.0,6.0,0.3,2.1],[["كوب",149.0]]],["11109","Cabbage, raw","خضار نيئة","لهانة (ملفوف) نيئة ملفوف لهانة","",[25,1.3,5.8,0.1,2.5],[["كوب",89.0]]],["11429","Radishes, raw","خضار نيئة","فجل فجل","",[16,0.7,3.4,0.1,1.6],[["كوب",116.0],["حبة كبيرة",9.0]]],["11297","Parsley, fresh","خضار نيئة","بقدونس معدنوس بقدونس","",[36,3.0,6.3,0.8,3.3],[["كوب",60.0],["ملعقة كبيرة",3.8]]],["11457","Spinach, raw","خضار نيئة","سبانخ نيء سبانغ","",[23,2.9,3.6,0.4,2.2],[["كوب",30.0]]],["11215","Garlic, raw","خضار نيئة","ثوم ثوم","",[149,6.4,33.1,0.5,2.1],[["كوب",136.0],["ملعقة صغيرة",2.8]]],["09152","Lemon juice, raw","خضار نيئة","عصير ليمون نومي حامض ليمون","",[22,0.3,6.9,0.2,0.3],[["كوب",244.0]]],["09037","Avocados, raw, all commercial varieties","خضار نيئة","أفوكادو افوكادو","",[160,2.0,8.5,14.7,6.7],[["كوب",150.0]]],["09087","Dates, deglet noor","فواكه","تمر (دقلة نور) تمر","",[282,2.5,75.0,0.4,8.0],[["كوب",147.0],["تمرة",7.1]]],["09421","Dates, medjool","فواكه","تمر مجهول تمر مجدول","",[277,1.8,75.0,0.1,6.7],[["تمرة",24.0]]],["09040","Bananas, raw","فواكه","موز موز","",[89,1.1,22.8,0.3,2.6],[["كوب",225.0]]],["09003","Apples, raw, with skin","فواكه","تفاح مع القشر تفاح","",[52,0.3,13.8,0.2,2.4],[["كوب",125.0]]],["09200","Oranges, raw, all commercial varieties","فواكه","برتقال برتقال","",[47,0.9,11.8,0.1,2.4],[["كوب",180.0],["حبة كبيرة",184.0]]],["09218","Tangerines, (mandarin oranges), raw","فواكه","لالنكي (يوسفي) لالنكي يوسفي مندرين","",[53,0.8,13.3,0.3,1.8],[["كوب",195.0],["حبة صغيرة",76.0]]],["09132","Grapes, red or green (European type, such as Thompson seedless), raw","فواكه","عنب عنب","",[69,0.7,18.1,0.2,0.9],[["كوب",151.0],["10 حبات",49.0]]],["09326","Watermelon, raw","فواكه","رقي (بطيخ أحمر) رقي بطيخ","",[30,0.6,7.5,0.1,0.4],[["كوب",154.0]]],["09181","Melons, cantaloupe, raw","فواكه","بطيخ (شمام) بطيخ شمام","",[34,0.8,8.2,0.2,0.9],[["كوب",177.0]]],["09286","Pomegranates, raw","فواكه","رمان رمان","",[83,1.7,18.7,1.2,4.0],[["نصف كوب",87.0],["حبة",282.0]]],["09316","Strawberries, raw","فواكه","فراولة فراولة شليك","",[32,0.7,7.7,0.3,2.0],[["كوب",152.0]]],["09089","Figs, raw","فواكه","تين تين","",[74,0.8,19.2,0.3,2.9],[["حبة كبيرة",64.0],["حبة متوسطة",50.0]]],["09021","Apricots, raw","فواكه","مشمش مشمش","",[48,1.4,11.1,0.4,2.0],[["كوب",155.0]]],["09236","Peaches, yellow, raw","فواكه","خوخ خوخ دراق","",[39,0.9,9.5,0.2,1.5],[["كوب",154.0],["حبة صغيرة",130.0]]],["09252","Pears, raw","فواكه","عرموط (كمثرى) عرموط كمثرى اجاص","",[57,0.4,15.2,0.1,3.1],[["كوب",140.0]]],["09279","Plums, raw","فواكه","عنجاص (برقوق) عنجاص برقوق","",[46,0.7,11.4,0.3,1.4],[["كوب",165.0],["حبة",66.0]]],["09176","Mangos, raw","فواكه","مانجو منكة مانجو","",[60,0.8,15.0,0.4,1.6],[["كوب",165.0],["حبة",336.0]]],["09148","Kiwifruit, green, raw","فواكه","كيوي كيوي","",[61,1.1,14.7,0.5,3.0],[["كوب",180.0],["حبة",69.0]]],["09266","Pineapple, raw, all varieties","فواكه","أناناس اناناس","",[50,0.5,13.1,0.1,1.4],[["كوب",165.0],["حبة",905.0]]],["09070","Cherries, sweet, raw","فواكه","كرز كرز","",[63,1.1,16.0,0.2,2.1],[["كوب",138.0]]],["09050","Blueberries, raw","فواكه","توت أزرق توت","",[57,0.7,14.5,0.3,2.4],[["كوب",148.0],["50 حبة",68.0]]],["09139","Guavas, common, raw","فواكه","جوافة جوافة","",[68,2.5,14.3,0.9,5.4],[["كوب",165.0],["حبة",55.0]]],["09298","Raisins, seedless","فواكه","زبيب كشمش زبيب","",[299,3.1,79.2,0.5,3.7],[["كوب",165.0]]],["12061","Nuts, almonds","مكسرات","لوز لوز","",[579,21.1,21.6,49.9,12.5],[["كوب",143.0]]],["12063","Nuts, almonds, dry roasted, without salt added","مكسرات","لوز محمص لوز","",[598,21.0,21.0,52.5,10.9],[["كوب",138.0]]],["12155","Nuts, walnuts, english","مكسرات","جوز جوز عين جمل","",[654,15.2,13.7,65.2,6.7],[["كوب",117.0]]],["12151","Nuts, pistachio nuts, raw","مكسرات","فستق حلبي فستق","",[560,20.2,27.2,45.3,10.6],[["كوب",123.0]]],["12152","Nuts, pistachio nuts, dry roasted, without salt added","مكسرات","فستق حلبي محمص فستق","",[572,21.1,28.3,45.8,10.3],[["كوب",123.0]]],["12085","Nuts, cashew nuts, dry roasted, without salt added","مكسرات","كاجو محمص كاجو","",[574,15.3,32.7,46.4,3.0],[["كوب",137.0],["ملعقة كبيرة",8.6]]],["12120","Nuts, hazelnuts or filberts","مكسرات","بندق بندق","",[628,14.9,16.7,60.8,9.7],[["كوب",115.0]]],["16090","Peanuts, all types, dry-roasted, with salt","مكسرات","فول سوداني محمص فستق عبيد فول سوداني","",[587,24.4,21.3,49.7,8.4],[["حبة",1.0]]],["16098","Peanut butter, smooth style, with salt","مكسرات","زبدة فول سوداني زبدة فستق","",[598,22.2,22.3,51.4,5.0],[["ملعقتان كبيرتان",32.0],["كوب",258.0]]],["12537","Seeds, sunflower seed kernels, dry roasted, with salt added","مكسرات","حب عباد الشمس (اللب) محمص حب ابيض شمسي","",[582,19.3,24.1,49.8,9.0],[["كوب",128.0]]],["12516","Seeds, pumpkin and squash seed kernels, roasted, with salt added","مكسرات","حب القرع (اللب) محمص حب قرع","",[574,29.8,14.7,49.0,6.5],[["كوب",118.0]]],["12698","Seeds, sesame butter, tahini, type of kernels unspecified","مكسرات","طحينة طحين راشي طحينة","",[592,17.4,21.5,53.0,4.7],[["ملعقة كبيرة",15.0]]],["12024","Seeds, sesame seeds, whole, roasted and toasted","مكسرات","سمسم محمص سمسم","",[565,17.0,25.7,48.0,14.0],[]],["12006","Seeds, chia seeds, dried","مكسرات","بذور الشيا شيا","",[486,16.5,42.1,30.7,34.4],[]],["12220","Seeds, flaxseed","مكسرات","بذور الكتان كتان","",[534,18.3,28.9,42.2,27.3],[["ملعقة كبيرة",10.3],["كوب",168.0]]],["04053","Oil, olive, salad or cooking","دهون","زيت زيتون زيت","",[884,0.0,0.0,100.0,0.0],[["ملعقة كبيرة",13.5],["كوب",216.0]]],["04506","Oil, sunflower, linoleic, (approx. 65%)","دهون","زيت دوار الشمس زيت عباد الشمس","",[884,0.0,0.0,100.0,0.0],[["ملعقة كبيرة",13.6],["كوب",218.0]]],["04518","Oil, corn, industrial and retail, all purpose salad or cooking","دهون","زيت ذرة زيت","",[900,0.0,0.0,100.0,0.0],[["ملعقة كبيرة",13.6],["كوب",218.0]]],["04044","Oil, soybean, salad or cooking","دهون","زيت نباتي (صويا) زيت","",[884,0.0,0.0,100.0,0.0],[["ملعقة كبيرة",13.6],["كوب",218.0]]],["01003","Butter oil, anhydrous","دهون","دهن حر / سمن دهن حر سمن","",[876,0.3,0.0,99.5,0.0],[["ملعقة كبيرة",12.8],["كوب",205.0]]],["01145","Butter, without salt","دهون","زبدة زبدة","",[717,0.8,0.1,81.1,0.0],[["ملعقة كبيرة",14.2]]],["04025","Salad dressing, mayonnaise, regular","دهون","مايونيز مايونيز","",[680,1.0,0.6,74.8,0.0],[["ملعقة كبيرة",13.8],["كوب",220.0]]],["19335","Sugars, granulated","حلويات","سكر شكر سكر","",[387,0.0,100.0,0.0,0.0],[["كيس صغير",2.8],["ملعقة صغيرة",4.2]]],["19296","Honey","حلويات","عسل عسل","",[304,0.3,82.4,0.0,0.2],[["كوب",339.0],["ملعقة كبيرة",21.0]]],["19297","Jams and preserves","حلويات","مربى مربى","",[278,0.4,68.9,0.1,1.1],[["ملعقة كبيرة",20.0],["كيس صغير",14.0]]],["19120","Candies, milk chocolate","حلويات","شوكولاتة بالحليب شوكلت شوكولاته","",[535,7.7,59.4,29.7,3.4],[["قطعة صغيرة",7.0],["لوح 44 غ",44.0]]],["19904","Chocolate, dark, 70-85% cacao solids","حلويات","شوكولاتة داكنة 70-85% شوكلت داكنة","",[598,7.8,45.9,42.6,10.9],[["لوح",101.0]]],["19125","Chocolate-flavored hazelnut spread","حلويات","نوتيلا (كريمة بندق بالشوكولاتة) نوتيلا","",[541,5.4,62.2,29.7,5.4],[["ملعقتان كبيرتان",37.0]]],["19095","Ice creams, vanilla","حلويات","آيس كريم فانيلا دوندرمة ايسكريم","",[207,3.5,23.6,11.0,0.7],[["نصف كوب",66.0]]],["19270","Ice creams, chocolate","حلويات","آيس كريم شوكولاتة دوندرمة ايسكريم","",[216,3.8,28.2,11.0,1.2],[["قطعة",58.0],["نصف كوب",66.0]]],["14148","Beverages, carbonated, cola, regular","مشروبات","بيبسي / كولا بيبسي كولا مشروب غازي","",[42,0.0,10.4,0.2,0.0],[["علبة 355 مل",370.0]]],["14145","Beverages, carbonated, SPRITE, lemon-lime, without caffeine","مشروبات","سفن أب / سبرايت سفن مشروب غازي","",[40,0.1,10.1,0.0,0.0],[["علبة 355 مل",369.0]]],["14150","Beverages, carbonated, orange","مشروبات","مشروب غازي برتقال (ميرندا) ميرندا","",[48,0.0,12.3,0.0,0.0],[["عبوة 473 مل",496.0]]],["14627","Beverages, Energy Drink, Monster, fortified with vitamins C, B2, B3, B6, B12","مشروبات","مشروب طاقة مونستر طاقة","",[47,0.5,11.3,0.0,0.0],[["حصة",240.0]]],["09206","Orange juice, raw","مشروبات","عصير برتقال طبيعي عصير","",[45,0.7,10.4,0.2,0.2],[["كوب",248.0]]],["09209","Orange juice, chilled, includes from concentrate","مشروبات","عصير برتقال معلب عصير","",[49,0.7,11.5,0.1,0.3],[["كوب",249.0]]],["14355","Beverages, tea, black, brewed, prepared with tap water","مشروبات","شاي (بدون سكر) جاي شاي","",[1,0.0,0.3,0.0,0.0],[]],["14209","Beverages, coffee, brewed, prepared with tap water","مشروبات","قهوة (بدون سكر) كهوة قهوة","",[1,0.1,0.0,0.0,0.0],[]],["14210","Beverages, coffee, brewed, espresso, restaurant-prepared","مشروبات","إسبريسو اسبريسو","",[9,0.1,1.7,0.2,0.0],[]],["11935","Catsup","صلصات","كاتشب كجب كاتشب","",[101,1.0,27.4,0.1,0.3],[["ملعقة كبيرة",17.0],["كيس صغير",9.0]]],["11546","Tomato products, canned, paste, without salt added","صلصات","معجون طماطم معجون","",[82,4.3,18.9,0.5,4.1],[["ربع كوب",66.0],["كوب",262.0]]],["02046","Mustard, prepared, yellow","صلصات","خردل خردل","",[60,3.7,5.8,3.3,4.0],[["ملعقة صغيرة",5.0],["كوب",249.0]]],["19304","Molasses","صلصات","دبس السكر (مولاس) دبس","",[290,0.0,74.7,0.1,0.0],[["كوب",337.0],["ملعقة كبيرة",20.0]]],["21108","Fast foods, hamburger; single, regular patty; with condiments","وجبات سريعة","برغر لحم عادي همبركر برجر","",[263,13.3,29.6,10.2,1.8],[["ساندويتش",97.0]]],["21090","Fast foods, cheeseburger; single, regular patty, with condiments","وجبات سريعة","تشيز برغر همبركر جبن","",[270,13.5,25.5,12.9,1.9],[["ساندويتش",127.0]]],["21102","Fast foods, chicken fillet sandwich, plain with pickles","وجبات سريعة","ساندويتش دجاج مقلي زنجر","",[250,16.3,20.9,11.2,1.4],[["ساندويتش",187.0]]],["21401","Fast foods, chicken tenders","وجبات سريعة","أصابع دجاج مقلية (تندرز) استربس","",[271,19.2,17.2,13.9,1.2],[["إصبع",30.0],["حصة",184.0]]],["21299","Fast Food, Pizza Chain, 14\" pizza, cheese topping, regular crust","وجبات سريعة","بيتزا جبن بيتزا","",[266,11.4,33.3,9.7,2.3],[["شريحة",107.0]]],["14066","Beverages, Protein powder whey based","مكملات","بروتين واي (عام) واي بروتين","",[352,78.1,6.2,1.6,3.1],[]],["14058","Beverages, Whey protein powder isolate","مكملات","بروتين واي معزول ايزوليت","",[359,58.1,29.1,1.2,0.0],[]],["20444","Rice, white, long-grain, regular, raw, unenriched","مكونات نيئة","رز أبيض نيء (حبة طويلة) تمن رز عنبر بسمتي","",[365,7.1,80.0,0.7,1.3],[["كوب",185.0]]],["20450","Rice, white, medium-grain, raw, unenriched","مكونات نيئة","رز أبيض نيء (حبة متوسطة) تمن رز","",[360,6.6,79.3,0.6,null],[["كوب",195.0]]],["20452","Rice, white, short-grain, raw, unenriched","مكونات نيئة","رز أبيض نيء (حبة قصيرة) تمن رز دولمة","",[358,6.5,79.2,0.5,null],[["كوب",200.0]]],["20036","Rice, brown, long-grain, raw","مكونات نيئة","رز بني نيء تمن اسمر","",[367,7.5,76.2,3.2,3.6],[["كوب",185.0]]],["20012","Bulgur, dry","مكونات نيئة","برغل نيء برغل جريش كبة","",[342,12.3,75.9,1.3,12.5],[["كوب",140.0]]],["20120","Pasta, dry, enriched","مكونات نيئة","معكرونة / شعرية نيئة شعرية معكرونة باستا","",[371,13.0,74.7,1.5,3.2],[["كوب",91.0]]],["20028","Couscous, dry","مكونات نيئة","كسكس نيء كسكسي","",[376,12.8,77.4,0.6,5.0],[["كوب",173.0]]],["08120","Cereals, oats, regular and quick, not fortified, dry","مكونات نيئة","شوفان نيء شوفان","",[379,13.2,67.7,6.5,10.1],[["كوب",81.0]]],["20081","Wheat flour, white, all-purpose, enriched, bleached","مكونات نيئة","طحين أبيض طحين دقيق","",[364,10.3,76.3,1.0,2.7],[["كوب",125.0]]],["20080","Wheat flour, whole-grain","مكونات نيئة","طحين أسمر طحين اسمر","",[340,13.2,72.0,2.5,10.7],[["كوب",120.0]]],["16069","Lentils, raw","مكونات نيئة","عدس نيء عدس","",[352,24.6,63.4,1.1,10.7],[["كوب",192.0],["ملعقة كبيرة",12.0]]],["16144","Lentils, pink or red, raw","مكونات نيئة","عدس أحمر نيء عدس احمر شوربة","",[358,23.9,63.1,2.2,10.8],[["كوب",192.0]]],["16056","Chickpeas (garbanzo beans, bengal gram), mature seeds, raw","مكونات نيئة","حمص يابس نيء حمص لبلبي","",[378,20.5,63.0,6.0,12.2],[["كوب",200.0],["ملعقة كبيرة",12.5]]],["16032","Beans, kidney, red, mature seeds, raw","مكونات نيئة","فاصوليا حمراء يابسة نيئة فاصوليا","",[337,22.5,61.3,1.1,15.2],[["كوب",184.0],["ملعقة كبيرة",12.2]]],["16049","Beans, white, mature seeds, raw","مكونات نيئة","فاصوليا بيضاء يابسة نيئة فاصوليا يابسة","",[333,23.4,60.3,0.8,15.2],[["كوب",202.0],["ملعقة كبيرة",12.6]]],["16052","Broadbeans (fava beans), mature seeds, raw","مكونات نيئة","فول يابس نيء باقلاء فول","",[341,26.1,58.3,1.5,25.0],[["كوب",150.0],["ملعقة كبيرة",9.4]]],["16080","Mung beans, mature seeds, raw","مكونات نيئة","ماش نيء ماش","",[347,23.9,62.6,1.1,16.3],[["كوب",207.0],["ملعقة كبيرة",13.0]]],["16085","Peas, green, split, mature seeds, raw","مكونات نيئة","بازلاء مجروشة نيئة بازلاء","",[352,23.8,63.7,1.2,25.5],[["كوب",197.0]]],["16062","Cowpeas, common (blackeyes, crowder, southern), mature seeds, raw","مكونات نيئة","لوبيا يابسة نيئة لوبيا","",[336,23.5,60.0,1.3,10.6],[["كوب",167.0],["ملعقة كبيرة",10.5]]],["05062","Chicken, broiler or fryers, breast, skinless, boneless, meat only, raw","مكونات نيئة","صدر دجاج نيء بدون جلد دجاج صدر","",[120,22.5,0.0,2.6,0.0],[["قطعة",272.0]]],["05096","Chicken, broilers or fryers, dark meat, thigh, meat only, raw","مكونات نيئة","فخذ دجاج نيء بدون جلد دجاج فخذ ورك","",[121,19.7,0.0,4.1,0.0],[["فخذ بدون جلد",149.0]]],["05071","Chicken, broilers or fryers, dark meat, drumstick, meat only, raw","مكونات نيئة","دبوس دجاج نيء بدون جلد دجاج دبوس","",[116,19.4,0.0,3.7,0.0],[["دبوس بدون جلد",122.0]]],["05006","Chicken, broilers or fryers, meat and skin, raw","مكونات نيئة","دجاج نيء مع الجلد (لحم فقط بلا عظم) دجاج كامل","",[215,18.6,0.0,15.1,0.0],[]],["05011","Chicken, broilers or fryers, meat only, raw","مكونات نيئة","دجاج نيء بدون جلد (لحم فقط) دجاج","",[119,21.4,0.0,3.1,0.0],[]],["17226","Lamb, domestic, composite of trimmed retail cuts, separable lean and fat, trimmed to 1/8\" fat, choice, raw","مكونات نيئة","لحم غنم نيء (معدل القطع) لحم غنم","",[243,17.5,0.0,18.7,0.0],[]],["17230","Lamb, domestic, leg, whole (shank and sirloin), separable lean and fat, trimmed to 1/8\" fat, choice, raw","مكونات نيئة","فخذ غنم نيء لحم غنم فخذ","",[209,18.5,0.0,14.4,0.0],[]],["17242","Lamb, domestic, shoulder, whole (arm and blade), separable lean and fat, trimmed to 1/8\" fat, choice, raw","مكونات نيئة","كتف غنم نيء لحم غنم كتف","",[244,17.1,0.0,19.0,0.0],[]],["17224","Lamb, ground, raw","مكونات نيئة","لحم غنم مفروم نيء قيمة غنم مفروم","",[282,16.6,0.0,23.4,0.0],[]],["23557","Beef, ground, 95% lean meat / 5% fat, raw","مكونات نيئة","لحم بقر مفروم نيء 95% لحم قيمة مفروم لحم","",[137,21.4,0.0,5.0,0.0],[]],["23562","Beef, ground, 90% lean meat / 10% fat, raw","مكونات نيئة","لحم بقر مفروم نيء 90% لحم قيمة مفروم لحم","",[176,20.0,0.0,10.0,0.0],[]],["23567","Beef, ground, 85% lean meat / 15% fat, raw","مكونات نيئة","لحم بقر مفروم نيء 85% لحم قيمة مفروم لحم","",[215,18.6,0.0,15.0,0.0],[]],["23572","Beef, ground, 80% lean meat / 20% fat, raw","مكونات نيئة","لحم بقر مفروم نيء 80% لحم قيمة مفروم لحم كبة","",[254,17.2,0.0,20.0,0.0],[]],["13809","Beef, chuck, arm pot roast, separable lean and fat, trimmed to 1/8\" fat, all grades, raw","مكونات نيئة","لحم بقر نيء (كتف) لحم بقر قطع مرق","",[244,19.2,0.0,18.0,0.0],[]],["13891","Beef, round, top round, steak, separable lean and fat, trimmed to 1/8\" fat, all grades, raw","مكونات نيئة","لحم بقر نيء (فخذ) لحم بقر قطع","",[166,22.1,0.0,7.9,0.0],[]],["15008","Fish, carp, raw","مكونات نيئة","سمك كارب نيء شبوط سمك","",[127,17.8,0.0,5.6,0.0],[["شريحة فيليه",218.0]]],["15261","Fish, tilapia, raw","مكونات نيئة","سمك بلطي نيء بلطي سمك","",[96,20.1,0.0,1.7,0.0],[["شريحة فيليه",116.0]]],["01123","Egg, whole, raw, fresh","مكونات نيئة","بيض نيء بيض","",[143,12.6,0.7,9.5,0.0],[["حبة كبيرة",50.0],["حبة كبيرة جداً",56.0]]],["11278","Okra, raw","مكونات نيئة","بامية نيئة باميا","",[33,1.9,7.5,0.2,3.2],[["كوب",100.0],["8 قرنات",95.0]]],["11209","Eggplant, raw","مكونات نيئة","باذنجان نيء بيتنجان","",[25,1.0,5.9,0.2,3.0],[["كوب",82.0]]],["11477","Squash, summer, zucchini, includes skin, raw","مكونات نيئة","كوسا نيئة شجر كوسة","",[17,1.2,3.1,0.3,1.0],[["كوب",124.0]]],["11352","Potatoes, flesh and skin, raw","مكونات نيئة","بطاطا نيئة بطاطس","",[77,2.0,17.5,0.1,2.1],[["نصف كوب",75.0]]],["11052","Beans, snap, green, raw","مكونات نيئة","فاصوليا خضراء نيئة فاصوليا خضراء","",[31,1.8,7.0,0.2,2.7],[["كوب",100.0]]],["11304","Peas, green, raw","مكونات نيئة","بازلاء خضراء نيئة بزاليا","",[81,5.4,14.4,0.4,5.7],[["كوب",145.0]]],["11135","Cauliflower, raw","مكونات نيئة","قرنابيط نيء قرنابيط","",[25,1.9,5.0,0.3,2.0],[["كوب",107.0]]],["11974","Grape leaves, raw","مكونات نيئة","ورق عنب نيء ورق عنب دولمة يبرق","",[93,5.6,17.3,2.1,11.0],[["كوب",14.0]]]];
+const AR_BY={};FOOD_AR.forEach(r=>{AR_BY[r[0]]=r});
+const MEALS=["الفطور","الغداء","العشاء","وجبات خفيفة"];
+const KCAL_PER_KG=7700; // energy per kg of body-weight change, the usual approximation
+// net walking cost per kg per km at a moderate pace: Compendium 2024 code 17190 (2.8 to 3.4 mph) = 3.8 MET, minus 1 MET of rest, at 3.1 mph
+const WALK_NET=(3.8-1)*3.5*60*5/1000/(3.1*1.609344);
+// MET values from the 2024 Adult Compendium of Physical Activities (code, MET, name)
+const ACTS=[
+ ["المشي والركض",[["17170",3.0,"مشي 4 كم/س"],["17190",3.8,"مشي 4.5 إلى 5.5 كم/س"],["17200",4.8,"مشي سريع 5.6 إلى 6.3 كم/س"],["17220",5.5,"مشي سريع جداً 6.4 إلى 7.1 كم/س"],["17034",5.3,"مشي صعوداً بميل 1 إلى 5%"],["17035",7.0,"مشي صعوداً بميل 6 إلى 10%"],["17082",5.3,"مشي في الطبيعة (هايكنغ)"],["17131",6.8,"صعود الدرج"],
+   ["12020",7.5,"هرولة بالسرعة التي تريحك"],["12028",6.5,"ركض 6.4 إلى 6.8 كم/س"],["12030",8.5,"ركض 8 إلى 8.4 كم/س"],["12045",9.0,"ركض 8.9 إلى 9.3 كم/س"],["12050",9.3,"ركض 9.7 إلى 10.1 كم/س"],["12060",10.5,"ركض 10.8 كم/س"],["12070",11.0,"ركض 11.3 كم/س"],["12080",11.8,"ركض 12.1 كم/س"],["12090",12.0,"ركض 12.9 كم/س"],["12110",13.0,"ركض 14.5 كم/س"],["12120",14.8,"ركض 16.1 كم/س"]]],
+ ["السباحة",[["18240",5.8,"سباحة حرة بطيئة، ترفيهية"],["18290",8.0,"سباحة حرة متوسطة، نحو 46 متراً في الدقيقة"],["18280",10.5,"سباحة حرة سريعة، نحو 69 متراً في الدقيقة"],["18265",5.3,"سباحة صدر ترفيهية"],["18260",10.3,"سباحة صدر، تدريب"],["18255",4.8,"سباحة ظهر ترفيهية"],["18250",9.5,"سباحة ظهر، تدريب"],["18270",13.8,"سباحة فراشة"],["18310",6.0,"سباحة حرة في المسبح بلا أشواط"],["18350",3.5,"طفو في الماء، جهد متوسط"],["18355",5.5,"تمارين هوائية في الماء"]]],
+ ["الدراجة",[["01200",6.8,"دراجة ثابتة، عام"],["01214",4.0,"دراجة ثابتة 50 واط"],["01220",6.0,"دراجة ثابتة 90 إلى 100 واط"],["01228",8.0,"دراجة ثابتة 126 إلى 150 واط"],["01232",10.3,"دراجة ثابتة 151 إلى 199 واط"],["01270",9.0,"صف دراجات (سبين)"],["01020",6.8,"دراجة 16 إلى 19 كم/س"],["01030",8.0,"دراجة 19 إلى 22 كم/س"],["01040",10.0,"دراجة 22.5 إلى 25.6 كم/س"]]],
+ ["أجهزة وتمارين",[["02048",5.0,"إليبتكال، جهد متوسط"],["02049",9.0,"إليبتكال، جهد شديد"],["02071",5.0,"جهاز تجديف أقل من 100 واط"],["02072",7.5,"جهاز تجديف 100 إلى 149 واط"],["02073",11.0,"جهاز تجديف 150 إلى 199 واط"],["02065",9.3,"جهاز الدرج"],["02068",11.0,"حبل القفز"],["02210",7.0,"تمارين متقطعة عالية الشدة، جهد متوسط"],["02214",11.0,"تمارين متقطعة شديدة جداً (بيربي، تاباتا)"],["02035",5.0,"تمارين دائرية، جهد متوسط"],["02040",7.5,"تمارين دائرية شديدة"],["02022",3.8,"تمارين وزن الجسم، جهد متوسط"],["02020",7.5,"تمارين وزن الجسم، جهد شديد"],["02050",6.0,"أوزان، جهد شديد (خارج سجل الجم)"],["02054",3.5,"أوزان، تمارين متعددة 8 إلى 15 عدة"],["02175",2.3,"يوغا"],["02101",2.3,"تمدد خفيف"]]],
+ ["الرياضات",[["15610",7.0,"كرة قدم ترفيهية"],["15605",9.5,"كرة قدم تنافسية"],["15055",7.5,"كرة سلة"],["15040",8.0,"مباراة كرة سلة"],["15710",4.0,"كرة طائرة"],["15711",6.0,"كرة طائرة تنافسية في صالة"],["15690",8.0,"تنس فردي"],["15680",6.0,"تنس زوجي"],["15660",4.0,"تنس طاولة"],["15030",5.5,"ريشة طائرة ترفيهية"],["15025",9.0,"ريشة طائرة، مباراة"],["15110",5.8,"ملاكمة على الكيس"],["15120",7.8,"ملاكمة، نزال تدريبي"],["15430",10.3,"فنون قتالية بإيقاع متوسط"],["15652",7.3,"سكواش"]]]
+];
+const ACT_BY={};ACTS.forEach(g=>g[1].forEach(a=>{ACT_BY[a[0]]=a}));
+
+/* ---------- nutrition: state & storage ---------- */
+S.nutri={};S.nut=null;
+S.nu={cur:todayK(),view:"",an:"28"};
+const nutDef=()=>({prof:null,rate:0,pkg:2,fpct:25,tmode:"avg",gmet:0,foods:{},recipes:{},meals:{},units:{}});
+function NUT(){if(!S.nut||typeof S.nut!=="object")S.nut=nutDef();const n=S.nut;["foods","recipes","meals","units"].forEach(k=>{if(!n[k]||typeof n[k]!=="object"||Array.isArray(n[k]))n[k]={}});return n}
+function nDay(k){if(!S.nutri[k])S.nutri[k]={d:k,it:[]};const d=S.nutri[k];if(!Array.isArray(d.it))d.it=[];if(!Array.isArray(d.act))d.act=[];d.d=k;return d}
+function saveN(k){
+  const d=S.nutri[k];
+  if(d&&!(d.it||[]).length&&!(d.act||[]).length&&!(+d.steps>0)&&!(+d.km>0)&&!d.st){delete S.nutri[k];queueWrite("nutri/"+k,null)}
+  else queueWrite("nutri/"+k,d?JSON.parse(JSON.stringify(d)):null);
+  enReset();
+}
+const r1=v=>Math.round(v*10)/10;
+const kc0=v=>Number.isFinite(v)?String(Math.round(v)):"–";
+function vSum(items){const t=[0,0,0,0,0];(items||[]).forEach(e=>{const v=e.v||[],g=+e.g||0;for(let i=0;i<5;i++)t[i]+=(+v[i]||0)*g/100});return t}
+const vOf=(v,g)=>[0,1,2,3,4].map(i=>(+((v||[])[i])||0)*g/100);
+// units are stored as [{l,g}] because the database does not accept arrays inside arrays; map keys avoid ':'
+const ukey=fid=>String(fid).replace(":","_");
+const uPairs=a=>Array.isArray(a)?a.filter(x=>x&&x.l&&+x.g>0).map(x=>[x.l,+x.g]):[];
+function userUnits(fid){return uPairs(NUT().units[ukey(fid)])}
+
+/* English USDA list, loaded on first search */
+let FDB=null,FDB_LIST=null,FDB_ST="",EN_W=null;
+function loadFDB(){
+  if(FDB||FDB_ST==="loading")return;FDB_ST="loading";
+  fetch("foods.json?v=1").then(r=>{if(!r.ok)throw new Error("http");return r.json()}).then(o=>{FDB={};FDB_LIST=o.f;o.f.forEach(x=>{FDB[x[0]]=x});FDB_ST="ok";if(FS&&FS.view==="list")fsResults()})
+    .catch(()=>{FDB_ST="err";if(FS&&FS.view==="list")fsResults()});
+}
+function recipeV(r){
+  const its=r.it||[],t=vSum(its),sumG=its.reduce((a,e)=>a+(+e.g||0),0),W=+r.tw>0?+r.tw:sumG;
+  const v=W>0?t.map(x=>x/W*100):[0,0,0,0,0],u=[];
+  if(+r.sv>0&&W>0)u.push(["حصة (من "+r.sv+")",Math.round(W/r.sv*10)/10]);
+  if(W>0)u.push(["القدر كاملاً",Math.round(W)]);
+  return {v:v,u:u,W:W,sumG:sumG,t:t};
+}
+function food(fid){
+  if(!fid||typeof fid!=="string")return null;const t=fid.slice(0,2),id=fid.slice(2);
+  if(t==="u:"){const a=AR_BY[id];if(a)return {fid:fid,n:a[1],v:a[5],u:a[6].concat(userUnits(fid)),note:a[4],src:"USDA · "+id,kind:"ar",cat:a[2]};
+    const x=FDB&&FDB[id];if(x)return {fid:fid,n:x[1],v:[x[2],x[3],x[4],x[5],x[6]],u:[[x[10],x[9]],[x[12],x[11]]].filter(q=>q[0]&&+q[1]>0).concat(userUnits(fid)),note:x[14]?"غير مطبوخ أو بحالته قبل التحضير":"",src:"USDA · "+id,kind:"en",raw:!!x[14]};return null}
+  if(t==="c:"){const c=NUT().foods[id];return c?{fid:fid,n:c.n,v:c.v,u:uPairs(c.u).concat(userUnits(fid)),note:c.note||"",src:"طعامك",kind:"c"}:null}
+  if(t==="r:"){const r=NUT().recipes[id];if(!r)return null;const rv=recipeV(r);return {fid:fid,n:r.n,v:rv.v,u:rv.u.concat(userUnits(fid)),note:+r.tw>0?"محسوبة على الوزن النهائي بعد الطبخ ("+Math.round(r.tw)+" غ)":"محسوبة على مجموع أوزان المكوّنات، بلا وزن نهائي بعد الطبخ",src:"وصفتك",kind:"r"}}
+  return null;
+}
+const foodOr=e=>food(e.f)||{fid:e.f,n:e.n,v:e.v,u:userUnits(e.f),note:"",src:"محفوظ مع التسجيل",kind:"snap"};
+
+/* ---------- nutrition: search ---------- */
+const normA=s=>String(s||"").toLowerCase().replace(/[ً-ٰٟـ]/g,"").replace(/[أإآٱ]/g,"ا").replace(/ة/g,"ه").replace(/ى/g,"ي").replace(/ؤ/g,"و").replace(/ئ/g,"ي").replace(/[(),.،\/]/g," ").replace(/\s+/g," ").trim();
+let AR_IDX=null;
+function arIdx(){if(!AR_IDX)AR_IDX=FOOD_AR.map((r,i)=>({r:r,i:i,w:words(r[1]+" "+r[3]+" "+r[2]),n:normA(r[1]+" "+r[3])}));return AR_IDX}
+// whole-word prefix matching, so "رز" finds rice but not "كرز", and "الدجاج" finds "دجاج"
+const words=s=>normA(s).split(" ").filter(Boolean).map(w=>w.replace(/^(وال|بال|لل|ال)(?=..)/,""));
+const enWords=s=>String(s).toLowerCase().split(/[\s,()\/%-]+/).filter(Boolean);
+const hasTok=(ws,t)=>ws.some(w=>w.startsWith(t));
+function recentFoods(n){
+  const seen=new Map(),ks=Object.keys(S.nutri).sort().reverse().slice(0,60);
+  ks.forEach(k=>{(S.nutri[k].it||[]).slice().reverse().forEach(e=>{if(e.f&&e.f!=="q"&&!seen.has(e.f))seen.set(e.f,e)})});
+  return Array.from(seen.values()).slice(0,n);
+}
+function lastG(fid){const ks=Object.keys(S.nutri).sort().reverse();for(const k of ks){const it=(S.nutri[k].it||[]);for(let i=it.length-1;i>=0;i--)if(it[i].f===fid&&+it[i].g>0)return +it[i].g}return null}
+function fsSearch(q){
+  const nq=normA(q),toks=words(q),res={own:[],ar:[],en:[],hid:0,enHid:0};if(!toks.length)return res;
+  const sc=n=>(n.startsWith(toks[0])?4:0)+(n.includes(nq)?2:0);
+  const ok=ws=>toks.every(t=>hasTok(ws,t));
+  const N=NUT();
+  Object.values(N.foods).forEach(c=>{if(ok(words(c.n)))res.own.push({fid:"c:"+c.id,s:sc(normA(c.n))})});
+  Object.values(N.recipes).forEach(r=>{if(ok(words(r.n)))res.own.push({fid:"r:"+r.id,s:sc(normA(r.n))})});
+  const showRaw=FS&&(FS.raw||FS.mode==="recipe");res.hid=0;
+  arIdx().forEach(x=>{if(!ok(x.w))return;if(x.r[2]==="مكونات نيئة"&&!showRaw){res.hid++;return}res.ar.push({fid:"u:"+x.r[0],s:sc(x.n)+(x.r[2]==="مكونات نيئة"&&FS&&FS.mode==="recipe"?3:0)-x.i/1000})});
+  res.own.sort((a,b)=>b.s-a.s);res.ar.sort((a,b)=>b.s-a.s);
+  if(/[a-z]/.test(nq)&&FDB_LIST){
+    const raw=FS&&(FS.raw||FS.mode==="recipe"),et=enWords(q);
+    if(!EN_W)EN_W=FDB_LIST.map(x=>enWords(x[1]));
+    FDB_LIST.forEach((x,i)=>{if(AR_BY[x[0]])return;const ws=EN_W[i];if(!et.every(t=>ws.some(w=>w.startsWith(t))))return;if(!raw&&x[14]){res.enHid++;return}const h=x[1].toLowerCase();res.en.push({fid:"u:"+x[0],s:(h.startsWith(et[0])?4:0)+(ws[0]===et[0]?2:0)-h.length/120})});
+    res.en.sort((a,b)=>b.s-a.s);res.en=res.en.slice(0,60);
+  }
+  return res;
+}
+
+/* ---------- nutrition: energy model ---------- */
+// TDEE estimate = (BMR + general daily activity + walking + exercise) / 0.9; the division adds the thermic effect of food, about 10% of the total.
+// The result is then multiplied by a calibration factor measured from your own intake and weight trend.
+let EN_C={};const enReset=()=>{EN_C={}};
+function nProf(){const p=S.nut&&S.nut.prof;return p&&+p.h>=120&&+p.by>1900&&(p.sex==="m"||p.sex==="f")?p:null}
+function wOn(k){
+  const keys=EN_C.wk||(EN_C.wk=wKeys());
+  const a=avgAround(keys,k,7);if(Number.isFinite(a))return a;
+  let b=null;for(const x of keys){if(x<=k)b=x;else break}if(b)return S.days[b].w;
+  return keys.length?S.days[keys[0]].w:NaN;
+}
+// body fat from a day's measurements: a device reading if given, else US Navy tape formula (needs neck), else Relative Fat Mass (height and waist)
+function bfFromDay(k){
+  const d=S.days[k],p=nProf();if(!d)return null;
+  if(+d.bf>=3&&+d.bf<=65)return {bf:+d.bf,m:"device"};
+  if(!p||!(+d.waist>0))return null;const H=+p.h,w=+d.waist,n=+d.neck,hp=+d.hip;let bf=null,m="";
+  if(n>0&&p.sex==="m"&&w-n>0){bf=495/(1.0324-0.19077*Math.log10(w-n)+0.15456*Math.log10(H))-450;m="navy"}
+  else if(n>0&&p.sex==="f"&&hp>0&&w+hp-n>0){bf=495/(1.29579-0.35004*Math.log10(w+hp-n)+0.22100*Math.log10(H))-450;m="navy"}
+  else{bf=(p.sex==="m"?64:76)-20*H/w;m="rfm"}
+  return bf>=3&&bf<=65?{bf:bf,m:m}:null;
+}
+const compKeys=()=>Object.keys(S.days).filter(k=>k<=todayK()&&(+S.days[k].bf>0||+S.days[k].waist>0)).sort();
+function compOn(k){ // latest measurement up to day k, used for 120 days; lean mass is taken at the measurement and held, since it changes slowly
+  const ks=EN_C.ck||(EN_C.ck=compKeys());let best=null;for(const x of ks){if(x<=k)best=x;else break}
+  if(!best||diffD(best,k)>120)return null;const r=bfFromDay(best);if(!r)return null;
+  const W=wOn(best);if(!Number.isFinite(W))return null;return Object.assign(r,{k:best,W:W,lbm:W*(1-r.bf/100)});
+}
+const BF_M={device:"قراءة جهاز",navy:"معادلة البحرية الأمريكية",rfm:"كتلة الدهون النسبية (RFM)"};
+function bmrOn(k){
+  const p=nProf();if(!p)return null;const W=wOn(k);if(!Number.isFinite(W))return null;
+  const age=+k.slice(0,4)-(+p.by),c=compOn(k);
+  if(c)return {v:370+21.6*c.lbm,W:W,age:age,m:"katch",lbm:c.lbm,c:c};
+  return {v:10*W+6.25*(+p.h)-5*age+(p.sex==="m"?5:-161),W:W,age:age,m:"mifflin"};
+}
+function gymMet(w){
+  const gm=+NUT().gmet;if(gm>0)return {met:gm,r:null,fixed:true};
+  const rs=[];(w.ex||[]).forEach(e=>e.sets.forEach(s=>{if(s.done!==false&&hasRir(s))rs.push(+s.rir)}));
+  const r=rs.length?avg(rs):TR(),t=Math.max(0,Math.min(1,(4-r)/4));
+  return {met:3.5+2.5*t,r:r,fixed:false}; // between Compendium 02054 (3.5, 8 to 15 reps at varied resistance) and 02050 (6.0, vigorous body building) by closeness to failure
+}
+const netK=(met,min,W,bmr)=>Math.max(0,(met*3.5*W/200-bmr/1440)*min);
+function energyOn(k){
+  if(EN_C[k])return EN_C[k];
+  const p=nProf(),b=bmrOn(k);if(!b)return null;
+  const d=S.nutri[k]||{},W=b.W,neat=0.15*b.v;
+  let km=+d.km>0?+d.km:0,est=false;if(!km&&+d.steps>0){km=d.steps*(+p.h/100)*(p.sex==="f"?0.413:0.415)/1000;est=true}
+  const stepsK=km*W*WALK_NET;
+  const gym=doneWos().filter(w=>w.date===k).map(w=>{const min=Math.max(0,Math.min(240,(new Date(w.end)-new Date(w.start))/60000)),g=gymMet(w);return {id:w.id,n:w.gname,min:min,met:g.met,r:g.r,fixed:g.fixed,kc:netK(g.met,min,W,b.v)}});
+  const act=(d.act||[]).map(a=>({id:a.id,n:a.n,min:+a.min||0,met:+a.met||0,c:a.c,kc:+a.kc>0?+a.kc:netK(+a.met||0,+a.min||0,W,b.v),watch:+a.kc>0}));
+  const ex=gym.reduce((s,x)=>s+x.kc,0)+act.reduce((s,x)=>s+x.kc,0);
+  const sub=b.v+neat+stepsK+ex,total=sub/0.9;
+  return EN_C[k]={W:W,b:b,neat:neat,km:km,est:est,steps:+d.steps||0,stepsK:stepsK,gym:gym,act:act,ex:ex,tef:total-sub,total:total};
+}
+function intakeOk(k,F){const d=S.nutri[k];if(!d||d.st==="part")return null;const kc=vSum(d.it)[0];if(!(kc>0))return null;if(d.st!=="done"&&F&&kc<0.5*F)return null;return kc}
+function adaptive(){
+  if(EN_C._ad)return EN_C._ad;
+  const t=todayK(),end=addD(t,-1),st=addD(end,-27),days=[];
+  for(let k=st;k<=end;k=addD(k,1)){const e=energyOn(k);if(!e)continue;const kc=intakeOk(k,e.total);if(kc!==null)days.push({k:k,kc:kc,F:e.total})}
+  const wk=wKeys().filter(k=>k>=st&&k<=end),span=wk.length?diffD(wk[0],wk[wk.length-1]):0;
+  const out={ok:false,nI:days.length,nW:wk.length,span:span,st:st,end:end};
+  if(days.length>=10&&wk.length>=6&&span>=14){
+    const rg=regress(wk.map(k=>[diffD(st,k),S.days[k].w]));
+    if(rg){const avgI=avg(days.map(x=>x.kc)),Fm=avg(days.map(x=>x.F)),obs=avgI-rg.b*KCAL_PER_KG,ratio=obs/Fm,cl=Math.max(0.75,Math.min(1.25,ratio)),conf=Math.min(1,days.length/21)*Math.min(1,wk.length/12);
+      Object.assign(out,{ok:true,slope:rg.b,avgI:avgI,Fm:Fm,obs:obs,ratio:ratio,clamped:cl!==ratio,conf:conf,f:1+conf*(cl-1)})}
+  }
+  return EN_C._ad=out;
+}
+const calF=()=>{const a=adaptive();return a.ok?a.f:1};
+function tdeeOn(k){const e=energyOn(k);return e?e.total*calF():null}
+function targetOn(k){
+  const p=nProf();if(!p)return null;const e=energyOn(k);if(!e)return null;const N=NUT(),f=calF();
+  let base;
+  if(N.tmode==="day")base=e.total*f;
+  else{const v=[];for(let i=1;i<=14;i++){const x=energyOn(addD(k,-i));if(x)v.push(x.total)}base=(v.length?avg(v):e.total)*f}
+  const rate=Number.isFinite(+N.rate)?+N.rate:0,adj=rate*KCAL_PER_KG/7,kcal=Math.round(base+adj);
+  const pr=(+N.pkg>0?+N.pkg:2)*e.W,fat=(+N.fpct>0?+N.fpct:25)/100*kcal/9,carb=Math.max(0,(kcal-4*pr-9*fat)/4);
+  const warn=[];if(kcal<e.b.v)warn.push("الهدف أقل من معدل الأيض الأساسي لجسمك ("+Math.round(e.b.v)+" سعرة).");
+  if(rate<0&&-rate>0.01*e.W)warn.push("معدل النزول أسرع من 1% من وزنك أسبوعياً، وهذا يعرّضك لفقد عضل أكثر.");
+  if(kcal-4*pr-9*fat<0)warn.push("البروتين والدهون وحدهما يتجاوزان الهدف، فالكربوهيدرات صفر.");
+  return {kcal:kcal,base:base,adj:adj,p:pr,f:fat,c:carb,fib:14*kcal/1000,warn:warn};
+}
+
+/* ---------- nutrition: habits linked to logging ---------- */
+function linkHabit(re){return liveHabits().find(h=>re.test(h.name||""))||null}
+function syncLogHabit(k){
+  const h=linkHabit(/mypal|myfitness|تسجيل (الاكل|الأكل|الطعام|السعرات|الوجبات)/i);if(!h||isQ(h))return;
+  const nd=S.nutri[k],dd=ensureDay(k);
+  if(nd&&nd.st==="done"){if(!dd.h[h.id]){dd.h[h.id]=1;touchStart(h,k);saveDay(k)}if(!nd.lh){nd.lh=1;saveN(k)}}
+  else if(nd&&nd.lh){delete dd.h[h.id];saveDay(k);delete nd.lh;saveN(k)}
+}
+function syncStepsHabit(k){
+  const h=linkHabit(/خطوة|خطوات/);if(!h)return;const nd=S.nutri[k],steps=nd&&+nd.steps>0?+nd.steps:0,dd=ensureDay(k);
+  if(isQ(h)){if(steps>0)dd.h[h.id]=steps;else if(nd&&nd.sh)delete dd.h[h.id];if(nd){if(steps>0)nd.sh=1;else delete nd.sh}saveDay(k);return}
+  const m=String(h.name).replace(/[٠-٩]/g,c=>"٠١٢٣٤٥٦٧٨٩".indexOf(c)).replace(/[,،]/g,"").match(/\d{3,6}/),need=m?+m[0]:10000;
+  if(steps>=need){if(!dd.h[h.id]){dd.h[h.id]=1;touchStart(h,k);saveDay(k)}if(nd&&!nd.sh)nd.sh=1}
+  else if(nd&&nd.sh){delete dd.h[h.id];saveDay(k);delete nd.sh}
+}
+
+/* ---------- nutrition: day view ---------- */
+const macLine=v=>'بروتين '+L(num(v[1],1))+' · كربوهيدرات '+L(num(v[2],1))+' · دهون '+L(num(v[3],1));
+const eName=e=>{const f=e.f&&e.f!=="q"?food(e.f):null;return f?f.n:e.n};
+function nRow(e){
+  const v=vOf(e.v,e.g),q=e.f==="q";
+  return '<button class="nrow" data-act="nEdit" data-id="'+e.id+'"><span class="nn" dir="auto">'+esc(eName(e))+'</span><span class="nk">'+L(kc0(v[0]))+' <span class="u lbl">سعرة</span></span><span class="nm2">'+(q?"":L(num(+e.g,1))+' غ · ')+macLine(v)+'</span></button>';
+}
+function macBox(lbl,got,tg,cls){
+  const p=tg>0?Math.min(1,got/tg):0;
+  return '<div style="--mc:var('+cls+')"><span class="lbl">'+lbl+'</span><b>'+L(num(got,0)+(tg>0?" / "+num(tg,0):""))+' <span class="u lbl">غ</span></b><span class="bar"><i style="width:'+Math.round(p*100)+'%"></i></span></div>';
+}
+function vNut(){
+  if(S.nu.view==="set")return vNutSet();
+  if(S.nu.view==="an")return vNutAn();
+  const k=S.nu.cur,t=todayK(),d=S.nutri[k]||{d:k,it:[],act:[]},its=d.it||[],tot=vSum(its),tg=targetOn(k),en=energyOn(k);
+  let s='<section class="sec-h"><h2 class="dsp">التغذية</h2><div class="row"><button class="btn sm" data-act="nView" data-v="an">التحليل</button><button class="btn sm" data-act="nView" data-v="set">الأهداف والإعدادات</button></div></section>';
+  s+='<section class="datebar"><button class="iconbtn" data-act="nDay" data-n="-1" aria-label="اليوم السابق">'+ICON.prev+'</button><div class="d"><h1>'+esc(fLong(k))+'</h1><div class="lbl">'+(k===t?"اليوم":(diffD(k,t)===1?"أمس":"قبل "+daysAr(diffD(k,t))))+'</div>'+(k!==t?'<div class="dbtns"><button class="chip-link" data-act="nToday">العودة لليوم</button></div>':"")+'</div>'+
+    '<button class="iconbtn" data-act="nDay" data-n="1" aria-label="اليوم التالي"'+(k>=t?" disabled":"")+'>'+ICON.next+'</button></section>';
+  // summary
+  let sum='<section class="panel nsum">';
+  if(tg){const rem=tg.kcal-tot[0],p=tg.kcal>0?Math.min(1,tot[0]/tg.kcal):0;
+    sum+='<div class="nbig"><div><span class="lbl">'+(rem>=0?"المتبقي":"تجاوزت الهدف بـ")+'</span><br><b class="'+(rem<0?"over":"")+'">'+L(kc0(Math.abs(rem)))+'</b> <span class="lbl">سعرة</span></div>'+
+      '<div class="kv" style="flex:1;max-width:320px"><div><b>'+L(kc0(tot[0]))+'</b><span>أكلت</span></div><div><b>'+L(kc0(tg.kcal))+'</b><span>الهدف</span></div><div><b>'+L(kc0(NUT().tmode==="day"?tdeeOn(k):tg.base))+'</b><span>'+(NUT().tmode==="day"?"حرق هذا اليوم":"متوسط حرقك اليومي")+'</span></div></div></div>'+
+      '<div class="bar"><i style="width:'+Math.round(p*100)+'%'+(rem<0?";background:var(--bad)":"")+'"></i></div>'+
+      '<div class="mac">'+macBox("البروتين",tot[1],tg.p,"--g3")+macBox("الكربوهيدرات",tot[2],tg.c,"--g2")+macBox("الدهون",tot[3],tg.f,"--g4")+macBox("الألياف",tot[4],tg.fib,"--g6")+'</div>'+
+      (tg.warn.length?'<p class="err" style="margin:0">'+tg.warn.map(esc).join(" ")+'</p>':"")+
+      '<div class="row" style="justify-content:space-between"><span class="lbl">'+(NUT().tmode==="day"?"الهدف يتغير مع نشاط هذا اليوم.":"الهدف ثابت من متوسط آخر أسبوعين.")+' '+(adaptive().ok?"معاير من وزنك وأكلك.":"لم تتم المعايرة بعد.")+'</span><button class="chip-link" data-act="nEnergy">تفاصيل الحرق</button></div>';
+  }else{
+    sum+='<div class="kv"><div><b>'+L(kc0(tot[0]))+'</b><span>سعرة</span></div><div><b>'+L(num(tot[1],0))+'</b><span>بروتين (غ)</span></div><div><b>'+L(num(tot[2],0))+'</b><span>كربوهيدرات (غ)</span></div><div><b>'+L(num(tot[3],0))+'</b><span>دهون (غ)</span></div></div>'+
+      (!nProf()?'<div class="row" style="justify-content:space-between"><span class="small muted">أدخل جنسك وسنة ميلادك وطولك ليحسب البرنامج حرقك وهدفك اليومي.</span><button class="btn pri sm" data-act="nView" data-v="set">إعداد الهدف</button></div>'
+        :'<div class="row" style="justify-content:space-between"><span class="small muted">سجّل وزنك مرة واحدة على الأقل في قسم الوزن ليُحسب الحرق والهدف.</span><button class="btn sm" data-act="tab" data-t="weight">قسم الوزن</button></div>');
+  }
+  sum+='</section>';
+  // meals
+  const y=S.nutri[addD(k,-1)];
+  let meals='';
+  MEALS.forEach((mn,m)=>{const me=its.filter(e=>(+e.m||0)===m),mt=vSum(me),ym=y?(y.it||[]).filter(e=>(+e.m||0)===m):[];
+    meals+='<section class="nmeal"><div class="nmeal-h"><h3>'+mn+'</h3>'+(me.length?'<span class="gsc">'+L(kc0(mt[0]))+' سعرة</span>':"")+'<button class="iconbtn sm2" data-act="nAdd" data-m="'+m+'" aria-label="إضافة إلى '+mn+'">+</button></div>'+
+      (me.length?'<div class="hlist">'+me.map(nRow).join("")+'</div>':'<button class="nadd" data-act="nAdd" data-m="'+m+'">إضافة طعام</button>')+
+      '<div class="row" style="gap:16px">'+(!me.length&&ym.length?'<button class="chip-link" data-act="nCopy" data-m="'+m+'">نسخ '+mn+' أمس ('+ym.length+')</button>':"")+(me.length>1?'<button class="chip-link" data-act="nSaveMeal" data-m="'+m+'">حفظ كوجبة جاهزة</button>':"")+'</div></section>'});
+  // status
+  const stt='<section class="panel sec"><div class="sec-h"><h2>حالة تسجيل اليوم</h2></div><div class="row"><button class="nchip'+(d.st==="done"?" on":"")+'" data-act="nSt" data-v="done">اكتمل التسجيل</button><button class="nchip'+(d.st==="part"?" on":"")+'" data-act="nSt" data-v="part">يوم ناقص</button></div>'+
+    '<p class="lbl" style="margin:0">«اكتمل» ينجز مهمة تسجيل الأكل إن وجدت. اليوم الناقص لا يدخل في معايرة الحرق، وكذلك أي يوم سجلت فيه أقل من نصف حرقك المقدّر ما لم تعلّمه مكتملاً.</p></section>';
+  const act=actHTML(k);
+  return s+'<div class="tg"><div class="tg-main">'+sum+meals+'</div><div class="tg-side">'+act+stt+'</div></div>';
+}
+/* daily activity: steps, distance, gym sessions from the gym log, other sessions; shown in nutrition and on the day page */
+function recentActs(k){
+  const seen=new Map();Object.keys(S.nutri).filter(x=>x!==k&&x<=todayK()).sort().reverse().slice(0,45).forEach(x=>(S.nutri[x].act||[]).forEach(a=>{const key=a.c+"|"+(+a.kc>0?"k"+a.kc:a.min);if(!seen.has(key))seen.set(key,a)}));
+  return Array.from(seen.values()).slice(0,4);
+}
+const actShort=a=>(+a.kc>0?"من الساعة "+Math.round(a.kc)+" سعرة":String(a.n).split("،")[0]+" · "+Math.round(+a.min||0)+" د");
+function actHTML(k){
+  const d=S.nutri[k]||{},en=energyOn(k),gyms=doneWos().filter(w=>w.date===k);
+  let s='<section class="panel sec"><div class="sec-h"><h2>النشاط</h2>'+(en?'<span class="lbl">'+L(kc0(en.stepsK+en.ex))+' سعرة فوق الراحة</span>':"")+'</div>'+
+    '<div class="two"><div class="fld"><label for="nu-steps">الخطوات</label><input id="nu-steps" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(+d.steps>0?d.steps:"")+'" placeholder="0"></div>'+
+    '<div class="fld"><label for="nu-km">المسافة (كم)</label><input id="nu-km" data-k="'+k+'" class="keep ltr" type="number" inputmode="decimal" min="0" max="100" step="0.01" value="'+(+d.km>0?d.km:"")+'" placeholder="اختياري"></div></div>'+
+    '<span class="lbl" id="nu-stk">'+stepsLine(en)+'</span>';
+  if(gyms.length)s+='<div class="fld"><span class="lbl2">من سجل الجم</span>'+gyms.map(w=>{const g=en&&en.gym.find(x=>x.id===w.id),min=(new Date(w.end)-new Date(w.start))/60000;return '<div class="erow"><span>'+esc(w.gname)+' <span class="lbl">'+Math.round(min)+' دقيقة'+(g?' · '+L(num(g.met,1))+' MET':"")+'</span></span><b class="num">'+(g?L(kc0(g.kc)):"–")+'</b></div>'}).join("")+'</div>';
+  const acts=d.act||[];
+  if(acts.length)s+='<div class="fld"><span class="lbl2">جلسات أخرى</span>'+acts.map((a,i)=>{const x=en&&en.act[i];return '<div class="erow"><span>'+esc(a.n)+' <span class="lbl">'+(+a.kc>0?"من الساعة":Math.round(+a.min||0)+' دقيقة · '+L(num(+a.met,1))+' MET')+'</span></span><span class="row" style="gap:6px;flex-wrap:nowrap"><b class="num">'+(x?L(kc0(x.kc)):"–")+'</b><button class="iconbtn sm2" data-act="nActDel" data-k="'+k+'" data-id="'+a.id+'" aria-label="حذف الجلسة">×</button></span></div>'}).join("")+'</div>';
+  const rec=recentActs(k);
+  s+='<div class="nchips"><button class="btn sm" data-act="nAct" data-k="'+k+'">إضافة جلسة</button>'+rec.map((a,i)=>'<button class="nchip" data-act="nActRep" data-k="'+k+'" data-i="'+i+'">+ '+esc(actShort(a))+'</button>').join("")+'</div>'+
+    (rec.length?'<span class="lbl">الأزرار تكرر جلسة سجلتها سابقاً بنفس المدة.</span>':"")+
+    (!en?'<span class="lbl">السعرات تظهر بعد إعداد الهدف في قسم التغذية وتسجيل وزنك.</span>':"")+'</section>';
+  return s;
+}
+function stepsLine(en){
+  if(!en)return "تُحسب سعرات المشي بعد إعداد الهدف وتسجيل الوزن.";
+  if(!(en.km>0))return "أدخل خطوات اليوم من تطبيق الصحة في هاتفك. المسافة التي يعرضها التطبيق أدق من الخطوات إن أدخلتها.";
+  return "نحو "+L(num(en.km,1))+" كم"+(en.est?" مقدّرة من طولك":"")+" = "+L(kc0(en.stepsK))+" سعرة فوق الراحة.";
+}
+
+/* ---------- nutrition: food sheet ---------- */
+let FS=null;
+const fsMealSeg=m=>'<div class="fld"><span class="lbl2">الوجبة</span><div class="seg2" role="radiogroup">'+MEALS.map((n,i)=>'<label><input type="radio" name="m" value="'+i+'"'+(i===(+m||0)?" checked":"")+'><span>'+n+'</span></label>').join("")+'</div></div>';
+function openFS(k,m){FS={k:k,m:+m||0,q:"",mode:"log",view:"list",raw:false,added:[]};loadFDB();openSheet(fsHTML(),fsSubmit);fsResults()}
+function fsShow(){const y=card.scrollTop;card.innerHTML=fsHTML();if(FS&&FS.view==="list"){fsResults();const q=$("#fs-q");if(q){q.focus();const n=q.value.length;try{q.setSelectionRange(n,n)}catch(e){}}}else card.scrollTop=FS&&FS.view==="food"?0:y}
+function fsHTML(){
+  if(!FS)return "";
+  if(FS.view==="food")return fsFoodHTML();
+  if(FS.view==="quick")return fsQuickHTML();
+  if(FS.view==="recipe")return recipeHTML();
+  const title=FS.mode==="recipe"?"مكوّن للوصفة":"إضافة إلى "+MEALS[FS.m];
+  return '<h2>'+title+'</h2><div class="f">'+(FS.mode==="log"?'<div class="lbl">'+esc(fLong(FS.k))+'</div>':"")+
+    '<input id="fs-q" class="search" type="search" autocomplete="off" placeholder="chicken breast roasted, rice cooked" value="'+esc(FS.q)+'" aria-label="بحث عن طعام">'+
+    '<div class="row" style="gap:14px">'+(FS.mode==="log"?'<button class="chip-link" data-act="fsQuick">إضافة سعرات سريعة</button>':"")+'<button class="chip-link" data-act="cfNew">طعام من ملصق</button>'+(FS.mode==="log"?'<button class="chip-link" data-act="rcNew">وصفة جديدة</button>':"")+'</div>'+
+    (FS.added.length?'<div class="banner">أُضيف: '+FS.added.slice(-3).map(x=>'<bdi>'+esc(x)+'</bdi>').join("، ")+'</div>':"")+
+    '<div id="fs-res" class="fsres" aria-live="polite"></div>'+
+    '<div class="row"><button class="btn'+(FS.mode==="log"?" pri":"")+'" data-act="'+(FS.mode==="recipe"?"rcBack":"closeSheet")+'">'+(FS.mode==="recipe"?"رجوع للوصفة":"تم")+'</button></div></div>';
+}
+function fsItem(fid,extra){
+  const f=food(fid);if(!f)return "";
+  return '<button class="fsi" data-act="fsPick" data-f="'+esc(fid)+'"'+(extra&&extra.g?' data-g="'+extra.g+'"':"")+'><span class="t"><b dir="auto">'+esc(f.n)+'</b><span>'+(f.kind==="ar"?esc(f.cat):f.kind==="c"?"طعامك":f.kind==="r"?"وصفتك":"USDA")+(f.note&&f.kind!=="en"?" · "+esc(f.note):"")+(extra&&extra.g?" · آخر مرة "+L(num(extra.g,0))+" غ":"")+'</span></span><span class="k">'+L(kc0(+f.v[0]))+' / 100 غ</span></button>';
+}
+function fsResults(){
+  const box=$("#fs-res");if(!box||!FS)return;
+  const q=FS.q.trim();let h="";
+  if(!q){
+    if(FS.mode==="log"){const ml=Object.values(NUT().meals);if(ml.length)h+='<div class="fsh">وجباتك الجاهزة</div>'+ml.map(x=>{const t=vSum(x.it);return '<button class="fsi" data-act="fsMeal" data-id="'+x.id+'"><span class="t"><b>'+esc(x.n)+'</b><span>'+x.it.length+' أصناف · تُضاف كلها</span></span><span class="k">'+L(kc0(t[0]))+' سعرة</span></button>'}).join("")}
+    const own=Object.values(NUT().recipes).map(r=>"r:"+r.id).concat(Object.values(NUT().foods).map(c=>"c:"+c.id));
+    const rec=recentFoods(25).filter(e=>food(e.f)||e.f.indexOf("u:")===0);
+    if(rec.length)h+='<div class="fsh">الأخيرة</div>'+rec.map(e=>fsItem(e.f,{g:+e.g})||'<button class="fsi" data-act="fsPick" data-f="'+esc(e.f)+'"><span class="t"><b dir="auto">'+esc(e.n)+'</b><span>USDA</span></span><span class="k">'+L(kc0(+e.v[0]))+' / 100 غ</span></button>').join("");
+    if(own.length)h+='<div class="fsh">أطعمتك ووصفاتك</div>'+own.map(f=>fsItem(f)).join("");
+    h+='<p class="lbl" style="margin:6px 0 0">النتائج تبدأ بـ '+FOOD_AR.length+' صنفاً شائعاً مطبوخاً أو جاهزاً، ثم بقية قاعدة USDA ('+(FDB_LIST?FDB_LIST.length.toLocaleString("en"):"8,400")+' صنف). اكتب بالإنكليزية، والكلمات العراقية الشائعة تعمل أيضاً للأصناف الشائعة.</p>';
+    box.innerHTML=h;return;
+  }
+  const r=fsSearch(q);
+  if(r.own.length)h+='<div class="fsh">أطعمتك ووصفاتك</div>'+r.own.map(x=>fsItem(x.fid)).join("");
+  if(r.ar.length)h+='<div class="fsh">أصناف شائعة · USDA</div>'+r.ar.slice(0,40).map(x=>fsItem(x.fid)).join("");
+  if(/[a-z]/i.test(q)){
+    if(FDB_ST==="loading"||(!FDB&&FDB_ST===""))h+='<p class="lbl">جارٍ تحميل قاعدة USDA…</p>';
+    else if(FDB_ST==="err")h+='<p class="err">تعذّر تحميل قاعدة USDA. تحقق من الاتصال ثم أعد فتح البحث.</p>';
+    else if(r.en.length)h+='<div class="fsh">قاعدة USDA الكاملة · '+r.en.length+(r.en.length>=60?"+":"")+' نتيجة</div>'+r.en.map(x=>fsItem(x.fid)).join("");
+  }
+  if(FS.mode!=="recipe"&&(r.hid||r.enHid||FS.raw))h+='<label class="chk" style="margin-top:6px"><input type="checkbox" id="fs-raw"'+(FS.raw?" checked":"")+'><span>إظهار المكونات النيئة وغير المطبوخة'+(r.hid+r.enHid&&!FS.raw?" ("+(r.hid+r.enHid)+")":"")+'</span></label><span class="lbl">مخفية لأن وزنها قبل الطبخ، وأنت تزن الأكل بعد الطبخ. تحتاجها فقط داخل الوصفات.</span>';
+  if(!h)h='<p class="muted small" style="margin:0">لا نتائج. جرّب كلمة أقصر، أو اكتب بالإنكليزية للبحث في قاعدة USDA الكاملة، أو أضف الطعام من ملصقه.</p>';
+  box.innerHTML=h;
+}
+function fsFoodHTML(){
+  const f=FS.f;if(!f)return "";
+  const v=f.v,ed=FS.edit,units=[["غرام",1]].concat(f.u||[]),ui=Math.max(0,Math.min(units.length-1,FS.ui||0)),qty=FS.qty;
+  const recipe=FS.mode==="recipe";
+  return '<div class="f"><button class="chip-link" style="align-self:flex-start" data-act="'+(ed?"closeSheet":"fsBack")+'">'+(ed?"إغلاق":"رجوع للبحث")+'</button>'+
+    '<h2 style="margin:0" dir="auto">'+esc(f.n)+'</h2><div class="lbl">'+esc(f.src)+(f.note?" · "+esc(f.note):"")+'</div>'+
+    '<div class="p100"><div><b>'+L(kc0(+v[0]))+'</b><span>سعرة</span></div><div><b>'+L(num(+v[1],1))+'</b><span>بروتين</span></div><div><b>'+L(num(+v[2],1))+'</b><span>كربوهيدرات</span></div><div><b>'+L(num(+v[3],1))+'</b><span>دهون</span></div><div><b>'+(v[4]==null?"–":L(num(+v[4],1)))+'</b><span>ألياف</span></div></div><span class="lbl">القيم لكل 100 غرام'+(f.kind==="ar"||f.kind==="en"?"، من قاعدة USDA SR28":"")+'. الكربوهيدرات تشمل الألياف.</span>'+
+    '<form id="fs-amt" class="f" autocomplete="off"><div class="amt"><div class="fld"><label for="fs-n">الكمية</label><input id="fs-n" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(qty!=null?qty:"")+'" required></div>'+
+      '<div class="fld"><label for="fs-u">الوحدة</label><select id="fs-u" class="sel">'+units.map((u,i)=>'<option value="'+i+'"'+(i===ui?" selected":"")+'>'+esc(u[0])+(i?" ("+num(+u[1],1)+" غ)":"")+'</option>').join("")+'</select></div></div>'+
+      '<div class="ntot" id="fs-tot">'+fsTotHTML()+'</div>'+
+      (recipe?"":fsMealSeg(FS.m))+
+      '<p class="err" id="fs-err" hidden></p>'+
+      '<div class="row"><button class="btn pri" type="submit">'+(ed?"حفظ التعديل":recipe?"إضافة للوصفة":"إضافة")+'</button>'+(ed?'<button class="btn danger" type="button" data-act="nDelEntry">حذف من اليوم</button>':"")+'</div></form>'+
+    '<details class="unitbox"><summary class="chip-link">إضافة وحدة خاصة لهذا الطعام</summary><form id="fs-unit" class="two" autocomplete="off" style="margin-top:8px"><div class="fld"><label for="fu-l">الاسم</label><input id="fu-l" maxlength="24" placeholder="مثال: صمونة"></div><div class="fld"><label for="fu-g">الوزن بالغرام</label><input id="fu-g" class="ltr" type="number" inputmode="decimal" min="0.1" step="any" placeholder="90"></div><button class="btn sm" type="submit">حفظ الوحدة</button></form>'+
+      (userUnits(f.fid).length?'<div class="setl" style="margin-top:6px">'+userUnits(f.fid).map((u,i)=>'<span>'+esc(u[0])+' '+L(num(+u[1],1)+" غ")+' <button class="chip-link" data-act="fuDel" data-i="'+i+'">حذف</button></span>').join("")+'</div>':"")+'</details></div>';
+}
+function fsGrams(){const f=FS.f,units=[["غرام",1]].concat(f.u||[]),u=units[Math.max(0,Math.min(units.length-1,FS.ui||0))],q=+FS.qty;return Number.isFinite(q)&&q>0?q*(+u[1]):0}
+function fsTotHTML(){const g=fsGrams(),v=vOf(FS.f.v,g);return '<b>'+L(kc0(v[0]))+'</b> سعرة · '+L(num(g,1))+' غ<br><span class="lbl">'+macLine(v)+'</span>'}
+function fsPick(fid,g0){
+  let f=food(fid);if(!f){const e=recentFoods(200).find(x=>x.f===fid);if(e)f=foodOr(e)}if(!f)return;
+  const lg=g0||lastG(fid);let ui=0,qty=lg||100;
+  if(!lg&&f.u&&f.u.length&&f.kind!=="en"){const pi=f.u.findIndex(u=>!/^(كوب|نصف كوب|ربع كوب)$/.test(u[0]));if(pi>=0&&/حبة|رغيف|شريحة|قطعة|تمرة|ساندويتش|علبة|إصبع|فخذ|دبوس|قرص|حصة|كبدة|عرنوص|لوح/.test(f.u[pi][0])){ui=pi+1;qty=1}}
+  Object.assign(FS,{view:"food",f:f,fid:fid,ui:ui,qty:qty,edit:null});fsShow();
+}
+function openEntry(k,id){
+  const d=S.nutri[k],e=d&&(d.it||[]).find(x=>x.id===id);if(!e)return;
+  if(e.f==="q"){FS={k:k,m:+e.m||0,mode:"log",view:"quick",edit:id,q:"",added:[],raw:false};openSheet(fsHTML(),fsSubmit);return}
+  const f=foodOr(e);FS={k:k,m:+e.m||0,mode:"log",view:"food",f:f,fid:e.f,ui:0,qty:+e.g,edit:id,q:"",added:[],raw:false};openSheet(fsHTML(),fsSubmit);
+}
+function fsQuickHTML(){
+  const e=FS.edit&&S.nutri[FS.k]?(S.nutri[FS.k].it||[]).find(x=>x.id===FS.edit):null,v=e?e.v:[];
+  return '<h2>'+(e?"تعديل إضافة سريعة":"إضافة سعرات سريعة")+'</h2><form id="fs-quick" class="f" autocomplete="off">'+
+    '<div class="fld"><label for="fq-n">الوصف (اختياري)</label><input id="fq-n" name="n" maxlength="60" value="'+esc(e?e.n:"")+'" placeholder="مثال: عشاء مطعم"></div>'+
+    '<div class="two"><div class="fld"><label for="fq-k">السعرات</label><input id="fq-k" name="k" class="ltr" type="number" inputmode="numeric" min="1" max="10000" step="any" required value="'+(e?Math.round(+v[0]):"")+'"></div>'+
+    '<div class="fld"><label for="fq-p">البروتين (غ)</label><input id="fq-p" name="p" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(e&&+v[1]?r1(+v[1]):"")+'"></div>'+
+    '<div class="fld"><label for="fq-c">الكربوهيدرات (غ)</label><input id="fq-c" name="c" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(e&&+v[2]?r1(+v[2]):"")+'"></div>'+
+    '<div class="fld"><label for="fq-f">الدهون (غ)</label><input id="fq-f" name="f" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(e&&+v[3]?r1(+v[3]):"")+'"></div></div>'+
+    fsMealSeg(e?e.m:FS.m)+'<p class="err" id="fq-err" hidden></p>'+
+    '<div class="row"><button class="btn pri" type="submit">'+(e?"حفظ":"إضافة")+'</button>'+(e?'<button class="btn danger" type="button" data-act="nDelEntry">حذف</button>':'<button class="btn" type="button" data-act="fsBack">رجوع</button>')+'</div>'+
+    '<p class="lbl" style="margin:0">للحالات التي لا تعرف فيها مكونات الأكل. الأدق دائماً أن تزن الأكل وتختاره من القائمة.</p></form>';
+}
+function addEntry(k,e){const d=nDay(k);d.it.push(e);saveN(k)}
+function fsSubmit(fd,form){
+  if(!FS)return;const id=form.id;
+  if(id==="fs-amt"){
+    const g=fsGrams(),err=$("#fs-err");if(!(g>0)){err.textContent="أدخل كمية أكبر من صفر.";err.hidden=false;return}
+    if(g>5000){err.textContent="الكمية كبيرة جداً، تأكد منها (أكثر من 5 كغم).";err.hidden=false;return}
+    if(FS.mode==="recipe"){RD.it.push({f:FS.fid,n:FS.f.n,g:r1(g),v:FS.f.v.slice()});FS.view="recipe";fsShow();return}
+    const m=+(fd.get("m")||FS.m)||0;
+    if(FS.edit){const d=S.nutri[FS.k],e=d&&(d.it||[]).find(x=>x.id===FS.edit);if(e){e.g=r1(g);e.m=m;saveN(FS.k)}closeSheet();FS=null;render();return}
+    addEntry(FS.k,{id:uid(),f:FS.fid,n:FS.f.n,g:r1(g),m:m,v:FS.f.v.slice()});FS.m=m;FS.added.push(FS.f.n);FS.view="list";FS.q="";fsShow();render();return;
+  }
+  if(id==="fs-quick"){
+    const kc=parseFloat(fd.get("k")),num2=x=>{const v=parseFloat(fd.get(x));return Number.isFinite(v)&&v>=0?v:0},err=$("#fq-err");
+    if(!Number.isFinite(kc)||kc<=0||kc>10000){err.textContent="أدخل السعرات رقماً بين 1 و 10000.";err.hidden=false;return}
+    const v=[kc,num2("p"),num2("c"),num2("f"),0],n=String(fd.get("n")||"").trim()||"إضافة سريعة",m=+(fd.get("m")||0)||0;
+    if(FS.edit){const d=S.nutri[FS.k],e=d&&(d.it||[]).find(x=>x.id===FS.edit);if(e){e.v=v;e.n=n;e.m=m;saveN(FS.k)}closeSheet();FS=null;render();return}
+    addEntry(FS.k,{id:uid(),f:"q",n:n,g:100,m:m,v:v});FS.added.push(n);FS.m=m;FS.view="list";fsShow();render();return;
+  }
+  if(id==="fs-unit"){
+    const l=String(($("#fu-l")||{}).value||"").trim(),g=parseFloat(($("#fu-g")||{}).value);
+    if(!l||!(g>0&&g<=5000))return;
+    const N=NUT(),uk=ukey(FS.fid),list=(Array.isArray(N.units[uk])?N.units[uk]:[]).filter(x=>x&&x.l&&+x.g>0);list.push({l:l,g:r1(g)});N.units[uk]=list;saveConfig();
+    FS.f=food(FS.fid)||Object.assign({},FS.f,{u:(FS.f.u||[]).concat([[l,r1(g)]])});FS.ui=(FS.f.u||[]).length;FS.qty=1;fsShow();return;
+  }
+  if(id==="rc-form"){rcSave(fd);return}
+}
+
+/* ---------- nutrition: custom foods, recipes, saved meals ---------- */
+function openCustomFood(c,fromFS){
+  const v=c?c.v:[],u=c&&uPairs(c.u)[0];
+  const back=fromFS&&FS?JSON.parse(JSON.stringify({k:FS.k,m:FS.m,mode:FS.mode,q:FS.q})):null;CF_BACK=back;
+  openSheet('<h2>'+(c?"تعديل طعامك":"طعام من ملصق")+'</h2><form class="f" id="cf-form" autocomplete="off">'+
+    '<div class="fld"><label for="cf-n">الاسم</label><input id="cf-n" name="n" maxlength="60" required value="'+esc(c?c.n:"")+'" placeholder="مثال: واي بروتين ماي بروتين"></div>'+
+    '<div class="fld"><span class="lbl2">القيم المكتوبة على الملصق</span><div class="seg2"><label><input type="radio" name="basis" value="100" checked><span>لكل 100 غ</span></label><label><input type="radio" name="basis" value="sv"><span>لكل حصة</span></label></div></div>'+
+    '<div class="fld" id="cf-svbox" hidden><label for="cf-sg">وزن الحصة بالغرام</label><input id="cf-sg" name="sg" class="ltr" type="number" inputmode="decimal" min="0.1" step="any" placeholder="30"></div>'+
+    '<div class="two"><div class="fld"><label for="cf-k">السعرات</label><input id="cf-k" name="k" class="ltr" type="number" inputmode="decimal" min="0" step="any" required value="'+(c?r1(+v[0]):"")+'"></div>'+
+    '<div class="fld"><label for="cf-p">البروتين (غ)</label><input id="cf-p" name="p" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(c?r1(+v[1]):"")+'"></div>'+
+    '<div class="fld"><label for="cf-c">الكربوهيدرات (غ)</label><input id="cf-c" name="c" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(c?r1(+v[2]):"")+'"></div>'+
+    '<div class="fld"><label for="cf-f">الدهون (غ)</label><input id="cf-f" name="f" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(c?r1(+v[3]):"")+'"></div>'+
+    '<div class="fld"><label for="cf-fb">الألياف (غ، اختياري)</label><input id="cf-fb" name="fb" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(c&&v[4]!=null?r1(+v[4]):"")+'"></div></div>'+
+    '<div class="two"><div class="fld"><label for="cf-ul">وحدة (اختياري)</label><input id="cf-ul" name="ul" maxlength="24" value="'+esc(u?u[0]:"")+'" placeholder="مثال: سكوب"></div><div class="fld"><label for="cf-ug">وزنها بالغرام</label><input id="cf-ug" name="ug" class="ltr" type="number" inputmode="decimal" min="0.1" step="any" value="'+(u?u[1]:"")+'"></div></div>'+
+    '<p class="lbl" style="margin:0">إذا كان الملصق يذكر الكربوهيدرات بدون الألياف (صافية)، أضف الألياف إليها ليتطابق الحساب مع بقية الأطعمة.</p>'+
+    '<p class="err" id="cf-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button>'+(c?'<button class="btn sm danger" type="button" data-act="cfDel" data-id="'+c.id+'">حذف هذا الطعام</button>':"")+'<button class="btn" type="button" data-act="cfCancel">إلغاء</button></div></form>',fd=>{
+    const err=$("#cf-err"),bad=m=>{err.textContent=m;err.hidden=false};
+    const n=String(fd.get("n")||"").trim();if(!n)return bad("اكتب اسم الطعام.");
+    const g=x=>{const s=String(fd.get(x)||"");if(s==="")return null;const q=parseFloat(s);return Number.isFinite(q)&&q>=0?q:NaN};
+    let k=g("k"),p=g("p")||0,cb=g("c")||0,ft=g("f")||0,fb=g("fb");
+    if(k===null||Number.isNaN(k)||[p,cb,ft].some(Number.isNaN)||Number.isNaN(fb))return bad("أدخل القيم أرقاماً موجبة.");
+    let sc=1;if(fd.get("basis")==="sv"){const sg=parseFloat(fd.get("sg"));if(!(sg>0))return bad("أدخل وزن الحصة بالغرام.");sc=100/sg}
+    const vv=[k*sc,p*sc,cb*sc,ft*sc,fb===null?null:fb*sc].map(x=>x===null?null:Math.round(x*100)/100);
+    if(p*4+cb*4+ft*9>k*1.35+20)return bad("مجموع البروتين والكربوهيدرات والدهون أعلى بكثير من السعرات. راجع الأرقام.");
+    const ul=String(fd.get("ul")||"").trim(),ug=parseFloat(fd.get("ug")),uu=ul&&ug>0?[{l:ul,g:r1(ug)}]:fd.get("basis")==="sv"?[{l:"حصة",g:r1(parseFloat(fd.get("sg")))}]:[];
+    const N=NUT(),id=c?c.id:uid();N.foods[id]=Object.assign({},c||{},{id:id,n:n,v:vv,u:uu,created:c&&c.created||new Date().toISOString()});saveConfig();
+    CF_BACK=null;if(back){FS={k:back.k,m:back.m,mode:back.mode,q:back.q,view:"list",raw:false,added:[]};if(back.mode==="recipe"&&RD){openSheet(fsHTML(),fsSubmit)}else openSheet(fsHTML(),fsSubmit);fsPick("c:"+id);render()}else{closeSheet();render()}
+  });
+}
+let RD=null,CF_BACK=null,RD_BACK=null; // recipe draft; where a label-food form returns to
+function cfCancel(){const b=CF_BACK;CF_BACK=null;if(b){FS={k:b.k,m:b.m,mode:b.mode,q:b.q,view:"list",raw:false,added:[]};openSheet(fsHTML(),fsSubmit);fsResults()}else closeSheet()}
+function openRecipe(r,backLog){
+  RD=r?JSON.parse(JSON.stringify(r)):{id:uid(),n:"",it:[],tw:null,sv:null,created:new Date().toISOString(),isNew:true};
+  RD_BACK=backLog||null;
+  FS={k:S.nu.cur,m:0,mode:"recipe",view:"recipe",q:"",added:[],raw:false};openSheet(fsHTML(),fsSubmit);
+}
+function recipeHTML(){
+  const rv=recipeV(RD);
+  return '<h2>'+(RD.isNew?"وصفة جديدة":"تعديل الوصفة")+'</h2><form id="rc-form" class="f" autocomplete="off">'+
+    '<div class="fld"><label for="rc-n">اسم الأكلة</label><input id="rc-n" name="n" maxlength="60" value="'+esc(RD.n)+'" placeholder="مثال: مرق باميا بلحم الغنم"></div>'+
+    '<div class="fld"><span class="lbl2">المكوّنات بأوزانها كما دخلت القدر</span>'+(RD.it.length?'<div class="entries" style="max-height:none">'+RD.it.map((e,i)=>'<div><span dir="auto">'+esc(eName(e))+'</span><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="num">'+L(num(+e.g,1))+' غ</span><button class="chip-link" type="button" data-act="rcDel" data-i="'+i+'">حذف</button></span></div>').join("")+'</div>':'<p class="muted small" style="margin:0">لا مكونات بعد.</p>')+
+      '<button class="btn sm" type="button" data-act="rcAdd" style="align-self:flex-start">+ مكوّن</button><span class="lbl">للمكونات النيئة كالرز واللحم والزيت قبل الطبخ اكتب بالإنكليزية في البحث، مثل: rice raw أو lamb raw أو olive oil.</span></div>'+
+    '<div class="two"><div class="fld"><label for="rc-tw">وزن الأكلة بعد الطبخ (غ)</label><input id="rc-tw" name="tw" class="ltr" type="number" inputmode="decimal" min="1" step="any" value="'+(+RD.tw>0?RD.tw:"")+'" placeholder="زن القدر بعد الطبخ واطرح وزنه فارغاً"></div>'+
+      '<div class="fld"><label for="rc-sv">عدد الحصص (اختياري)</label><input id="rc-sv" name="sv" class="ltr" type="number" inputmode="numeric" min="1" max="100" step="1" value="'+(+RD.sv>0?RD.sv:"")+'"></div></div>'+
+    '<div class="ntot">المجموع: <b>'+L(kc0(rv.t[0]))+'</b> سعرة · '+L(num(rv.sumG,0))+' غ مكونات'+(rv.W>0?'<br><span class="lbl">لكل 100 غ مطبوخ: '+L(kc0(rv.v[0]))+' سعرة · '+macLine(rv.v)+'</span>':"")+'</div>'+
+    '<p class="lbl" style="margin:0">الطبخ يغير الوزن بتبخر الماء أو امتصاصه، فالوزن النهائي هو ما يجعل الحساب دقيقاً عندما تزن صحنك بعد الطبخ.</p>'+
+    '<p class="err" id="rc-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ الوصفة</button>'+(!RD.isNew?'<button class="btn sm danger" type="button" data-act="rcRemove">حذف الوصفة</button>':"")+'<button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>';
+}
+function rcSync(){const n=$("#rc-n"),tw=$("#rc-tw"),sv=$("#rc-sv");if(n)RD.n=n.value;if(tw){const v=parseFloat(tw.value);RD.tw=v>0?v:null}if(sv){const v=parseInt(sv.value,10);RD.sv=v>0?v:null}}
+function rcSave(fd){
+  rcSync();const err=$("#rc-err"),bad=m=>{err.textContent=m;err.hidden=false};
+  RD.n=String(RD.n||"").trim();if(!RD.n)return bad("اكتب اسم الأكلة.");if(!RD.it.length)return bad("أضف مكوناً واحداً على الأقل.");
+  const r=Object.assign({},RD);delete r.isNew;NUT().recipes[r.id]=r;saveConfig();RD=null;
+  const b=RD_BACK;RD_BACK=null;if(b){FS={k:b.k,m:b.m,mode:"log",q:"",view:"list",raw:false,added:[]};openSheet(fsHTML(),fsSubmit);fsPick("r:"+r.id)}else{closeSheet();FS=null}render();
+}
+function openSaveMeal(k,m){
+  const d=S.nutri[k],me=d?(d.it||[]).filter(e=>(+e.m||0)===m):[];if(!me.length)return;
+  openSheet('<h2>حفظ كوجبة جاهزة</h2><form class="f" id="sm-form"><div class="fld"><label for="sm-n">الاسم</label><input id="sm-n" name="n" maxlength="50" required placeholder="مثال: فطوري المعتاد" value="'+esc(MEALS[m])+'"></div>'+
+    '<p class="lbl" style="margin:0">'+me.length+' أصناف بأوزانها الحالية. تظهر في البحث فتضيفها كلها بضغطة.</p><div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{
+    const n=String(fd.get("n")||"").trim();if(!n)return;const id=uid();NUT().meals[id]={id:id,n:n,it:me.map(e=>({f:e.f,n:e.n,g:e.g,v:e.v}))};saveConfig();closeSheet();render();
+  });
+}
+function openAct(k){
+  openSheet('<h2>إضافة نشاط</h2><form class="f" id="ac-form" autocomplete="off"><div class="fld"><label for="ac-c">النشاط</label><select id="ac-c" name="c" class="sel">'+ACTS.map(g=>'<optgroup label="'+g[0]+'">'+g[1].map(a=>'<option value="'+a[0]+'">'+esc(a[2])+' · '+a[1]+' MET</option>').join("")+'</optgroup>').join("")+'<option value="watch">سعرات نشطة من الساعة الذكية</option></select></div>'+
+    '<div class="fld" id="ac-minbox"><label for="ac-min">المدة بالدقائق</label><input id="ac-min" name="min" class="ltr" type="number" inputmode="numeric" min="1" max="600" step="1" placeholder="30"></div>'+
+    '<div class="fld" id="ac-kbox" hidden><label for="ac-k">السعرات النشطة كما تعرضها الساعة</label><input id="ac-k" name="k" class="ltr" type="number" inputmode="numeric" min="1" max="5000" step="1"><span class="lbl">السعرات النشطة في الساعة تحسب فوق الراحة، فتُضاف كما هي.</span></div>'+
+    '<p class="lbl" style="margin:0">قيم MET من دليل الأنشطة البدنية للبالغين 2024. المشي والركض الذي يحسبه هاتفك ضمن الخطوات لا تضفه هنا حتى لا يُحسب مرتين. جلسات الجم تُحسب تلقائياً من سجلها.</p>'+
+    '<p class="err" id="ac-err" hidden></p><div class="row"><button class="btn pri" type="submit">إضافة</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{
+    const c=String(fd.get("c")||""),err=$("#ac-err"),bad=m=>{err.textContent=m;err.hidden=false};
+    const d=nDay(k);
+    if(c==="watch"){const kc=parseFloat(fd.get("k"));if(!(kc>0&&kc<=5000))return bad("أدخل السعرات رقماً بين 1 و 5000.");d.act.push({id:uid(),c:"watch",n:"نشاط من الساعة الذكية",kc:Math.round(kc)})}
+    else{const a=ACT_BY[c],mn=parseFloat(fd.get("min"));if(!a)return bad("اختر نشاطاً.");if(!(mn>0&&mn<=600))return bad("المدة من 1 إلى 600 دقيقة.");d.act.push({id:uid(),c:a[0],n:a[2],met:a[1],min:Math.round(mn)})}
+    saveN(k);closeSheet();render();
+  });
+}
+function energyHTML(k){
+  const e=energyOn(k),A=adaptive(),f=calF(),p=nProf();
+  if(!e)return '<h2>تفاصيل الحرق</h2><p class="muted">أكمل إعداد الهدف وسجّل وزنك أولاً.</p><div class="row"><button class="btn" data-act="closeSheet">إغلاق</button></div>';
+  const row=(a,b,c)=>'<div class="erow"><span>'+a+(c?' <span class="lbl">'+c+'</span>':"")+'</span><b class="num">'+b+'</b></div>';
+  return '<h2>تفاصيل الحرق · '+esc(fShort(k))+'</h2><div class="f"><div class="entries" style="max-height:none">'+
+    row("الأيض الأساسي",L(kc0(e.b.v)),(e.b.m==="katch"?"معادلة كاتش ماكاردل من كتلتك الخالية من الدهون "+L(num(e.b.lbm,1))+" كغم (دهون "+L(num(e.b.c.bf,1)+"%")+"، قياس "+esc(fShort(e.b.c.k))+")":"معادلة ميفلين سان جيور، لعدم وجود قياس دهون")+" · وزن "+L(num(e.W,1))+" · عمر "+e.b.age)+
+    row("النشاط العام في اليوم",L(kc0(e.neat)),"15% من الأيض الأساسي، تقدير أولي تصححه المعايرة")+
+    row("المشي",L(kc0(e.stepsK)),e.km>0?L(num(e.km,1))+" كم"+(e.est?" من "+e.steps.toLocaleString("en")+" خطوة":""):"لم تُسجل خطوات")+
+    e.gym.map(g=>row(esc(g.n),L(kc0(g.kc)),Math.round(g.min)+" دقيقة · "+L(num(g.met,1))+" MET"+(g.fixed?" (قيمة ثابتة من الإعدادات)":g.r!=null?" من متوسط عدات باقية "+L(num(g.r,1)):""))).join("")+
+    e.act.map(a=>row(esc(a.n),L(kc0(a.kc)),a.watch?"من الساعة":Math.round(a.min)+" دقيقة · "+L(num(a.met,1))+" MET")).join("")+
+    row("هضم الطعام",L(kc0(e.tef)),"نحو 10% من المجموع")+
+    row("<b>المجموع بالمعادلة</b>",L(kc0(e.total)))+
+    row("معامل المعايرة",L("×"+num(f,3)),A.ok?"من "+A.nI+" يوماً مسجلاً و "+A.nW+" قراءة وزن":"لم تتم بعد")+
+    row("<b>الحرق المقدّر</b>",L(kc0(e.total*f)))+'</div>'+
+    '<p class="lbl" style="margin:0">التمرين والمشي محسوبان صافيين فوق الراحة: سعرات النشاط ناقص ما كنت ستحرقه وأنت مرتاح في نفس المدة، لأن الراحة محسوبة في الأيض الأساسي. شدة جلسة الجم بين 3.5 و 6 MET بحسب قربك من الفشل.</p>'+
+    '<div class="row"><button class="btn" data-act="closeSheet">إغلاق</button></div></div>';
+}
+
+/* ---------- nutrition: targets & settings view ---------- */
+function vNutSet(){
+  const N=NUT(),p=N.prof||{},A=adaptive(),rates=[[-1,"نزول 1 كغم أسبوعياً"],[-0.75,"نزول 0.75 كغم أسبوعياً"],[-0.5,"نزول 0.5 كغم أسبوعياً"],[-0.25,"نزول 0.25 كغم أسبوعياً"],[0,"ثبات الوزن"],[0.25,"زيادة 0.25 كغم أسبوعياً"],[0.5,"زيادة 0.5 كغم أسبوعياً"]];
+  const cr=Number.isFinite(+N.rate)?+N.rate:0;
+  let s='<section class="sec-h"><h2 class="dsp">الأهداف والإعدادات</h2><button class="btn sm" data-act="nView" data-v="">رجوع</button></section>';
+  s+='<form id="nu-prof" class="panel sec" autocomplete="off"><div class="sec-h"><h2>بياناتك</h2></div>'+
+    '<div class="fld"><span class="lbl2">الجنس</span><div class="seg2"><label><input type="radio" name="sex" value="m"'+(p.sex!=="f"?" checked":"")+'><span>ذكر</span></label><label><input type="radio" name="sex" value="f"'+(p.sex==="f"?" checked":"")+'><span>أنثى</span></label></div></div>'+
+    '<div class="two"><div class="fld"><label for="np-by">سنة الميلاد</label><input id="np-by" name="by" class="ltr" type="number" inputmode="numeric" min="1920" max="'+(new Date().getFullYear()-12)+'" value="'+(p.by||"")+'" required></div>'+
+    '<div class="fld"><label for="np-h">الطول (سم)</label><input id="np-h" name="h" class="ltr" type="number" inputmode="decimal" min="120" max="230" step="0.5" value="'+(p.h||"")+'" required></div></div>'+
+    compLine()+
+    '<div class="sec-h" style="margin-top:6px"><h2>الهدف</h2></div>'+
+    '<div class="fld"><label for="np-rate">معدل تغير الوزن</label><select id="np-rate" name="rate" class="sel">'+rates.map(r=>'<option value="'+r[0]+'"'+(r[0]===cr?" selected":"")+'>'+r[1]+'</option>').join("")+'</select></div>'+
+    '<div class="two"><div class="fld"><label for="np-pkg">البروتين (غ لكل كغم)</label><input id="np-pkg" name="pkg" class="ltr" type="number" inputmode="decimal" min="0.8" max="3.5" step="0.1" value="'+(+N.pkg>0?N.pkg:2)+'"></div>'+
+    '<div class="fld"><label for="np-fp">الدهون (% من السعرات)</label><input id="np-fp" name="fpct" class="ltr" type="number" inputmode="numeric" min="15" max="50" step="1" value="'+(+N.fpct>0?N.fpct:25)+'"></div></div>'+
+    '<span class="lbl">الباقي من السعرات يذهب للكربوهيدرات. البروتين بين 1.6 و 2.2 غ لكل كغم هو المدى الذي تذكره الدراسات لمن يتمرن بالأوزان.</span>'+
+    '<div class="fld"><span class="lbl2">طريقة الهدف اليومي</span><div class="seg2"><label><input type="radio" name="tmode" value="avg"'+(N.tmode!=="day"?" checked":"")+'><span>ثابت من متوسط أسبوعين</span></label><label><input type="radio" name="tmode" value="day"'+(N.tmode==="day"?" checked":"")+'><span>يتغير مع نشاط اليوم</span></label></div>'+
+      '<span class="lbl">الثابت يعطيك رقماً واحداً كل يوم ويوزع حرق تمارينك على الأسبوع. المتغير يرفع الهدف في يوم التمرين ويخفضه في يوم الراحة.</span></div>'+
+    '<div class="fld"><label for="np-gm">شدة جلسة الجم (MET)</label><input id="np-gm" name="gmet" class="ltr" type="number" inputmode="decimal" min="0" max="9" step="0.1" value="'+(+N.gmet>0?N.gmet:"")+'" placeholder="تلقائي من العدات الباقية" style="max-width:240px"><span class="lbl">اتركه فارغاً ليُحسب لكل جلسة: 6 MET إذا وصلت للفشل، وتنخفض حتى 3.5 كلما بقيت عدات أكثر.</span></div>'+
+    '<p class="err" id="np-err"'+(S.nu.msg?"":" hidden")+'>'+esc(S.nu.msg||"")+'</p><div class="row"><button class="btn pri" type="submit">حفظ</button></div></form>';
+  const k=todayK(),tg=targetOn(k),e=energyOn(k);
+  if(tg)s+='<section class="panel sec"><div class="sec-h"><h2>هدفك اليوم</h2><button class="chip-link" data-act="nEnergy">تفاصيل الحرق</button></div><div class="kv"><div><b>'+L(kc0(tg.kcal))+'</b><span>سعرة</span></div><div><b>'+L(num(tg.p,0))+'</b><span>بروتين (غ)</span></div><div><b>'+L(num(tg.c,0))+'</b><span>كربوهيدرات (غ)</span></div><div><b>'+L(num(tg.f,0))+'</b><span>دهون (غ)</span></div></div>'+
+    '<p class="lbl" style="margin:0">الحرق '+L(kc0(tg.base))+(tg.adj?' '+(tg.adj<0?"ناقص ":"زائد ")+L(kc0(Math.abs(tg.adj)))+' لمعدل '+L(signed(+N.rate,2))+' كغم أسبوعياً، على أساس أن الكيلو من وزن الجسم يعادل نحو 7700 سعرة.':".")+'</p>'+(tg.warn.length?'<p class="err" style="margin:0">'+tg.warn.map(esc).join(" ")+'</p>':"")+'</section>';
+  else if(nProf()&&!e)s+='<section class="panel"><p class="small" style="margin:0">سجّل وزنك في قسم الوزن ليظهر هدفك.</p></section>';
+  s+=adaptHTML(A);
+  // manage
+  const fs=Object.values(N.foods),rs=Object.values(N.recipes),ms=Object.values(N.meals);
+  s+='<section class="panel sec"><div class="sec-h"><h2>أطعمتك</h2><button class="btn sm" data-act="cfNew2">طعام جديد</button></div>'+(fs.length?'<div class="exl">'+fs.map(c=>'<button class="exi" data-act="cfEdit" data-id="'+c.id+'"><span>'+esc(c.n)+'</span><span class="lbl">'+L(kc0(+c.v[0]))+' سعرة / 100 غ</span></button>').join("")+'</div>':'<p class="muted small" style="margin:0">أضف هنا ما ليس في القائمة من ملصقه، مثل البروتين الذي تستخدمه.</p>')+'</section>';
+  s+='<section class="panel sec"><div class="sec-h"><h2>وصفاتك</h2><button class="btn sm" data-act="rcNew">وصفة جديدة</button></div>'+(rs.length?'<div class="exl">'+rs.map(r=>{const rv=recipeV(r);return '<button class="exi" data-act="rcEdit" data-id="'+r.id+'"><span>'+esc(r.n)+'</span><span class="lbl">'+r.it.length+' مكونات · '+L(kc0(rv.v[0]))+' سعرة / 100 غ</span></button>'}).join("")+'</div>':'<p class="muted small" style="margin:0">الأكلات العراقية المركبة كالمرق والدولمة والكبة ليست في قاعدة USDA. سجّل مكوناتها مرة واحدة بأوزانها ووزن القدر بعد الطبخ، ثم تزن صحنك وتختارها كأي طعام.</p>')+'</section>';
+  if(ms.length)s+='<section class="panel sec"><div class="sec-h"><h2>وجباتك الجاهزة</h2></div><div class="exl">'+ms.map(m=>'<div class="exi"><span>'+esc(m.n)+' <span class="lbl">'+m.it.length+' أصناف · '+L(kc0(vSum(m.it)[0]))+' سعرة</span></span><button class="chip-link" data-act="smDel" data-id="'+m.id+'">حذف</button></div>').join("")+'</div></section>';
+  return s;
+}
+function compLine(){
+  const c=compOn(todayK());
+  return '<span class="lbl">الوزن يؤخذ من قسم الوزن، متوسط آخر 7 أيام. '+(c?'الأيض محسوب من كتلتك الخالية من الدهون: '+L(num(c.lbm,1))+' كغم (دهون '+L(num(c.bf,1)+"%")+'، '+esc(BF_M[c.m])+'، '+esc(fShort(c.k))+').':'سجّل محيط خصرك في قسم الوزن ليُحسب الأيض من كتلتك الخالية من الدهون بدل الوزن الكلي.')+'</span>';
+}
+S.bc={sel:todayK(),msg:""};
+function compHTML(){
+  const p=nProf(),k=S.bc.sel,d=S.days[k]||{},c=compOn(todayK()),ks=compKeys().slice().reverse(),f=p&&p.sex==="f";
+  let s='<section class="panel sec"><div class="sec-h"><h2>نسبة الدهون</h2>'+(c?'<span class="lbl">آخر قياس '+esc(fShort(c.k))+'</span>':"")+'</div>';
+  if(c)s+='<div class="kv"><div><b>'+L(num(c.bf,1)+"%")+'</b><span>نسبة الدهون</span></div><div><b>'+L(num(c.lbm,1))+'</b><span>الكتلة الخالية من الدهون (كغم)</span></div><div><b>'+L(num(c.W-c.lbm,1))+'</b><span>كتلة الدهون (كغم)</span></div><div><b class="small">'+esc(BF_M[c.m])+'</b><span>طريقة الحساب</span></div></div>';
+  if(!p)s+='<p class="small" style="margin:0">الحساب يحتاج طولك وجنسك. أدخلهما في التغذية ← الأهداف والإعدادات.</p>';
+  s+='<form id="bcform" class="f" autocomplete="off"><div class="two"><div class="fld"><label for="bc-d">اليوم</label><input id="bc-d" class="keep ltr datein" type="date" max="'+todayK()+'" value="'+k+'"></div>'+
+    '<div class="fld"><label for="bc-w">محيط الخصر (سم)</label><input id="bc-w" class="keep ltr" type="number" inputmode="decimal" min="40" max="200" step="0.1" value="'+(+d.waist>0?d.waist:"")+'"></div>'+
+    '<div class="fld"><label for="bc-n">محيط الرقبة (سم، اختياري)</label><input id="bc-n" class="keep ltr" type="number" inputmode="decimal" min="20" max="70" step="0.1" value="'+(+d.neck>0?d.neck:"")+'"></div>'+
+    (f?'<div class="fld"><label for="bc-h">محيط الورك (سم)</label><input id="bc-h" class="keep ltr" type="number" inputmode="decimal" min="50" max="200" step="0.1" value="'+(+d.hip>0?d.hip:"")+'"></div>':"")+
+    '<div class="fld"><label for="bc-bf">أو نسبة من جهاز (%)</label><input id="bc-bf" class="keep ltr" type="number" inputmode="decimal" min="3" max="65" step="0.1" value="'+(+d.bf>0?d.bf:"")+'" placeholder="اختياري"></div></div>'+
+    '<p class="err" id="bc-err"'+(S.bc.msg?"":" hidden")+'>'+esc(S.bc.msg)+'</p><div class="row"><button class="btn pri sm" type="submit">حفظ القياس</button>'+((+d.waist>0||+d.bf>0)?'<button class="btn sm danger" type="button" data-act="bcDel" data-k="'+k+'">حذف قياس هذا اليوم</button>':"")+'</div></form>'+
+    '<p class="lbl" style="margin:0">'+(f?'الخصر عند أضيق نقطة، والورك عند أعرض نقطة، والرقبة تحت الحنجرة.':'الخصر على مستوى السرة، والرقبة تحت تفاحة آدم مباشرة.')+' قِس صباحاً قبل الأكل، والشريط ملاصق للجلد بلا ضغط، وبنفس الطريقة كل مرة. مع الرقبة تُستخدم معادلة البحرية الأمريكية، وبدونها معادلة كتلة الدهون النسبية من الطول والخصر فقط. قراءة جهاز DEXA أدق من الاثنتين وتُقدَّم عليهما. كل الطرق بالشريط تقديرية، وفائدتها الأكبر في متابعة الاتجاه.</p>';
+  const pts=ks.slice().reverse().map(x=>{const r=bfFromDay(x);return r?[x,r.bf]:null}).filter(Boolean);
+  if(pts.length>=2){const x0=pts[0][0],xs=pts.map(q=>[diffD(x0,q[0]),q[1]]),xm=Math.max(1,xs[xs.length-1][0]),mn=Math.min.apply(null,xs.map(q=>q[1])),mx=Math.max.apply(null,xs.map(q=>q[1])),pad=Math.max(0.5,(mx-mn)*.2);
+    s+=chart(W=>lineChart({w:W,h:150,xMin:0,xMax:xm,yMin:mn-pad,yMax:mx+pad,series:[{pts:xs,cls:"a"}],yTicks:[[mn,num(mn,1)+"%"],[mx,num(mx,1)+"%"]],xTicks:[[0,fNum(x0)],[xm,fNum(pts[pts.length-1][0])]],label:"نسبة الدهون"}))}
+  if(ks.length)s+='<div class="entries">'+ks.slice(0,12).map(x=>{const r=bfFromDay(x),dd=S.days[x];return '<div><button class="chip-link" data-act="bcPick" data-k="'+x+'">'+esc(fShort(x))+'</button><span class="num">'+(r?L(num(r.bf,1)+"%"):"–")+'</span><span class="lbl">'+(+dd.bf>0?"جهاز":"خصر "+num(+dd.waist,1)+(+dd.neck>0?" · رقبة "+num(+dd.neck,1):""))+'</span></div>'}).join("")+'</div>';
+  return s+'</section>';
+}
+function adaptHTML(A){
+  let s='<section class="panel sec"><div class="sec-h"><h2>معايرة الحرق من بياناتك</h2></div>';
+  if(!A.ok){s+='<p class="small" style="margin:0">تبدأ المعايرة حين يتوفر خلال آخر 28 يوماً: 10 أيام تسجيل أكل على الأقل، و6 قراءات وزن تمتد 14 يوماً. عندك الآن '+A.nI+' '+(A.nI===1?"يوم":"أيام")+' و '+A.nW+' قراءة'+(A.nW?' تمتد '+A.span+' يوماً':"")+'.</p><p class="lbl" style="margin:0">إلى أن تكتمل، الحرق محسوب بالمعادلات فقط.</p></section>';return s}
+  s+='<div class="kv"><div><b>'+L(kc0(A.avgI))+'</b><span>متوسط أكلك اليومي</span></div><div><b>'+L(signed(A.slope*7,2))+'</b><span>اتجاه الوزن (كغم أسبوعياً)</span></div><div><b>'+L(kc0(A.obs))+'</b><span>الحرق المقاس من بياناتك</span></div><div><b>'+L(kc0(A.Fm))+'</b><span>الحرق بالمعادلات للأيام نفسها</span></div><div><b>'+L("×"+num(A.f,3))+'</b><span>معامل المعايرة المطبق</span></div><div><b>'+L(Math.round(A.conf*100)+"%")+'</b><span>الثقة بالبيانات</span></div></div>'+
+    '<p class="lbl" style="margin:0">الحرق المقاس = متوسط الأكل ناقص تغير الوزن × 7700 سعرة لكل كغم. اتجاه الوزن من خط مستقيم عبر كل قراءات الفترة، فلا يتأثر كثيراً بتذبذب الماء اليومي. المعامل يُطبق بقدر الثقة: '+A.nI+' يوماً من 21 و '+A.nW+' قراءة من 12 تعطي ثقة كاملة.'+(A.clamped?' النسبة المحسوبة ('+L(num(A.ratio,2))+') خارج المدى المعقول فقُصرت بين 0.75 و 1.25؛ راجع اكتمال تسجيلك.':"")+'</p></section>';
+  return s;
+}
+
+/* ---------- nutrition: analysis view ---------- */
+function vNutAn(){
+  const t=todayK(),n=+S.nu.an||28,st=addD(t,-(n-1)),f=calF();
+  let s='<section class="sec-h"><h2 class="dsp">تحليل التغذية</h2><button class="btn sm" data-act="nView" data-v="">رجوع</button></section>';
+  s+='<div class="rng" role="group" aria-label="الفترة" style="align-self:flex-start">'+[["28","4 أسابيع"],["90","3 أشهر"]].map(r=>'<button data-act="nAnR" data-r="'+r[0]+'" class="'+(S.nu.an===r[0]?"on":"")+'">'+r[1]+'</button>').join("")+'</div>';
+  const inPts=[],tdPts=[],tgPts=[];let mx=0,mn=Infinity;
+  for(let i=0;i<n;i++){const k=addD(st,i),d=S.nutri[k],kc=d&&d.st!=="part"?vSum(d.it)[0]:0,e=energyOn(k);
+    if(kc>0){inPts.push([i,kc]);mx=Math.max(mx,kc);mn=Math.min(mn,kc)}
+    if(e){const v=e.total*f;tdPts.push([i,v]);mx=Math.max(mx,v);mn=Math.min(mn,v)}}
+  const logged=inPts.length;
+  s+='<section class="panel sec"><div class="sec-h"><h2>الأكل مقابل الحرق</h2><span class="lbl">'+logged+' يوماً مسجلاً</span></div>'+
+    (logged||tdPts.length?chart(W=>{if(!isFinite(mn)){mn=0;mx=3000}const lo=Math.max(0,Math.floor((mn-200)/250)*250),hi=Math.ceil((mx+200)/250)*250;
+      return lineChart({w:W,h:200,xMin:0,xMax:n-1,yMin:lo,yMax:hi,series:[{pts:tdPts,cls:"w",dots:false},{pts:inPts,cls:"a"}],gap:1.5,yTicks:niceTicks(lo,hi),xTicks:[[0,fNum(st)],[Math.round((n-1)/2),fNum(addD(st,Math.round((n-1)/2)))],[n-1,fNum(t)]],label:"الأكل مقابل الحرق"})})+
+      '<div class="legend"><span><i style="background:var(--accent)"></i>سعرات أكلتها</span><span><i style="background:var(--warm)"></i>الحرق المقدّر'+(adaptive().ok?" بعد المعايرة":"")+'</span></div>':'<p class="muted small" style="margin:0">لا بيانات في هذه الفترة بعد.</p>')+'</section>';
+  // averages
+  const ks=[];for(let i=0;i<n;i++){const k=addD(st,i),d=S.nutri[k];if(d&&d.st!=="part"&&vSum(d.it)[0]>0)ks.push(k)}
+  if(ks.length){const tt=ks.map(k=>vSum(S.nutri[k].it)),a=i=>avg(tt.map(x=>x[i]));const kcal=a(0);
+    s+='<section class="panel sec"><div class="sec-h"><h2>متوسط الأيام المسجلة</h2></div><div class="kv"><div><b>'+L(kc0(kcal))+'</b><span>سعرة</span></div><div><b>'+L(num(a(1),0))+'</b><span>بروتين (غ)</span></div><div><b>'+L(num(a(2),0))+'</b><span>كربوهيدرات (غ)</span></div><div><b>'+L(num(a(3),0))+'</b><span>دهون (غ)</span></div><div><b>'+L(num(a(4),0))+'</b><span>ألياف (غ)</span></div></div>'+
+      '<div class="mac">'+[["البروتين",a(1)*4,"--g3"],["الكربوهيدرات",a(2)*4,"--g2"],["الدهون",a(3)*9,"--g4"]].map(x=>{const pc=kcal>0?x[1]/kcal:0;return '<div style="--mc:var('+x[2]+')"><span class="lbl">'+x[0]+'</span><b>'+L(Math.round(pc*100)+"%")+'</b><span class="bar"><i style="width:'+Math.round(Math.min(1,pc)*100)+'%"></i></span></div>'}).join("")+'<div></div></div><span class="lbl">نسب السعرات من كل عنصر.</span></section>'}
+  // weekly table
+  const cw=weekStartK(t);let rows="";
+  for(let i=0;i<8;i++){const ws=addD(cw,-7*i),we=addD(ws,6),dk=[];for(let k=ws;k<=we&&k<=t;k=addD(k,1)){const d=S.nutri[k];if(d&&d.st!=="part"&&vSum(d.it)[0]>0)dk.push(k)}
+    const wv=wKeys().filter(k=>k>=ws&&k<=we).map(k=>S.days[k].w),td=[];for(let k=ws;k<=we&&k<=t;k=addD(k,1)){const x=tdeeOn(k);if(x)td.push(x)}
+    rows+='<tr><td>'+esc(fShort(ws))+'</td><td class="num">'+dk.length+'</td><td class="num">'+(dk.length?L(kc0(avg(dk.map(k=>vSum(S.nutri[k].it)[0])))):"–")+'</td><td class="num">'+(dk.length?L(num(avg(dk.map(k=>vSum(S.nutri[k].it)[1])),0)):"–")+'</td><td class="num">'+(td.length?L(kc0(avg(td))):"–")+'</td><td class="num">'+(wv.length?L(num(avg(wv),1)):"–")+'</td></tr>'}
+  s+='<section class="panel sec"><div class="sec-h"><h2>الأسابيع</h2><span class="lbl">الأسبوع يبدأ بالسبت</span></div><div class="tscroll"><table class="tan"><thead><tr><th>الأسبوع</th><th>أيام مسجلة</th><th>متوسط السعرات</th><th>متوسط البروتين</th><th>الحرق المقدّر</th><th>متوسط الوزن</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+  s+=adaptHTML(adaptive());
+  s+='<p class="lbl" style="margin:0">قيم الأطعمة من قاعدة USDA الرسمية (SR28) لكل 100 غ من الطعام كما يؤكل. الحرق تقدير مبني على معادلات منشورة ودليل الأنشطة البدنية 2024، ثم يُصحح من وزنك وأكلك الفعليين، فدقته تزيد كلما كان تسجيلك ووزنك أكثر انتظاماً.</p>';
+  return s;
+}
+
+/* ---------- appearance ---------- */
+S.ui={pal:"",thm:""};try{const u=JSON.parse(localStorage.getItem("dt-ui")||"{}");S.ui={pal:u.pal==="pink"?"pink":"",thm:u.thm==="light"||u.thm==="dark"?u.thm:""}}catch(e){}
+function saveUiLocal(){try{localStorage.setItem("dt-ui",JSON.stringify(S.ui))}catch(e){}}
+function applyTheme(){
+  const r=document.documentElement,u=S.ui||{};
+  if(u.pal==="pink")r.setAttribute("data-pal","pink");else r.removeAttribute("data-pal");
+  if(u.thm==="light"||u.thm==="dark")r.setAttribute("data-theme",u.thm);else r.removeAttribute("data-theme");
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",u.pal==="pink"?"#d6386f":"#0d6b7b");
+}
+applyTheme();
+
 /* ---------- ideas & notes ---------- */
 S.nt={sel:null,q:"",g:""};
 const ngName=id=>{const g=S.ngroups.find(x=>x.id===id);return g?g.name:""};
@@ -1781,11 +2441,11 @@ function render(force){
   if(S.mode==="loading"){v.innerHTML='<div class="loading">جارٍ فتح السجل…</div>';return}
   if(S.mode==="auth"){v.innerHTML=authHTML();return}
   if(S.mode==="setup"){v.innerHTML=setupHTML();return}
-  CH=[];
+  CH=[];enReset();
   let h="";
   if(bannerMsg)h+='<div class="banner">'+esc(bannerMsg)+'</div>';
   if(S.mode==="local"&&S.tab==="today")h+='<div class="banner">بياناتك محفوظة على هذا الجهاز فقط. لتزامنها مع أجهزتك الأخرى افتح الإعدادات من زر الترس.</div>';
-  h+=S.tab==="gym"?vGym():S.tab==="notes"?vNotes():S.tab==="habits"?vHabits():S.tab==="goals"?vGoals():S.tab==="weight"?vWeight():S.tab==="memories"?vMem():vToday();
+  h+=S.tab==="nutri"?vNut():S.tab==="gym"?vGym():S.tab==="notes"?vNotes():S.tab==="habits"?vHabits():S.tab==="goals"?vGoals():S.tab==="weight"?vWeight():S.tab==="memories"?vMem():vToday();
   v.innerHTML=h;
   v.querySelectorAll("[data-ch]").forEach(el=>{const f=CH[+el.dataset.ch];if(f)el.innerHTML=f(Math.max(240,Math.floor(el.clientWidth)))});
   if(S.tab==="memories"){drawMemChart();drawMemList();drawYear()}
@@ -1955,7 +2615,7 @@ function openLog(g){
 
 /* ---------- export ---------- */
 function doExport(){
-  const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos},null,1);
+  const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos,nutri:S.nutri,nut:S.nut},null,1);
   try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download="daftar-backup-"+todayK()+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}catch(e){}
   S.lastBackup=new Date().toISOString();saveConfig();render();
 }
@@ -1964,6 +2624,9 @@ function settingsHTML(){
   return '<h2>الإعدادات</h2><div class="f">'+
     (S.mode==="db"?'<div class="fld"><span class="lbl2">الحساب</span><div class="row" style="justify-content:space-between"><bdi class="ltr">'+esc(userEmail)+'</bdi><button class="btn sm" data-act="signOut">تسجيل الخروج</button></div><span class="lbl">بياناتك تتزامن بين كل الأجهزة التي تدخل منها بهذا الحساب، وتُحفظ على الجهاز حين ينقطع الإنترنت.</span></div>'
       :S.mode==="local"?'<div class="fld"><span class="lbl2">المزامنة</span><span class="small">البيانات محفوظة على هذا الجهاز فقط.</span><div class="row"><button class="btn sm" data-act="syncSetup">إعداد المزامنة</button></div></div>':"")+
+    '<div class="fld"><span class="lbl2">المظهر</span><div class="seg2" role="radiogroup" aria-label="الألوان"><label><input type="radio" name="pal" value=""'+(S.ui.pal!=="pink"?" checked":"")+'><span>الألوان الأصلية</span></label><label><input type="radio" name="pal" value="pink"'+(S.ui.pal==="pink"?" checked":"")+'><span>وردي</span></label></div>'+
+      '<div class="seg2" role="radiogroup" aria-label="الإضاءة"><label><input type="radio" name="thm" value=""'+(!S.ui.thm?" checked":"")+'><span>حسب الجهاز</span></label><label><input type="radio" name="thm" value="light"'+(S.ui.thm==="light"?" checked":"")+'><span>فاتح</span></label><label><input type="radio" name="thm" value="dark"'+(S.ui.thm==="dark"?" checked":"")+'><span>داكن</span></label></div>'+
+      '<span class="lbl">يُحفظ مع حسابك فيظهر بنفس الشكل على كل أجهزتك.</span></div>'+
     '<div class="fld"><span class="lbl2">نسخة احتياطية</span><div class="row"><button class="btn sm" data-act="export">تصدير ملف</button><label class="btn sm filebtn">استيراد ملف<input id="imp-file" type="file" accept=".json,application/json"></label></div>'+
       '<span class="lbl">الاستيراد يضيف محتوى الملف إلى بياناتك الحالية ولا يحذف شيئاً منها. استخدمه لنقل بياناتك من النسخة القديمة.</span><p class="err" id="imp-err" hidden></p></div>'+
     (!embedded&&S.mode==="db"?'<div class="fld"><span class="lbl2">مشروع المزامنة</span><div class="row"><button class="btn sm danger" data-act="resetCfg">تغيير إعدادات المشروع على هذا الجهاز</button></div></div>':"")+
@@ -1972,7 +2635,7 @@ function settingsHTML(){
 let IMP=null;
 function importSummary(o){
   const n=x=>x&&typeof x==="object"?(Array.isArray(x)?x.length:Object.keys(x).length):0;
-  return '<h2>استيراد نسخة احتياطية</h2><div class="f"><div class="kv"><div><b>'+n(o.days)+'</b><span>يوماً مسجّلاً</span></div><div><b>'+n(o.habits)+'</b><span>مهمة ثابتة</span></div><div><b>'+n(o.groups)+'</b><span>مجموعة</span></div><div><b>'+n(o.goals)+'</b><span>هدفاً</span></div><div><b>'+n(o.notes)+'</b><span>فكرة</span></div>'+(o.gym&&Array.isArray(o.gym.groups)?'<div><b>'+o.gym.groups.length+'</b><span>مجموعة تمارين</span></div><div><b>'+o.gym.groups.reduce((a,g)=>a+((g.ex||[]).length),0)+'</b><span>تمريناً</span></div>':'')+(o.wos?'<div><b>'+n(o.wos)+'</b><span>جلسة تمرين</span></div>':'')+'</div>'+
+  return '<h2>استيراد نسخة احتياطية</h2><div class="f"><div class="kv"><div><b>'+n(o.days)+'</b><span>يوماً مسجّلاً</span></div><div><b>'+n(o.habits)+'</b><span>مهمة ثابتة</span></div><div><b>'+n(o.groups)+'</b><span>مجموعة</span></div><div><b>'+n(o.goals)+'</b><span>هدفاً</span></div><div><b>'+n(o.notes)+'</b><span>فكرة</span></div>'+(o.gym&&Array.isArray(o.gym.groups)?'<div><b>'+o.gym.groups.length+'</b><span>مجموعة تمارين</span></div><div><b>'+o.gym.groups.reduce((a,g)=>a+((g.ex||[]).length),0)+'</b><span>تمريناً</span></div>':'')+(o.wos?'<div><b>'+n(o.wos)+'</b><span>جلسة تمرين</span></div>':'')+(o.nutri?'<div><b>'+n(o.nutri)+'</b><span>يوم تغذية</span></div>':'')+'</div>'+
     '<p class="small muted" style="margin:0">الأيام الموجودة في الملف وفي بياناتك معاً تُدمج، وقيم الملف تحل محل القيم المختلفة في اليوم نفسه.</p>'+
     '<p class="err" id="imp-err2" hidden></p><div class="row"><button class="btn pri" data-act="impGo">استيراد</button><button class="btn" data-act="closeSheet">إلغاء</button></div></div>';
 }
@@ -1989,6 +2652,9 @@ async function applyImport(o){
   if(Array.isArray(o.ggroups)){const ids=new Set(S.ggroups.map(g=>g.id));o.ggroups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.ggroups.push(clone(g))});ops[0].data=cfgDoc()}
   if(Array.isArray(o.ngroups)){const ids=new Set(S.ngroups.map(g=>g.id));o.ngroups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.ngroups.push(clone(g))});ops[0].data=cfgDoc()}
   if(o.todos&&typeof o.todos==="object")Object.keys(o.todos).forEach(id=>{S.todos[id]=clone(o.todos[id]);ops.push({path:"todos/"+id,data:S.todos[id]})});
+  if(o.nut&&typeof o.nut==="object"){const N=NUT(),inc=clone(o.nut);["foods","recipes","meals","units"].forEach(k=>{if(inc[k]&&typeof inc[k]==="object")Object.keys(inc[k]).forEach(id=>{if(!N[k][id])N[k][id]=inc[k][id]})});
+    if(!nProf()&&inc.prof)["prof","rate","pkg","fpct","tmode","gmet"].forEach(k=>{if(inc[k]!==undefined)N[k]=inc[k]});ops[0].data=cfgDoc()}
+  if(o.nutri&&typeof o.nutri==="object")Object.keys(o.nutri).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;S.nutri[k]=clone(o.nutri[k]);S.nutri[k].d=k;ops.push({path:"nutri/"+k,data:S.nutri[k]})});
   if(o.notes&&typeof o.notes==="object")Object.keys(o.notes).forEach(id=>{const n=clone(o.notes[id]);if(!(n.title||"").trim()&&!(n.body||"").trim())return;S.notes[id]=n;ops.push({path:"notes/"+id,data:n})});
   if(S.mode==="local"){persistLocal();return}
   if(DB&&DB.batch){pendingN++;setSync();try{await DB.batch(ops)}finally{pendingN--;setSync()}}
@@ -2109,6 +2775,39 @@ document.addEventListener("click",e=>{
     case "memClearVal":setHappy(S.mem.sel,null);render(true);break;
     case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
+    case "nView":S.nu.view=b.dataset.v||"";S.nu.msg="";render(true);window.scrollTo(0,0);break;
+    case "nDay":{let k=addD(S.nu.cur,+b.dataset.n);if(k>todayK())k=todayK();S.nu.cur=k;render();break}
+    case "nToday":S.nu.cur=todayK();render();break;
+    case "nAdd":openFS(S.nu.cur,+b.dataset.m||0);break;
+    case "nEdit":openEntry(S.nu.cur,id);break;
+    case "nCopy":{const k=S.nu.cur,m=+b.dataset.m||0,y=S.nutri[addD(k,-1)];if(!y)break;const src=(y.it||[]).filter(e=>(+e.m||0)===m);if(!src.length)break;const d=nDay(k);src.forEach(e=>d.it.push(Object.assign(JSON.parse(JSON.stringify(e)),{id:uid()})));saveN(k);render();break}
+    case "nSaveMeal":openSaveMeal(S.nu.cur,+b.dataset.m||0);break;
+    case "nSt":{const k=S.nu.cur,d=nDay(k),v=b.dataset.v;if(d.st===v)delete d.st;else d.st=v;saveN(k);syncLogHabit(k);render();break}
+    case "nAct":openAct(b.dataset.k||S.nu.cur);break;
+    case "nActDel":{const k=b.dataset.k||S.nu.cur,d=S.nutri[k];if(d){d.act=(d.act||[]).filter(a=>a.id!==id);saveN(k);render()}break}
+    case "nActRep":{const k=b.dataset.k||S.nu.cur,a2=recentActs(k)[+b.dataset.i];if(a2){const d=nDay(k);d.act.push(Object.assign(JSON.parse(JSON.stringify(a2)),{id:uid()}));saveN(k);render()}break}
+    case "bcPick":S.bc.sel=b.dataset.k;S.bc.msg="";render(true);break;
+    case "bcDel":{const k=b.dataset.k;if(confirmArm[a+k]){const d=ensureDay(k);["waist","neck","hip","bf"].forEach(x=>delete d[x]);saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف قياس هذا اليوم"},4000)}break}
+    case "nEnergy":openSheet(energyHTML(S.nu.view?todayK():S.nu.cur),null);break;
+    case "nAnR":S.nu.an=b.dataset.r;render();break;
+    case "fsPick":fsPick(b.dataset.f,+b.dataset.g||null);break;
+    case "fsBack":if(FS){FS.view=FS.mode==="recipe"&&!FS.f?"recipe":"list";FS.edit=null;FS.f=null;fsShow()}break;
+    case "fsQuick":if(FS){FS.view="quick";FS.edit=null;fsShow()}break;
+    case "fsMeal":{const ml=NUT().meals[id];if(!FS||!ml)break;const d=nDay(FS.k);ml.it.forEach(e=>d.it.push({id:uid(),f:e.f,n:e.n,g:e.g,m:FS.m,v:e.v}));saveN(FS.k);FS.added.push(ml.n);fsShow();render();break}
+    case "nDelEntry":{if(!FS||!FS.edit)break;const d=S.nutri[FS.k];if(d){d.it=(d.it||[]).filter(e=>e.id!==FS.edit);saveN(FS.k)}closeSheet();FS=null;render();break}
+    case "fuDel":{if(!FS)break;const g0=fsGrams(),N=NUT(),uk=ukey(FS.fid),list=(Array.isArray(N.units[uk])?N.units[uk]:[]).filter(x=>x&&x.l&&+x.g>0);list.splice(+b.dataset.i,1);if(list.length)N.units[uk]=list;else delete N.units[uk];saveConfig();const nf=food(FS.fid);FS.f=nf||Object.assign({},FS.f,{u:userUnits(FS.fid)});FS.ui=0;FS.qty=g0>0?r1(g0):FS.qty;fsShow();break}
+    case "cfNew":openCustomFood(null,true);break;
+    case "cfNew2":openCustomFood(null,false);break;
+    case "cfEdit":{const c=NUT().foods[id];if(c)openCustomFood(c,false);break}
+    case "cfCancel":cfCancel();break;
+    case "cfDel":{if(confirmArm[a+id]){delete NUT().foods[id];saveConfig();closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف هذا الطعام"},4000)}break}
+    case "rcNew":if(FS&&FS.mode==="log"&&!sheet.hidden)openRecipe(null,{k:FS.k,m:FS.m});else openRecipe(null);break;
+    case "rcEdit":{const r=NUT().recipes[id];if(r)openRecipe(r);break}
+    case "rcAdd":if(FS&&RD){rcSync();FS.mode="recipe";FS.view="list";FS.q="";FS.f=null;fsShow()}break;
+    case "rcBack":if(FS&&RD){FS.view="recipe";fsShow()}break;
+    case "rcDel":if(FS&&RD){rcSync();RD.it.splice(+b.dataset.i,1);fsShow()}break;
+    case "rcRemove":{if(!RD)break;if(confirmArm.rcR){delete confirmArm.rcR;delete NUT().recipes[RD.id];saveConfig();RD=null;closeSheet();render()}else{confirmArm.rcR=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm.rcR;if(b.isConnected)b.textContent="حذف الوصفة"},4000)}break}
+    case "smDel":{if(confirmArm[a+id]){delete NUT().meals[id];saveConfig();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى للتأكيد";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف"},4000)}break}
   }
   }finally{clickForce=false}
 });
@@ -2126,6 +2825,27 @@ document.addEventListener("submit",e=>{
     const tid=uid();S.todos[tid]={id:tid,name:name,pts:p,created:new Date().toISOString(),doneAt:null};saveTodo(tid);render(true);
     const n2=$("#xa-name");if(n2)n2.focus();return}
   if(e.target.id==="wgform"){e.preventDefault();const v=parseFloat($("#wg-v").value);if(!Number.isFinite(v)||v<20||v>400){S.wt.msg="أدخل الهدف رقماً بين 20 و 400 كغم.";render(true);return}S.wgoal=Math.round(v*10)/10;S.wt.msg="";saveConfig();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
+  if(e.target.id==="bcform"){e.preventDefault();const k=S.bc.sel,g=id2=>{const el=$("#"+id2);if(!el||el.value==="")return null;const v=parseFloat(el.value);return Number.isFinite(v)?v:NaN};
+    const w=g("bc-w"),n=g("bc-n"),hp=g("bc-h"),bf=g("bc-bf"),bad=m=>{S.bc.msg=m;render(true)};
+    if(w===null&&bf===null)return bad("أدخل محيط الخصر، أو نسبة الدهون من جهاز.");
+    if(w!==null&&!(w>=40&&w<=200))return bad("محيط الخصر بين 40 و 200 سم.");
+    if(n!==null&&!(n>=20&&n<=70))return bad("محيط الرقبة بين 20 و 70 سم.");
+    if(hp!==null&&!(hp>=50&&hp<=200))return bad("محيط الورك بين 50 و 200 سم.");
+    if(bf!==null&&!(bf>=3&&bf<=65))return bad("نسبة الدهون بين 3 و 65.");
+    if(w!==null&&n!==null&&w<=n)return bad("محيط الخصر يجب أن يكون أكبر من الرقبة.");
+    const d=ensureDay(k);[["waist",w],["neck",n],["hip",hp],["bf",bf]].forEach(x=>{if(x[1]===null)delete d[x[0]];else d[x[0]]=Math.round(x[1]*10)/10});saveDay(k);
+    S.bc.msg=nProf()||bf!==null?"":"حُفظ القياس. أدخل طولك وجنسك في التغذية ليُحسب منه.";document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
+  if(e.target.id==="nu-prof"){e.preventDefault();const fd=new FormData(e.target),N=NUT(),bad=m=>{S.nu.msg=m;render(true)};
+    const by=parseInt(fd.get("by"),10),h=parseFloat(fd.get("h")),bfr=String(fd.get("bf")||""),bf=bfr===""?null:parseFloat(bfr),rate=parseFloat(fd.get("rate")),pkg=parseFloat(fd.get("pkg")),fp=parseFloat(fd.get("fpct")),gr=String(fd.get("gmet")||""),gm=gr===""?0:parseFloat(gr),Y=new Date().getFullYear();
+    if(!(by>=1920&&by<=Y-12))return bad("سنة الميلاد بين 1920 و "+(Y-12)+".");
+    if(!(h>=120&&h<=230))return bad("الطول بالسنتيمتر بين 120 و 230.");
+    if(bf!==null&&!(bf>=4&&bf<60))return bad("نسبة الدهون بين 4 و 59، أو اتركها فارغة.");
+    if(!(pkg>=0.8&&pkg<=3.5))return bad("البروتين بين 0.8 و 3.5 غ لكل كغم.");
+    if(!(fp>=15&&fp<=50))return bad("نسبة الدهون من السعرات بين 15 و 50.");
+    if(gm&&!(gm>=2&&gm<=9))return bad("شدة جلسة الجم بين 2 و 9، أو اتركها فارغة.");
+    N.prof={sex:fd.get("sex")==="f"?"f":"m",by:by,h:h};
+    N.rate=Number.isFinite(rate)?rate:0;N.pkg=pkg;N.fpct=fp;N.tmode=fd.get("tmode")==="day"?"day":"avg";N.gmet=gm||0;
+    S.nu.msg="";saveConfig();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
   if(e.target.id==="wform"){e.preventDefault();
     const k=$("#wf-d").value,v=parseFloat($("#wf-v").value);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(k)||k>todayK()){S.wt.msg="اختر يوماً حتى اليوم.";render(true);return}
@@ -2135,9 +2855,15 @@ document.addEventListener("submit",e=>{
 });
 document.addEventListener("change",e=>{
   if(e.target.id==="an-ex"){S.anEx=e.target.value;render(true);return}
+  if(e.target.id==="fs-u"&&FS&&FS.f){const g=fsGrams(),ni=+e.target.value,units=[["غرام",1]].concat(FS.f.u||[]),u=units[ni]||units[0];FS.ui=ni;FS.qty=g>0?Math.round(g/(+u[1])*1000)/1000:FS.qty;const n=$("#fs-n");if(n)n.value=FS.qty;const t2=$("#fs-tot");if(t2)t2.innerHTML=fsTotHTML();return}
+  if(e.target.id==="bc-d"){const k=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&k<=todayK()){S.bc.sel=k;S.bc.msg="";e.target.blur();render(true)}return}
+  if(e.target.id==="fs-raw"&&FS){FS.raw=e.target.checked;fsResults();return}
+  if(e.target.name==="basis"&&e.target.closest("#cf-form")){const bx=$("#cf-svbox");if(bx)bx.hidden=e.target.value!=="sv";return}
+  if(e.target.id==="ac-c"){const w=e.target.value==="watch";$("#ac-minbox").hidden=w;$("#ac-kbox").hidden=!w;return}
+  if((e.target.name==="pal"||e.target.name==="thm")&&e.target.closest("#sheet")){S.ui[e.target.name]=e.target.value;saveUiLocal();applyTheme();saveConfig();return}
   if(e.target.id==="imp-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
     r.onload=()=>{let o=null;try{o=JSON.parse(r.result)}catch(er){}
-      if(!o||typeof o!=="object"||!(o.days||o.habits||o.notes||o.gym||o.wos||o.todos||o.goals)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
+      if(!o||typeof o!=="object"||!(o.days||o.habits||o.notes||o.gym||o.wos||o.todos||o.goals||o.nutri||o.nut)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
       IMP=o;card.innerHTML=importSummary(o)};r.readAsText(f);return}
   if(e.target.name==="kind"&&e.target.closest("#habit-form")){const bx=$("#hf-qbox");if(bx)bx.hidden=e.target.value!=="q";return}
   if(e.target.name==="fr"&&e.target.closest("#habit-form")){const w=e.target.value==="wk";$("#hf-daysbox").hidden=w;$("#hf-wkbox").hidden=!w;return}
@@ -2156,6 +2882,11 @@ document.addEventListener("input",e=>{
   if(id==="mem-q"){S.mem.q=e.target.value;drawMemList();return}
   if(id==="nt-title"||id==="nt-body"){const n=S.notes[S.nt.sel];if(!n)return;n[id==="nt-title"?"title":"body"]=e.target.value;n.updated=new Date().toISOString();n.saved=true;saveNote(n.id);lastKeep=Date.now();drawNotesList();return}
   if(id==="nt-q"){S.nt.q=e.target.value;drawNotesList();return}
+  if(id==="fs-q"&&FS){FS.q=e.target.value;if(/[a-z]/i.test(FS.q))loadFDB();fsResults();return}
+  if(id==="fs-n"&&FS&&FS.f){const v=parseFloat(e.target.value);FS.qty=Number.isFinite(v)?v:null;const t2=$("#fs-tot");if(t2)t2.innerHTML=fsTotHTML();return}
+  if(id==="nu-steps"||id==="nu-km"){const k=e.target.dataset.k||S.nu.cur,d=nDay(k),raw=e.target.value,key=id==="nu-steps"?"steps":"km",mx=id==="nu-steps"?100000:100;
+    if(raw==="")delete d[key];else{const v=id==="nu-steps"?parseInt(raw,10):parseFloat(raw);if(!Number.isFinite(v)||v<0||v>mx)return;if(v>0)d[key]=id==="nu-steps"?v:Math.round(v*100)/100;else delete d[key]}
+    saveN(k);if(key==="steps")syncStepsHabit(k);lastKeep=Date.now();const el=$("#nu-stk");if(el)el.innerHTML=stepsLine(energyOn(k));return}
   if(id==="wn"){const w=activeWo();if(w){w.note=e.target.value;lastKeep=Date.now();saveWo(w.id)}return}
   if(id&&id.indexOf("xn-")===0){setExNote(id.slice(3),e.target.value);lastKeep=Date.now();return}
   if(id&&id.indexOf("ws-")===0){const w=activeWo();if(!w)return;const p=id.split("-"),ex=w.ex[+p[1]],st=ex&&ex.sets[+p[2]];if(!st)return;st[p[3]]=e.target.value;e.target.classList.remove("need");lastKeep=Date.now();saveWo(w.id);return}
