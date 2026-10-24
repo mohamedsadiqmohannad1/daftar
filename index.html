@@ -1851,7 +1851,7 @@ function settingsHTML(){
 let IMP=null;
 function importSummary(o){
   const n=x=>x&&typeof x==="object"?(Array.isArray(x)?x.length:Object.keys(x).length):0;
-  return '<h2>استيراد نسخة احتياطية</h2><div class="f"><div class="kv"><div><b>'+n(o.days)+'</b><span>يوماً مسجّلاً</span></div><div><b>'+n(o.habits)+'</b><span>مهمة ثابتة</span></div><div><b>'+n(o.groups)+'</b><span>مجموعة</span></div><div><b>'+n(o.goals)+'</b><span>هدفاً</span></div><div><b>'+n(o.notes)+'</b><span>فكرة</span></div></div>'+
+  return '<h2>استيراد نسخة احتياطية</h2><div class="f"><div class="kv"><div><b>'+n(o.days)+'</b><span>يوماً مسجّلاً</span></div><div><b>'+n(o.habits)+'</b><span>مهمة ثابتة</span></div><div><b>'+n(o.groups)+'</b><span>مجموعة</span></div><div><b>'+n(o.goals)+'</b><span>هدفاً</span></div><div><b>'+n(o.notes)+'</b><span>فكرة</span></div>'+(o.gym&&Array.isArray(o.gym.groups)?'<div><b>'+o.gym.groups.length+'</b><span>مجموعة تمارين</span></div><div><b>'+o.gym.groups.reduce((a,g)=>a+((g.ex||[]).length),0)+'</b><span>تمريناً</span></div>':'')+(o.wos?'<div><b>'+n(o.wos)+'</b><span>جلسة تمرين</span></div>':'')+'</div>'+
     '<p class="small muted" style="margin:0">الأيام الموجودة في الملف وفي بياناتك معاً تُدمج، وقيم الملف تحل محل القيم المختلفة في اليوم نفسه.</p>'+
     '<p class="err" id="imp-err2" hidden></p><div class="row"><button class="btn pri" data-act="impGo">استيراد</button><button class="btn" data-act="closeSheet">إلغاء</button></div></div>';
 }
@@ -2013,7 +2013,7 @@ document.addEventListener("submit",e=>{
 document.addEventListener("change",e=>{
   if(e.target.id==="imp-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
     r.onload=()=>{let o=null;try{o=JSON.parse(r.result)}catch(er){}
-      if(!o||typeof o!=="object"||!(o.days||o.habits||o.notes)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
+      if(!o||typeof o!=="object"||!(o.days||o.habits||o.notes||o.gym||o.wos||o.todos||o.goals)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
       IMP=o;card.innerHTML=importSummary(o)};r.readAsText(f);return}
   if(e.target.name==="kind"&&e.target.closest("#habit-form")){const bx=$("#hf-qbox");if(bx)bx.hidden=e.target.value!=="q";return}
   if(e.target.name==="fr"&&e.target.closest("#habit-form")){const w=e.target.value==="wk";$("#hf-daysbox").hidden=w;$("#hf-wkbox").hidden=!w;return}
