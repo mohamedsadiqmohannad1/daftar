@@ -1863,7 +1863,7 @@ async function applyImport(o){
   if(o.days&&typeof o.days==="object")Object.keys(o.days).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;const v=clone(o.days[k]),cur=S.days[k]||{};
     S.days[k]=Object.assign({},cur,v,{d:k,h:Object.assign({},cur.h||{},v.h||{})});ops.push({path:"days/"+k,data:S.days[k]})});
   if(o.goals&&typeof o.goals==="object")Object.keys(o.goals).forEach(id=>{S.goals[id]=clone(o.goals[id]);ops.push({path:"goals/"+id,data:S.goals[id]})});
-  if(o.gym&&Array.isArray(o.gym.groups)){const ids=new Set(S.gym.groups.map(g=>g.id));o.gym.groups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.gym.groups.push(clone(g))});if(+o.gym.rest>0&&S.gym.rest===90)S.gym.rest=+o.gym.rest;ops[0].data=cfgDoc()}
+  if(o.gym&&Array.isArray(o.gym.groups)){const inc=o.gym.groups.filter(g=>g&&g.id).map(clone),ids=new Set(inc.map(g=>g.id));S.gym.groups=inc.concat(S.gym.groups.filter(g=>!ids.has(g.id)));if(+o.gym.rest>0&&S.gym.rest===90)S.gym.rest=+o.gym.rest;ops[0].data=cfgDoc()}
   if(o.wos&&typeof o.wos==="object")Object.keys(o.wos).forEach(id=>{S.wos[id]=clone(o.wos[id]);ops.push({path:"workouts/"+id,data:S.wos[id]})});
   if(Array.isArray(o.ggroups)){const ids=new Set(S.ggroups.map(g=>g.id));o.ggroups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.ggroups.push(clone(g))});ops[0].data=cfgDoc()}
   if(Array.isArray(o.ngroups)){const ids=new Set(S.ngroups.map(g=>g.id));o.ngroups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.ngroups.push(clone(g))});ops[0].data=cfgDoc()}
