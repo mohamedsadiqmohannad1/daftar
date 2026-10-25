@@ -639,6 +639,63 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
   #tbar .tb{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
   #tbar .tb i{display:block;height:100%;background:var(--accent);border-radius:3px}
 }
+.top .gear{position:relative}
+.top .gear.due::after{content:"";position:absolute;top:5px;inset-inline-end:5px;width:8px;height:8px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px var(--bg)}
+@media (max-width:700px){
+  #app{padding-block-start:6px}
+  .top{margin-bottom:6px;min-height:40px}
+  .brand{font-size:17px}
+  .top .gear{width:36px;height:36px}
+  .top .gear svg{width:18px;height:18px}
+  .sync{font-size:11px}
+}
+@media (max-width:899px){
+  nav.tabs .in{grid-template-columns:repeat(5,1fr)}
+  nav.tabs .more-t{display:none}
+  nav.tabs button{font-size:12px;letter-spacing:0}
+  nav.tabs button svg{width:23px;height:23px}
+}
+@media (min-width:900px){
+  nav.tabs:not(.mopen) .more-t:not(.on){display:none}
+  #tab-more{margin-inline-start:auto}
+}
+.moregrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.morei{display:flex;align-items:center;gap:12px;padding:16px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:16px;font-weight:500}
+.morei svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;flex:none}
+.morei.on{border-color:var(--accent);color:var(--accent)}
+.glf{display:flex;gap:8px;flex-wrap:wrap}
+.glf .nchip{display:inline-flex;align-items:center;gap:6px}
+.glf .num{opacity:.6;font-size:.9em}
+.glf .lgsq{width:10px;height:10px;border-radius:3px;display:inline-block}
+.glist{display:flex;flex-direction:column;gap:8px}
+.gli{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:start;width:100%;background:var(--surface);border:1px solid var(--line);border-inline-start:4px solid var(--gc);border-radius:12px;padding:10px 12px;color:var(--ink)}
+.gld{display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.gld b{font-size:20px}
+.gld span{font-size:11px;color:var(--muted)}
+.glm{display:flex;flex-direction:column;gap:2px;min-width:0}
+.glm b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.glt{display:flex;flex-direction:column;align-items:flex-end;font-size:15px}
+.glt .lbl{font-size:11px}
+.fsrow{display:flex;gap:6px;align-items:stretch}
+.fsrow .fsi{flex:1;min-width:0}
+.fsrow .iconbtn{height:auto;align-self:stretch}
+.fsrow .iconbtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8}
+.fqm summary{cursor:pointer;color:var(--accent);font-size:14px;padding:2px 0}
+@keyframes swl{from{opacity:.35;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes swr{from{opacity:.35;transform:translateX(18px)}to{opacity:1;transform:none}}
+#view.swl{animation:swl .22s ease-out}
+#view.swr{animation:swr .22s ease-out}
+@media (max-width:899px){
+  html.navtop{--navh:66px}
+  html.navtop nav.tabs{top:0;bottom:auto;border-top:0;border-bottom:1px solid var(--line);padding-bottom:0;padding-top:env(safe-area-inset-top,0px);box-shadow:0 2px 10px rgba(0,0,0,.05)}
+  html.navtop body{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+  html.navtop #app{padding-top:calc(var(--navh) + 6px)}
+  html.navtop #tbar{top:calc(var(--navh) + env(safe-area-inset-top,0px));padding-top:7px;z-index:19}
+  #tbar:not(.on){opacity:0;pointer-events:none}
+  html.navtop .sw-top,html.navtop .wo-h{top:calc(var(--navh) + env(safe-area-inset-top,0px))}
+  html.navtop .rest{bottom:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  html.navtop body.resting #app{padding-bottom:90px}
+}
 </style>
 </head>
 <body>
@@ -652,12 +709,13 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
   <div class="in">
     <button data-act="tab" data-t="today" id="tab-today"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M9 15l2 2 4-4"/></svg>اليوم</button>
     <button data-act="tab" data-t="memories" id="tab-memories"><svg viewBox="0 0 24 24"><path d="M3 17l4-6 4 3 4-7 6 8"/><path d="M3 21h18"/></svg>الذكريات</button>
-    <button data-act="tab" data-t="habits" id="tab-habits"><svg viewBox="0 0 24 24"><path d="M5 7l2 2 3-3M5 15l2 2 3-3M13 8h6M13 16h6"/></svg>المهام</button>
     <button data-act="tab" data-t="gym" id="tab-gym"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>الجم</button>
     <button data-act="tab" data-t="nutri" id="tab-nutri"><svg viewBox="0 0 24 24"><path d="M3.5 11h17a8.5 8.5 0 0 1-17 0z"/><path d="M8 20.5h8"/><path d="M12 7.5c0-2.2 1.3-3.6 3.5-4M8.5 8c-.4-1.6.3-3 1.7-3.6"/></svg>التغذية</button>
-    <button data-act="tab" data-t="notes" id="tab-notes"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>الأفكار</button>
-    <button data-act="tab" data-t="goals" id="tab-goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8"/></svg>الأهداف</button>
-    <button data-act="tab" data-t="weight" id="tab-weight"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 9.5a5 5 0 0 1 7 0L12 13z"/></svg>الوزن</button>
+    <button class="more-t" data-act="tab" data-t="habits" id="tab-habits"><svg viewBox="0 0 24 24"><path d="M5 7l2 2 3-3M5 15l2 2 3-3M13 8h6M13 16h6"/></svg>المهام</button>
+    <button class="more-t" data-act="tab" data-t="notes" id="tab-notes"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>الأفكار</button>
+    <button class="more-t" data-act="tab" data-t="goals" id="tab-goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8"/></svg>الأهداف</button>
+    <button class="more-t" data-act="tab" data-t="weight" id="tab-weight"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 9.5a5 5 0 0 1 7 0L12 13z"/></svg>الوزن</button>
+    <button data-act="moreTog" id="tab-more" aria-label="المزيد من الأقسام"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span class="mlab">المزيد</span></button>
   </div>
 </nav>
   <main id="view" class="view"><div class="loading">جارٍ فتح السجل…</div></main>
@@ -1061,7 +1119,20 @@ function dots7(h,k){
 }
 const ptsTag=p=>'<span class="pts">'+L("+"+p)+'</span>';
 const MOB=()=>{try{return matchMedia("(max-width:700px)").matches}catch(e){return false}};
-const FOPEN=new Set(); // completed groups the user opened again on the phone
+const FOPEN=new Set();
+let SW0=null;
+document.addEventListener("touchstart",e=>{
+  SW0=null;if(!MOB()||e.touches.length!==1||!(S.tab==="today"||(S.tab==="nutri"&&!S.nu.view))||!$("#sheet").hidden)return;
+  if(e.target.closest("input,textarea,select,.chart,[data-ch],.spark,.rng,.seg2,#tbar,nav.tabs,.rest"))return;
+  const t=e.touches[0];SW0={x:t.clientX,y:t.clientY,t:Date.now()};
+},{passive:true});
+document.addEventListener("touchend",e=>{
+  if(!SW0)return;const t=e.changedTouches[0],dx=t.clientX-SW0.x,dy=t.clientY-SW0.y,dt=Date.now()-SW0.t;SW0=null;
+  if(dt>700||Math.abs(dx)<70||Math.abs(dx)<2.2*Math.abs(dy))return;
+  // right-to-left page: a swipe to the right brings the next day, like the arrow on the left
+  const n=dx>0?1:-1,btn=$('#view .datebar [data-n="'+n+'"]');if(!btn||btn.disabled)return;
+  LP_FIRED=0;btn.click();const v=$("#view");if(v){v.classList.remove("swl","swr");void v.offsetWidth;v.classList.add(n>0?"swl":"swr")}
+},{passive:true}); // completed groups the user opened again on the phone
 // long press on a task opens its editor; the phone layout hides the edit buttons
 let LP_T=null,LP_X=0,LP_Y=0,LP_EL=null,LP_FIRED=0;
 document.addEventListener("pointerdown",e=>{
@@ -1087,6 +1158,14 @@ function tbarSync(){
   el.innerHTML='<b class="num">'+L(Math.round(p*100)+"%")+'</b><span class="tb"><i style="width:'+Math.round(p*100)+'%"></i></span><span class="num">'+L(num(sc.got,1)+" / "+num(sc.max,1))+'</span>';
   TB_IO=new IntersectionObserver(es=>{el.classList.toggle("on",!es[0].isIntersecting)});TB_IO.observe(sm);
 }
+const MORE_T=["habits","notes","goals","weight"];
+const navTop=()=>{try{return localStorage.getItem("dt-navpos")==="top"}catch(e){return false}};
+document.documentElement.classList.toggle("navtop",navTop());
+function navH(){const n=document.querySelector("nav.tabs .in");if(n&&n.offsetHeight)document.documentElement.style.setProperty("--navh",(n.offsetHeight+1)+"px")}
+window.addEventListener("resize",navH);
+function navMore(){const nav=$("nav.tabs"),mb=$("#tab-more");if(!nav||!mb)return;const open=nav.classList.contains("mopen")&&matchMedia("(min-width:900px)").matches,inM=MORE_T.includes(S.tab);
+  mb.classList.toggle("on",inM&&!open);const lab=mb.querySelector(".mlab");if(lab)lab.textContent=open?"أقل":"المزيد";mb.setAttribute("aria-expanded",String(open));navH()}
+try{if(localStorage.getItem("dt-more")==="1")document.querySelector("nav.tabs").classList.add("mopen")}catch(e){}
 let HIDE_DONE=false;try{HIDE_DONE=localStorage.getItem("dt-hidedone")==="1"}catch(e){}
 function taskRow(x,k){
   const t=todayK(),on=isDone(x,k),st=curStreak(x),wk=isWk(x),ws=weekStartK(k),wc=wk?weekCount(x,ws):0,wkMet=wk&&wc>=+x.wk&&!on;
@@ -1109,7 +1188,18 @@ function taskRow(x,k){
   return '<div class="xrow"><button class="hrow'+(on?" on":"")+(dim?" dim":"")+(JUST===x.id?" just":"")+'" data-act="toggle" data-id="'+x.id+'" aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+esc(x.name)+'</span>'+badges.join("")+'</span>'+
     dots7(x,k)+ptsTag(hPts(x))+'</button>'+edit+'</div>';
 }
-function backupBanner(){
+function backupDue(){
+  if(!(S.mode==="db"||S.mode==="local"))return null;
+  const fk=firstLogKey();if(!fk||diffD(fk,todayK())<7)return null;
+  const lb=S.lastBackup?keyOf(new Date(S.lastBackup)):null,age=lb?diffD(lb,todayK()):null;
+  return lb&&age<14?null:{lb:lb,age:age};
+}
+function backupLine(){
+  const lb=S.lastBackup?keyOf(new Date(S.lastBackup)):null,due=backupDue();
+  return '<span class="'+(due?"err":"lbl")+'" style="margin:0">'+(lb?"آخر نسخة احتياطية "+esc(fShort(lb))+(due?"، قبل "+due.age+" يوماً.":"."):"لم تصدّر أي نسخة احتياطية بعد.")+'</span>';
+}
+function backupBanner(){return "";
+
   if(!(S.mode==="db"||S.mode==="local"))return "";
   const fk=firstLogKey();if(!fk||diffD(fk,todayK())<7)return "";
   const lb=S.lastBackup?keyOf(new Date(S.lastBackup)):null,age=lb?diffD(lb,todayK()):null;
@@ -1574,6 +1664,14 @@ const activeWo=()=>Object.values(S.wos).find(w=>!w.end)||null;
 // transition between exercises: per-exercise value, else the gym default; 0 means use the normal rest
 const exDef=eid=>{for(const g of S.gym.groups){const e=(g.ex||[]).find(x=>x.id===eid);if(e)return e}return null};
 function exTx(ex){const d=exDef(ex.eid),v=d&&+d.tx>0?+d.tx:+S.gym.tx;return v>0?v:0}
+const SET_SEC=40;
+function woActive(w){
+  let sec=0,lastTx=0;
+  (w.ex||[]).forEach(e=>{const n=(e.sets||[]).filter(q=>q.done).length;if(!n)return;const d=exDef(e.eid),rest=+e.rest||+(d&&d.rest)||+S.gym.rest||90,tx=exTx(e)||rest;sec+=n*SET_SEC+(n-1)*rest+tx;lastTx=tx});
+  sec=Math.max(0,sec-lastTx);
+  const clock=Math.max(0,(new Date(w.end||Date.now())-new Date(w.start))/1000);
+  return Math.min(sec,clock);
+}
 function nextEx(w,ei){const n=w.ex.length;for(let k=1;k<n;k++){const x=w.ex[(ei+k)%n];if(x.sets.some(q=>!q.done))return x}return null}
 const saveWo=id=>queueWrite("workouts/"+id,S.wos[id]||null);
 setInterval(()=>{tickRest();const x=$("#wk-el"),w=activeWo();if(x&&w)x.textContent=fmtDur((Date.now()-new Date(w.start))/1000);wakeSync()},500);
@@ -1646,6 +1744,7 @@ function monthStats(y,m){
   Object.keys(inM).forEach(k=>{if(best[k]>0&&inM[k].v>best[k]+1e-9)st.prs.push({name:inM[k].name,v:inM[k].v,prev:best[k]})});
   return st;
 }
+let GCAL=false;try{GCAL=localStorage.getItem("dt-gcal")==="1"}catch(e){}
 function gymCalendarHTML(){
   const y=S.gm.y,m=S.gm.m,t=todayK(),first=keyOf(new Date(y,m,1,12)),last=keyOf(new Date(y,m+1,0,12)),pre=first.slice(0,7);
   const byDay={};doneWos().forEach(w=>{if(w.date.slice(0,7)===pre)(byDay[w.date]=byDay[w.date]||[]).push(w)});
@@ -1667,8 +1766,8 @@ function gymStatsHTML(){
     '<div class="panel tile"><span class="lbl">هذا الأسبوع</span><b>'+L(ws.thisWeek+" / "+ws.tg)+'</b><span class="delta muted">'+(ws.thisWeek>=ws.tg?"حققت هدف الأسبوع":"باقٍ "+(ws.tg-ws.thisWeek)+" للهدف")+'</span></div>'+
     '<div class="panel tile"><span class="lbl">سلسلة الأسابيع</span><b>'+ws.cur+'</b><span class="delta muted">أطول سلسلة '+ws.best+'</span></div></section>'+
   '<section class="panel sec"><div class="sec-h"><button class="iconbtn" data-act="gmNav" data-n="-1" aria-label="الشهر السابق">'+ICON.prev+'</button><h2 class="num">'+(m+1)+'/'+y+'</h2><button class="iconbtn" data-act="gmNav" data-n="1" aria-label="الشهر التالي"'+(isCur?" disabled":"")+'>'+ICON.next+'</button></div>'+
-    gymCalendarHTML()+
-    '<div class="sec-h" style="margin-top:6px"><h2>تقرير الشهر</h2></div>'+
+    (GCAL?gymCalendarHTML():"")+
+    '<div class="sec-h" style="margin-top:6px"><h2>تقرير الشهر</h2><button class="chip-link" data-act="gcalTog" aria-pressed="'+GCAL+'">'+(GCAL?"إخفاء التقويم":"عرض التقويم")+'</button></div>'+
     (cur.n?'<div class="kv"><div><b>'+cur.n+'</b><span>جلسة</span>'+dl(cur.n,prev.n,0)+'</div><div><b>'+cur.sets+'</b><span>جولة</span>'+dl(cur.sets,prev.sets,0)+'</div>'+
       '<div><b>'+L(num(cur.vol/1000,1))+'</b><span>الحجم (طن)</span>'+dl(cur.vol/1000,prev.vol/1000,1)+'</div><div><b>'+fmtDur(cur.dur)+'</b><span>الوقت الكلي</span></div></div>'+
       (cur.prs.length?'<div class="fld"><span class="lbl2">أرقام قياسية جديدة هذا الشهر</span><div class="setl">'+cur.prs.map(p=>'<span><b>'+esc(p.name)+'</b> <span class="num pr">'+L(num(p.v,1))+'</span> <span class="lbl">بدل '+L(num(p.prev,1))+'</span></span>').join("")+'</div><span class="lbl">بأقصى رفعة مقدّرة لتكرار واحد، مقارنة بأفضل ما سجلته قبل هذا الشهر.</span></div>'
@@ -1756,6 +1855,21 @@ function countBars(weeks,vals,target,label){
       if(i===0||i===n-1||i===Math.floor((n-1)/2))s+='<text class="ax" x="'+(x+w/2).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+fNum(weeks[i])+'</text>'});
     return s+'</svg>'});
 }
+S.glog={g:""};
+function vGymLog(){
+  const all=doneWos(),gids=[...new Set(all.map(w=>w.gid))],sel=gids.includes(S.glog.g)?S.glog.g:"",list=sel?all.filter(w=>w.gid===sel):all;
+  let s='<section class="sec-h"><h2 class="dsp">سجل الجلسات</h2><button class="btn sm" data-act="gview" data-v="">رجوع</button></section>';
+  if(!all.length)return s+'<section class="panel empty"><h2>لا جلسات بعد</h2><p class="muted small" style="margin:0">كل جلسة تنهيها تظهر هنا مرتبة حسب الشهر.</p></section>';
+  s+='<div class="glf" role="group" aria-label="المجموعة"><button class="nchip'+(sel?"":" on")+'" data-act="glogG" data-g="">الكل <span class="num">'+all.length+'</span></button>'+gids.map(id=>{const g=findG(id),n=all.filter(w=>w.gid===id).length,nm=g?g.name:(all.find(w=>w.gid===id)||{}).gname||"محذوفة";
+    return '<button class="nchip'+(sel===id?" on":"")+'" data-act="glogG" data-g="'+esc(id)+'" style="--gc:'+gColorId(id)+'"><i class="lgsq" style="background:'+gColorId(id)+'"></i><bdi>'+esc(nm)+'</bdi> <span class="num">'+n+'</span></button>'}).join("")+'</div>';
+  const months=[];list.forEach(w=>{const m=w.date.slice(0,7);let g=months[months.length-1];if(!g||g.m!==m){g={m:m,ws:[]};months.push(g)}g.ws.push(w)});
+  s+=months.map(g=>{const vol=g.ws.reduce((a,w)=>a+woVol(w),0),sets=g.ws.reduce((a,w)=>a+woSets(w),0),[yy,mm]=g.m.split("-");
+    return '<section class="sec"><div class="sec-h"><h2 class="num">'+(+mm)+'/'+yy+'</h2><span class="lbl">'+g.ws.length+' '+(g.ws.length===1?"جلسة":"جلسات")+' · '+sets+' جولة · '+L(num(vol/1000,1))+' طن</span></div><div class="glist">'+
+      g.ws.map(w=>{const d=parse(w.date);return '<button class="gli" data-act="woView" data-id="'+w.id+'" style="--gc:'+gColorId(w.gid)+'"><span class="gld"><b class="num">'+d.getDate()+'</b><span>'+DAY_NAME[dow(w.date)]+'</span></span>'+
+        '<span class="glm"><b><bdi>'+esc(w.gname)+'</bdi></b><span class="lbl">'+exP((w.ex||[]).filter(e=>e.sets.some(q=>q.done)).length)+' · '+setsP(woSets(w))+' · '+L(num(woVol(w),0))+' كغم</span></span>'+
+        '<span class="glt num">'+fmtDur(woActive(w))+'<span class="lbl">عمل</span></span></button>'}).join("")+'</div></section>'}).join("");
+  return s+'<p class="lbl" style="margin:0">وقت العمل = 40 ثانية لكل جولة منجزة مع راحتها المحددة، ولا يتجاوز مدة الجلسة. هو الذي يدخل في حساب السعرات، فالوقت الضائع أو جلسة نسيت إنهاءها لا يزيد الحرق.</p>';
+}
 function vGymAn(){
   const keys=anKeys();
   let s='<section class="sec-h"><h2 class="dsp">تحليل الأداء</h2><button class="btn sm" data-act="gview" data-v="">رجوع</button></section>';
@@ -1830,7 +1944,8 @@ function vGym(){
   const w=activeWo();
   if(w)return woView(w);
   if(S.gview==="an")return vGymAn();
-  let s='<section class="sec-h"><h2 class="dsp">الجم</h2>'+(w?'':'<div class="row"><button class="btn sm" data-act="gview" data-v="an">التحليل</button><button class="btn sm" data-act="gymSet">الإعدادات</button><button class="btn pri sm" data-act="wgNew">مجموعة جديدة</button></div>')+'</section>';
+  if(S.gview==="log")return vGymLog();
+  let s='<section class="sec-h"><h2 class="dsp">الجم</h2>'+(w?'':'<div class="row"><button class="btn sm" data-act="gview" data-v="an">التحليل</button><button class="btn sm" data-act="gview" data-v="log">السجل</button><button class="btn sm" data-act="gymSet">الإعدادات</button><button class="btn pri sm" data-act="wgNew">مجموعة جديدة</button></div>')+'</section>';
   if(w)return s+woView(w);
   const last=S.gsel&&S.wos[S.gsel]&&S.wos[S.gsel].end?S.wos[S.gsel]:null;
   if(last)s+='<section class="panel wdone"><div class="sec-h"><h2>أنهيت '+esc(last.gname)+'</h2><button class="chip-link" data-act="gselClose">إغلاق</button></div><div class="kv"><div><b class="num">'+fmtDur((new Date(last.end)-new Date(last.start))/1000)+'</b><span>المدة</span></div><div><b class="num">'+woSets(last)+'</b><span>الجولات</span></div><div><b class="num">'+L(num(woVol(last),0))+'</b><span>الحجم (كغم)</span></div></div></section>';
@@ -1841,9 +1956,6 @@ function vGym(){
       (g.ex.length?'<div class="exl">'+g.ex.map(e=>'<button class="exi" data-act="exEdit" data-g="'+g.id+'" data-id="'+e.id+'"><span>'+esc(e.name)+'</span>'+(exNote(e.id)?'<span class="exn">'+esc(exNote(e.id))+'</span>':'')+'<span class="lbl">'+setsP(+e.sets||3)+(+e.rest?' · راحة '+fmtS(+e.rest):"")+'</span></button>').join("")+'</div>':'<p class="muted small" style="margin:0">لا تمارين بعد.</p>')+
       '<div class="row"><button class="btn pri sm" data-act="woStart" data-id="'+g.id+'"'+(g.ex.length?"":" disabled")+'>ابدأ التمرين</button><button class="btn sm" data-act="exNew" data-g="'+g.id+'">+ تمرين</button></div></article>'}).join("")+'</div>';
   if(all.length)s+=gymStatsHTML();
-  if(all.length)s+='<section class="sec"><div class="sec-h"><h2>الجلسات السابقة</h2><span class="lbl">'+all.length+' جلسة</span></div><div class="panel wlist">'+all.slice(0,S.gall?500:12).map(x=>
-      '<button class="wrow" data-act="woView" data-id="'+x.id+'"><span>'+esc(x.gname)+' <span class="lbl">'+esc(fLong(x.date))+'</span></span><span>'+setsP(woSets(x))+'</span><span class="num small muted">'+fmtDur((new Date(x.end)-new Date(x.start))/1000)+'</span></button>').join("")+'</div>'+
-    (all.length>12?'<button class="chip-link" data-act="gAll">'+(S.gall?"عرض آخر 12 فقط":"عرض كل الجلسات ("+all.length+")")+'</button>':"")+'</section>';
   return s;
 }
 function openWg(g){
@@ -1947,7 +2059,7 @@ function woEditSubmit(){
   saveWo(cur.id);WE=null;closeSheet();render();
 }
 function woDetailHTML(w){
-  return '<h2>'+esc(w.gname)+'</h2><div class="f"><div class="lbl">'+esc(fLong(w.date))+' · المدة '+fmtDur((new Date(w.end)-new Date(w.start))/1000)+' · الحجم '+L(num(woVol(w),0))+' كغم</div>'+
+  return '<h2>'+esc(w.gname)+'</h2><div class="f"><div class="lbl">'+esc(fLong(w.date))+' · المدة '+fmtDur((new Date(w.end)-new Date(w.start))/1000)+' · وقت العمل المحسوب '+fmtDur(woActive(w))+' · الحجم '+L(num(woVol(w),0))+' كغم</div>'+
     (w.ex||[]).map(e=>'<div class="fld"><span class="lbl2" style="color:var(--ink);font-weight:600">'+esc(e.name)+'</span><div class="setl">'+e.sets.map((s,i)=>'<span class="num">'+L((i+1)+". "+num(+s.w||0,2)+" × "+(+s.r||0))+'</span>').join("")+'</div></div>').join("")+
     '<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn" data-act="closeSheet">إغلاق</button><button class="btn sm" data-act="woEdit" data-id="'+w.id+'">تعديل الجلسة</button><button class="btn sm danger" data-act="woDel" data-id="'+w.id+'">حذف الجلسة</button></div></div>';
 }
@@ -2106,10 +2218,12 @@ function gymMet(w){
 }
 const netK=(met,min,W,bmr)=>Math.max(0,(met*3.5*W/200-bmr/1440)*min);
 // a gym day picked by hand: average duration and intensity of its last 5 logged sessions, or from its sets and rest times if never logged
+// minutes that count for calories: sets and their rest only, so idle time or a session left open does not add burn
+const woMin=w=>Math.min(240,woActive(w)/60);
 function groupEst(gid,k,W,bmr){
   const g=findG(gid);if(!g)return null;
   const hs=doneWos().filter(w=>w.gid===gid&&w.date<=k).slice(0,5);let min,met,src;
-  if(hs.length){min=avg(hs.map(w=>Math.max(0,Math.min(240,(new Date(w.end)-new Date(w.start))/60000))));met=avg(hs.map(w=>gymMet(w).met));src="متوسط آخر "+hs.length+" "+(hs.length===1?"جلسة":"جلسات")+" لهذه المجموعة"}
+  if(hs.length){min=avg(hs.map(w=>woMin(w)));met=avg(hs.map(w=>gymMet(w).met));src="متوسط آخر "+hs.length+" "+(hs.length===1?"جلسة":"جلسات")+" لهذه المجموعة"}
   else{const sec=g.ex.reduce((a,e)=>a+(+e.sets||3)*((+e.rest||S.gym.rest)+40),0);min=sec/60;const gm=+NUT().gmet,t=Math.max(0,Math.min(1,(4-TR())/4));met=gm>0?gm:3.5+2.5*t;src="من عدد جولاتها وأوقات الراحة، بلا جلسات سابقة"}
   return {n:g.name,min:min,met:met,src:src,kc:netK(met,min,W,bmr)};
 }
@@ -2125,7 +2239,7 @@ function energyOn(k){
   const es=effSteps(k),km=es.v>0?es.v*strideM()/1000:0,est=false;
   const stepsK=km*W*WALK_NET;
   const logged=doneWos().filter(w=>w.date===k);
-  const gym=logged.map(w=>{const min=Math.max(0,Math.min(240,(new Date(w.end)-new Date(w.start))/60000)),g=gymMet(w);return {id:w.id,n:w.gname,min:min,met:g.met,r:g.r,fixed:g.fixed,kc:netK(g.met,min,W,b.v)}});
+  const gym=logged.map(w=>{const min=woMin(w),g=gymMet(w);return {id:w.id,n:w.gname,min:min,met:g.met,r:g.r,fixed:g.fixed,kc:netK(g.met,min,W,b.v)}});
   const lg=new Set(logged.map(w=>w.gid));
   (Array.isArray(d.gx)?d.gx:[]).forEach(gid=>{if(lg.has(gid))return;const x=groupEst(gid,k,W,b.v);if(x)gym.push(Object.assign(x,{id:"gx:"+gid,gid:gid,pick:true}))});
   const swE=effSwim(k),acts=(d.act||[]).filter(a=>a.id!=="swim").concat(swE.a?[swE.a]:[]);
@@ -2218,7 +2332,7 @@ function vNut(){
   MEALS.forEach((mn,m)=>{const me=its.filter(e=>(+e.m||0)===m),mt=vSum(me),ym=y?(y.it||[]).filter(e=>(+e.m||0)===m):[];
     meals+='<section class="nmeal"><div class="nmeal-h"><h3>'+mn+'</h3>'+(me.length?'<span class="gsc">'+L(kc0(mt[0]))+' سعرة</span>':"")+'<button class="iconbtn sm2" data-act="nAdd" data-m="'+m+'" aria-label="إضافة إلى '+mn+'">+</button></div>'+
       (me.length?'<div class="hlist">'+me.map(nRow).join("")+'</div>':'<button class="nadd" data-act="nAdd" data-m="'+m+'">إضافة طعام</button>')+
-      '<div class="row" style="gap:16px">'+(!me.length&&ym.length?'<button class="chip-link" data-act="nCopy" data-m="'+m+'">نسخ '+mn+' أمس ('+ym.length+')</button>':"")+(me.length>1?'<button class="chip-link" data-act="nSaveMeal" data-m="'+m+'">حفظ كوجبة جاهزة</button>':"")+'</div></section>'});
+      '<div class="row" style="gap:16px"><button class="chip-link" data-act="nQuick" data-m="'+m+'">سعرات سريعة</button>'+(!me.length&&ym.length?'<button class="chip-link" data-act="nCopy" data-m="'+m+'">نسخ '+mn+' أمس ('+ym.length+')</button>':"")+(me.length>1?'<button class="chip-link" data-act="nSaveMeal" data-m="'+m+'">حفظ كوجبة جاهزة</button>':"")+'</div></section>'});
   // status
   const stt='<section class="panel sec"><div class="sec-h"><h2>حالة تسجيل اليوم</h2></div><div class="row"><button class="nchip'+(d.st==="done"?" on":"")+'" data-act="nSt" data-v="done">اكتمل التسجيل</button><button class="nchip'+(d.st==="part"?" on":"")+'" data-act="nSt" data-v="part">يوم ناقص</button></div>'+
     '<p class="lbl" style="margin:0">«اكتمل» ينجز مهمة تسجيل الأكل إن وجدت. اليوم الناقص لا يدخل في معايرة الحرق، وكذلك أي يوم سجلت فيه أقل من نصف حرقك المقدّر ما لم تعلّمه مكتملاً.</p></section>';
@@ -2252,7 +2366,7 @@ function actHTML(k){
   rows.forEach(r=>{
     const log=gyms.find(w=>w.gid===r.id||(r.orphan&&w.id===r.id)),on=!!log||picked.includes(r.id);
     let kc=null,sub="";
-    if(log){const g=en&&en.gym.find(x=>x.id===log.id);kc=g?g.kc:null;sub="مسجلة في قسم الجم · "+Math.round((new Date(log.end)-new Date(log.start))/60000)+" دقيقة"}
+    if(log){const g=en&&en.gym.find(x=>x.id===log.id);kc=g?g.kc:null;sub="مسجلة في قسم الجم · "+Math.round(woMin(log))+" دقيقة عمل"}
     else if(en){const x=on?en.gym.find(q=>q.id==="gx:"+r.id):groupEst(r.id,k,en.W,en.b.v);if(x){kc=x.kc;sub=Math.round(x.min)+" دقيقة تقريباً"}}
     s+='<button class="hrow gyrow'+(on?" on":"")+'" data-act="nGymT" data-k="'+k+'" data-g="'+esc(r.id)+'"'+(log?" disabled":"")+' aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm"><bdi>'+esc(r.n)+'</bdi></span>'+(sub?'<span class="st">'+sub+'</span>':"")+'</span><span class="pts">'+(kc!=null?L(kc0(kc)):"–")+'</span></button>'});
   if(!rows.length)s+='<p class="muted small" style="margin:0">لا مجموعات تمارين بعد في قسم الجم.</p>';
@@ -2282,7 +2396,7 @@ function fsHTML(){
   const title=FS.mode==="recipe"?"مكوّن للوصفة":"إضافة إلى "+MEALS[FS.m];
   return '<h2>'+title+'</h2><div class="f">'+(FS.mode==="log"?'<div class="lbl">'+esc(fLong(FS.k))+'</div>':"")+
     '<input id="fs-q" class="search" type="search" autocomplete="off" placeholder="chicken breast roasted, rice cooked" value="'+esc(FS.q)+'" aria-label="بحث عن طعام">'+
-    '<div class="row" style="gap:14px">'+(FS.mode==="log"?'<button class="chip-link" data-act="fsQuick">إضافة سعرات سريعة</button>':"")+'<button class="chip-link" data-act="cfNew">طعام جديد بالماكروز</button>'+(FS.mode==="log"?'<button class="chip-link" data-act="rcNew">وصفة جديدة</button>':"")+'</div>'+
+    '<div class="row" style="gap:8px">'+(FS.mode==="log"?'<button class="btn sm" data-act="fsQuick">سعرات سريعة</button>':"")+'<button class="btn sm" data-act="cfNew">طعام جديد بالماكروز</button>'+(FS.mode==="log"?'<button class="btn sm" data-act="rcNew">وصفة جديدة</button>':"")+'</div>'+
     (FS.added.length?'<div class="banner">أُضيف: '+FS.added.slice(-3).map(x=>'<bdi>'+esc(x)+'</bdi>').join("، ")+'</div>':"")+
     '<div id="fs-res" class="fsres" aria-live="polite"></div>'+
     '<div class="row"><button class="btn'+(FS.mode==="log"?" pri":"")+'" data-act="'+(FS.mode==="recipe"?"rcBack":"closeSheet")+'">'+(FS.mode==="recipe"?"رجوع للوصفة":"تم")+'</button></div></div>';
@@ -2295,7 +2409,7 @@ function fsResults(){
   const box=$("#fs-res");if(!box||!FS)return;
   const q=FS.q.trim();let h="";
   if(!q){
-    if(FS.mode==="log"){const ml=Object.values(NUT().meals);if(ml.length)h+='<div class="fsh">وجباتك الجاهزة</div>'+ml.map(x=>{const t=vSum(x.it);return '<button class="fsi" data-act="fsMeal" data-id="'+x.id+'"><span class="t"><b>'+esc(x.n)+'</b><span>'+x.it.length+' أصناف · تُضاف كلها</span></span><span class="k">'+L(kc0(t[0]))+' سعرة</span></button>'}).join("")}
+    if(FS.mode==="log"){const ml=Object.values(NUT().meals);if(ml.length)h+='<div class="fsh">وجباتك الجاهزة</div>'+ml.map(x=>{const t=vSum(x.it);return '<div class="fsrow"><button class="fsi" data-act="fsMeal" data-id="'+x.id+'"><span class="t"><b>'+esc(x.n)+'</b><span>'+x.it.length+' أصناف · تُضاف كلها</span></span><span class="k">'+L(kc0(t[0]))+' سعرة</span></button><button class="iconbtn sm2" data-act="smEdit" data-id="'+x.id+'" aria-label="تعديل '+esc(x.n)+'">'+ICON.edit+'</button></div>'}).join("")}
     const own=Object.values(NUT().recipes).map(r=>"r:"+r.id).concat(Object.values(NUT().foods).map(c=>"c:"+c.id));
     const rec=recentFoods(25).filter(e=>food(e.f)||e.f.indexOf("u:")===0);
     if(rec.length)h+='<div class="fsh">الأخيرة</div>'+rec.map(e=>fsItem(e.f,{g:+e.g})||'<button class="fsi" data-act="fsPick" data-f="'+esc(e.f)+'"><span class="t"><b dir="auto">'+esc(e.n)+'</b><span>USDA</span></span><span class="k">'+L(kc0(+e.v[0]))+' / 100 غ</span></button>').join("");
@@ -2348,11 +2462,12 @@ function fsQuickHTML(){
   const e=FS.edit&&S.nutri[FS.k]?(S.nutri[FS.k].it||[]).find(x=>x.id===FS.edit):null,v=e?e.v:[];
   return '<h2>'+(e?"تعديل إضافة سريعة":"إضافة سعرات سريعة")+'</h2><form id="fs-quick" class="f" autocomplete="off">'+
     '<div class="fld"><label for="fq-n">الوصف (اختياري)</label><input id="fq-n" name="n" maxlength="60" value="'+esc(e?e.n:"")+'" placeholder="مثال: عشاء مطعم"></div>'+
-    '<div class="two"><div class="fld"><label for="fq-k">السعرات (اختياري)</label><input id="fq-k" name="k" class="ltr" type="number" inputmode="numeric" min="1" max="10000" step="any" value="'+(e&&!e.ka?Math.round(+v[0]):"")+'" placeholder="تلقائي"></div>'+
+    '<div class="fld"><label for="fq-k">السعرات</label><input id="fq-k" name="k" class="ltr" type="number" inputmode="numeric" min="1" max="10000" step="any" value="'+(e&&!e.ka?Math.round(+v[0]):"")+'" placeholder="مثال: 650" style="font-size:20px"></div>'+
+    '<details class="fqm"'+(e&&(+v[1]||+v[2]||+v[3])?" open":"")+'><summary>إضافة الماكروز (اختياري)</summary><div class="two" style="margin-top:8px">'+
     '<div class="fld"><label for="fq-p">البروتين (غ)</label><input id="fq-p" name="p" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(e&&+v[1]?r1(+v[1]):"")+'"></div>'+
     '<div class="fld"><label for="fq-c">الكربوهيدرات (غ)</label><input id="fq-c" name="c" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(e&&+v[2]?r1(+v[2]):"")+'"></div>'+
     '<div class="fld"><label for="fq-f">الدهون (غ)</label><input id="fq-f" name="f" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(e&&+v[3]?r1(+v[3]):"")+'"></div></div>'+
-    '<div class="ntot" id="fq-calc">'+macroCalc(e?v[1]:0,e?v[2]:0,e?v[3]:0,e&&!e.ka?v[0]:null)+'</div>'+
+    '<div class="ntot" id="fq-calc">'+macroCalc(e?v[1]:0,e?v[2]:0,e?v[3]:0,e&&!e.ka?v[0]:null)+'</div><span class="lbl">إذا تركت السعرات فارغة تُحسب من الماكروز.</span></details>'+
     fsMealSeg(e?e.m:FS.m)+'<p class="err" id="fq-err" hidden></p>'+
     '<div class="row"><button class="btn pri" type="submit">'+(e?"حفظ":"إضافة")+'</button>'+(e?'<button class="btn danger" type="button" data-act="nDelEntry">حذف</button>':'<button class="btn" type="button" data-act="fsBack">رجوع</button>')+'</div>'+
     '<p class="lbl" style="margin:0">للحالات التي لا تعرف فيها مكونات الأكل. الأدق دائماً أن تزن الأكل وتختاره من القائمة.</p></form>';
@@ -2824,7 +2939,7 @@ function render(force){
   }
   pendingRender=false;
   document.querySelectorAll("nav.tabs button").forEach(b=>{const on=b.dataset.t===S.tab;b.classList.toggle("on",on);if(on)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
-  const nav=$("nav.tabs");if(nav)nav.hidden=!(S.mode==="db"||S.mode==="local");
+  const nav=$("nav.tabs");if(nav)nav.hidden=!(S.mode==="db"||S.mode==="local");navMore();
   if(S.mode==="loading"){v.innerHTML='<div class="loading">جارٍ فتح السجل…</div>';return}
   if(S.mode==="auth"){v.innerHTML=authHTML();return}
   if(S.mode==="setup"){v.innerHTML=setupHTML();return}
@@ -2839,7 +2954,7 @@ function render(force){
   if(S.tab==="habits")drawTaskChart();
   if(S.tab==="weight")drawWeightChart();
   if(S.tab==="notes")drawNotesList();
-  queueShare();tbarSync();
+  queueShare();tbarSync();const gr=$(".top .gear");if(gr)gr.classList.toggle("due",!!backupDue());
 }
 let pendingRender=false;
 document.addEventListener("focusout",e=>{if(e.target&&e.target.classList&&e.target.classList.contains("keep")&&pendingRender){setTimeout(()=>{const a=document.activeElement;if(!(a&&a.classList&&a.classList.contains("keep")))render()},0)}});
@@ -3015,8 +3130,9 @@ function settingsHTML(){
     '<div class="fld"><span class="lbl2">المظهر</span><div class="seg2" role="radiogroup" aria-label="الألوان"><label><input type="radio" name="pal" value=""'+(S.ui.pal!=="pink"?" checked":"")+'><span>الألوان الأصلية</span></label><label><input type="radio" name="pal" value="pink"'+(S.ui.pal==="pink"?" checked":"")+'><span>وردي</span></label></div>'+
       '<div class="seg2" role="radiogroup" aria-label="الإضاءة"><label><input type="radio" name="thm" value=""'+(!S.ui.thm?" checked":"")+'><span>حسب الجهاز</span></label><label><input type="radio" name="thm" value="light"'+(S.ui.thm==="light"?" checked":"")+'><span>فاتح</span></label><label><input type="radio" name="thm" value="dark"'+(S.ui.thm==="dark"?" checked":"")+'><span>داكن</span></label></div>'+
       '<span class="lbl">يُحفظ مع حسابك فيظهر بنفس الشكل على كل أجهزتك.</span></div>'+
+    '<div class="fld"><span class="lbl2">شريط الأقسام على الهاتف</span><div class="seg2" role="radiogroup" aria-label="مكان شريط الأقسام"><label><input type="radio" name="navpos" value=""'+(navTop()?"":" checked")+'><span>أسفل الشاشة</span></label><label><input type="radio" name="navpos" value="top"'+(navTop()?" checked":"")+'><span>أعلى الشاشة</span></label></div><span class="lbl">يُحفظ على هذا الجهاز فقط. على الكمبيوتر الشريط دائماً في الأعلى.</span></div>'+
     cmpSettingsHTML()+
-    '<div class="fld"><span class="lbl2">نسخة احتياطية</span><div class="row"><button class="btn sm" data-act="export">تصدير ملف</button><label class="btn sm filebtn">استيراد ملف<input id="imp-file" type="file" accept=".json,application/json"></label></div>'+
+    '<div class="fld"><span class="lbl2">نسخة احتياطية</span>'+backupLine()+'<div class="row"><button class="btn sm" data-act="export">تصدير ملف</button><label class="btn sm filebtn">استيراد ملف<input id="imp-file" type="file" accept=".json,application/json"></label></div>'+
       '<span class="lbl">الاستيراد يضيف محتوى الملف إلى بياناتك الحالية ولا يحذف شيئاً منها. استخدمه لنقل بياناتك من النسخة القديمة.</span><p class="err" id="imp-err" hidden></p></div>'+
     (!embedded&&S.mode==="db"?'<div class="fld"><span class="lbl2">مشروع المزامنة</span><div class="row"><button class="btn sm danger" data-act="resetCfg">تغيير إعدادات المشروع على هذا الجهاز</button></div></div>':"")+
     '<div class="row"><button class="btn" data-act="closeSheet">إغلاق</button></div></div>';
@@ -3056,6 +3172,9 @@ document.addEventListener("click",e=>{
   const a=b.dataset.act,id=b.dataset.id;
   clickForce=true;try{
   switch(a){
+    case "moreTog":{const nav=$("nav.tabs");if(matchMedia("(min-width:900px)").matches){const o=!nav.classList.contains("mopen");nav.classList.toggle("mopen",o);try{localStorage.setItem("dt-more",o?"1":"")}catch(er){}navMore();break}
+      openSheet('<h2>المزيد</h2><div class="moregrid">'+MORE_T.map(t=>{const nb=$("#tab-"+t);return '<button class="morei'+(S.tab===t?" on":"")+'" data-act="moreGo" data-t="'+t+'">'+(nb?nb.innerHTML:t)+'</button>'}).join("")+'</div><div class="row"><button class="btn" data-act="closeSheet">إغلاق</button></div>');break}
+    case "moreGo":closeSheet();S.tab=b.dataset.t;try{localStorage.setItem("dt-tab",S.tab)}catch(er){}render(true);window.scrollTo(0,0);break;
     case "tab":S.tab=b.dataset.t;try{localStorage.setItem("dt-tab",S.tab)}catch(er){}render(true);window.scrollTo(0,0);break;
     case "day":{let k=addD(S.cur,+b.dataset.n);if(k>todayK())k=todayK();S.cur=k;render();break}
     case "pick":{const k=b.dataset.k;if(k&&k<=todayK()){S.cur=k;render()}break}
@@ -3107,6 +3226,9 @@ document.addEventListener("click",e=>{
     case "gselClose":S.gsel=null;render();break;
     case "rir":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e],st=ex&&ex.sets[+b.dataset.s];if(st){st.rir=+b.dataset.v;saveWo(w.id);render()}break}
     case "gview":S.gview=b.dataset.v||"";render();window.scrollTo(0,0);break;
+    case "glogG":S.glog.g=b.dataset.g||"";render();break;
+    case "gcalTog":GCAL=!GCAL;try{localStorage.setItem("dt-gcal",GCAL?"1":"")}catch(er){}render();break;
+    case "nQuick":openFS(S.nu.cur,+b.dataset.m||0);if(FS){FS.view="quick";FS.edit=null;fsShow();const q=$("#fq-k");if(q)q.focus()}break;
     case "tmrBtn":unlockAudio();if(TMR)stopRest();else startRest(S.gym.rest);render();break;
     case "woMenu":{const w=activeWo();if(w)openWoMenu(w);break}
     case "exMenu":{const w=activeWo();if(w&&w.ex[+b.dataset.e])openSheet(exMenuHTML(w,+b.dataset.e),null);break}
@@ -3278,6 +3400,7 @@ document.addEventListener("change",e=>{
   if(e.target.id==="bc-d"){const k=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&k<=todayK()){S.bc.sel=k;S.bc.msg="";e.target.blur();render(true)}return}
   if(e.target.id==="fs-raw"&&FS){FS.raw=e.target.checked;fsResults();return}
   if(e.target.name==="basis"&&e.target.closest("#cf-form")){const bx=$("#cf-svbox");if(bx)bx.hidden=e.target.value!=="sv";return}
+  if(e.target.name==="navpos"&&e.target.closest("#sheet")){try{localStorage.setItem("dt-navpos",e.target.value)}catch(er){}document.documentElement.classList.toggle("navtop",e.target.value==="top");navH();return}
   if((e.target.name==="pal"||e.target.name==="thm")&&e.target.closest("#sheet")){S.ui[e.target.name]=e.target.value;saveUiLocal();applyTheme();saveConfig();return}
   if(e.target.id==="imp-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
     r.onload=()=>{let o=null;try{o=JSON.parse(r.result)}catch(er){}
