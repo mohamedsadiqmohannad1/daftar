@@ -1878,6 +1878,8 @@ const WALK_NET=(3.8-1)*3.5*60*5/1000/(3.1*1.609344);
 // step length: 41.2 km over 62,016 steps from Mo's own phone readings = 0.664 m; editable in settings
 const STRIDE_DEF=0.664;
 const strideM=()=>{const v=+NUT().stride;return v>=0.4&&v<=1.2?v:STRIDE_DEF};
+// steps walked without the phone, added to every count that comes from the Health app
+const xSteps=()=>{const v=Math.round(+NUT().xs);return v>0&&v<=20000?v:0};
 // MET values from the 2024 Adult Compendium of Physical Activities (code, MET, name)
 const ACTS=[
  ["السباحة",[["18240",5.8,"سباحة حرة بطيئة، ترفيهية"],["18290",8.0,"سباحة حرة متوسطة، نحو 46 متراً في الدقيقة"],["18280",10.5,"سباحة حرة سريعة، نحو 69 متراً في الدقيقة"],["18265",5.3,"سباحة صدر ترفيهية"],["18260",10.3,"سباحة صدر، تدريب"],["18255",4.8,"سباحة ظهر ترفيهية"],["18250",9.5,"سباحة ظهر، تدريب"],["18270",13.8,"سباحة فراشة"],["18310",6.0,"سباحة حرة في المسبح بلا أشواط"],["18350",3.5,"طفو في الماء، جهد متوسط"],["18355",5.5,"تمارين هوائية في الماء"]]]
@@ -2016,7 +2018,7 @@ function groupEst(gid,k,W,bmr){
 }
 /* usual day: default steps and swimming from settings, used on every day up to today where you did not type a number */
 function actDef(k){const a=S.nut&&S.nut.ad;if(!a||k>todayK())return null;return a}
-function effSteps(k){const d=S.nutri[k]||{};if(d.steps!==undefined&&d.steps!==null&&d.steps!=="")return {v:+d.steps||0,def:false};if(+d.hk>0)return {v:Math.round(+d.hk),def:false,hk:true};const a=actDef(k);return a&&+a.steps>0?{v:+a.steps,def:true}:{v:0,def:false}}
+function effSteps(k){const d=S.nutri[k]||{};if(d.steps!==undefined&&d.steps!==null&&d.steps!=="")return {v:+d.steps||0,def:false};if(+d.hk>0){const r=Math.round(+d.hk),x=xSteps();return {v:r+x,def:false,hk:true,raw:r,x:x}}const a=actDef(k);return a&&+a.steps>0?{v:+a.steps,def:true}:{v:0,def:false}}
 function effSwim(k){const d=S.nutri[k]||{},sw=(d.act||[]).find(x=>x.id==="swim");if(sw)return {a:sw,def:false};const a=actDef(k);
   if(a&&+a.swim>0){const t=ACT_BY[a.swc]||ACT_BY["18240"];return {a:{id:"swim",c:t[0],n:t[2],met:t[1],min:+a.swim},def:true}}return {a:null,def:false}}
 function energyOn(k){
@@ -2140,7 +2142,7 @@ function actHTML(k){
   // steps
   const es=effSteps(k),hasS=d.steps!==undefined&&d.steps!==null&&d.steps!=="";
   s+='<div class="fld"><label for="nu-steps">الخطوات</label><input id="nu-steps" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(hasS?d.steps:"")+'" placeholder="'+(es.hk?es.v+" · من الصحة":es.def?es.v+" · افتراضي":"0")+'"></div>'+
-    '<span class="lbl" id="nu-stk">'+stepsLine(en,es.v,es.def,es.hk)+'</span>';
+    '<span class="lbl" id="nu-stk">'+stepsLine(en,es.v,es.def,es.hk,es.x)+'</span>';
   // swimming: one fixed entry per day
   const swE=effSwim(k),sw=swE.a,swc=sw?sw.c:lastSwimC(k);
   s+='<div class="two" style="margin-top:4px"><div class="fld"><label for="nu-swm">السباحة (دقائق)</label><input id="nu-swm" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(sw&&!swE.def?sw.min:"")+'" placeholder="'+(swE.def?sw.min+" · افتراضي":"0")+'"></div>'+
@@ -2161,9 +2163,9 @@ function actHTML(k){
     (!en?'<span class="lbl">السعرات تظهر بعد إعداد الهدف في قسم التغذية وتسجيل وزنك.</span>':"")+'</section>';
   return s;
 }
-function stepsLine(en,steps,def,hk){
+function stepsLine(en,steps,def,hk,x){
   const st=strideM();
-  if(hk)return "من تطبيق الصحة: "+steps.toLocaleString("en")+" خطوة، نحو "+L(num(steps*st/1000,1))+" كم"+(en?" = "+L(kc0(en.stepsK))+" سعرة فوق الراحة":"")+". اكتب رقماً هنا فقط إن أردت تجاوزه.";
+  if(hk)return "من تطبيق الصحة: "+(x>0?(steps-x).toLocaleString("en")+" + "+x.toLocaleString("en")+" بدون الهاتف = ":"")+steps.toLocaleString("en")+" خطوة، نحو "+L(num(steps*st/1000,1))+" كم"+(en?" = "+L(kc0(en.stepsK))+" سعرة فوق الراحة":"")+". اكتب رقماً هنا فقط إن أردت تجاوزه.";
   if(!(steps>0))return "أدخل خطوات اليوم من تطبيق الصحة في هاتفك. المسافة تُحسب بطول خطوتك "+L(num(st*100,1))+" سم.";
   if(def)return "الافتراضي "+steps.toLocaleString("en")+" خطوة"+(en?" = "+L(kc0(en.stepsK))+" سعرة فوق الراحة":"")+". اكتب العدد الفعلي إن اختلف.";
   const km=steps*st/1000;
@@ -2410,6 +2412,7 @@ function vNutSet(){
     '<div class="fld"><span class="lbl2">طريقة الهدف اليومي</span><div class="seg2"><label><input type="radio" name="tmode" value="avg"'+(N.tmode!=="day"?" checked":"")+'><span>ثابت من متوسط أسبوعين</span></label><label><input type="radio" name="tmode" value="day"'+(N.tmode==="day"?" checked":"")+'><span>يتغير مع نشاط اليوم</span></label></div>'+
       '<span class="lbl">الثابت يعطيك رقماً واحداً كل يوم ويوزع حرق تمارينك على الأسبوع. المتغير يرفع الهدف في يوم التمرين ويخفضه في يوم الراحة.</span></div>'+
     '<div class="fld"><label for="np-st">طول خطوتك (سم)</label><input id="np-st" name="stride" class="ltr" type="number" inputmode="decimal" min="40" max="120" step="0.1" value="'+num(strideM()*100,1)+'" style="max-width:160px"><span class="lbl">القيمة الافتراضية 66.4 سم محسوبة من 7 قراءات من هاتفك: 41.2 كم في 62,016 خطوة. لتحديثها اقسم مسافة يوم على خطواته من تطبيق الصحة.</span></div>'+
+    '<div class="fld"><label for="np-xs">خطوات بدون الهاتف</label><input id="np-xs" name="xs" class="ltr" type="number" inputmode="numeric" min="0" max="20000" step="1" value="'+(xSteps()||"")+'" placeholder="0" style="max-width:160px"><span class="lbl">عدد ثابت يُضاف كل يوم لرقم الخطوات الواصل من تطبيق الصحة، للمشي الذي لا يكون فيه الهاتف معك. لا يُضاف للرقم الذي تكتبه بيدك، ولا للقيمة الافتراضية.</span></div>'+
     '<div class="sec-h" style="margin-top:6px"><h2>يومك المعتاد</h2></div>'+
     '<div class="three"><div class="fld"><label for="np-ds">الخطوات</label><input id="np-ds" name="ds" class="ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(N.ad&&+N.ad.steps>0?N.ad.steps:"")+'" placeholder="10000"></div>'+
     '<div class="fld"><label for="np-dw">السباحة (دقائق)</label><input id="np-dw" name="dw" class="ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(N.ad&&+N.ad.swim>0?N.ad.swim:"")+'" placeholder="60"></div>'+
@@ -2614,7 +2617,7 @@ function hkCopyRow(label,val,id){return '<div class="fld"><span class="lbl2">'+l
 function hkStatus(){
   if(HK_ERR)return '<p class="err" style="margin:0">'+(HK_ERR==="permission-denied"?"قاعدة البيانات ترفض قراءة الخطوات. انشر قواعد الأمان الجديدة في Firebase، والبرنامج يعيد المحاولة كل دقيقة.":"تعذّرت قراءة الخطوات الآن، والبرنامج يعيد المحاولة كل دقيقة.")+' <bdi dir="ltr">['+esc(HK_ERR)+']</bdi></p>';
   if(!HK_LAST)return '<p class="small" style="margin:0">لم تصل أي قراءة بعد. شغّل الاختصار مرة من تطبيق الاختصارات للتجربة.</p>';
-  return '<p class="small" style="margin:0">آخر قراءة وصلت: <b class="num">'+L(HK_LAST.n.toLocaleString("en"))+'</b> خطوة ليوم '+esc(fShort(HK_LAST.k))+'.</p>';
+  return '<p class="small" style="margin:0">آخر قراءة وصلت: <b class="num">'+L(HK_LAST.n.toLocaleString("en"))+'</b> خطوة ليوم '+esc(fShort(HK_LAST.k))+'.'+(xSteps()>0?' يُضاف لها '+L(xSteps().toLocaleString("en"))+' خطوة بدون الهاتف.':'')+'</p>';
 }
 function hkRefresh(){const el=$("#hk-st");if(el)el.innerHTML=hkStatus()}
 function hkHTML(){
@@ -3155,6 +3158,7 @@ document.addEventListener("submit",e=>{
     if(!(dsv>=0&&dsv<=100000))return bad("الخطوات المعتادة بين 0 و 100000.");if(!(dwv>=0&&dwv<=600))return bad("دقائق السباحة المعتادة بين 0 و 600.");
     if(dsv>0||dwv>0){const old=N.ad||{};N.ad={steps:dsv,swim:dwv,swc:ACT_BY[fd.get("dc")]?String(fd.get("dc")):"18240",from:old.from||todayK()}}else delete N.ad;
     const stc=parseFloat(fd.get("stride"));if(!(stc>=40&&stc<=120))return bad("طول الخطوة بين 40 و 120 سم.");N.stride=Math.round(stc*10)/1000;
+    const xsr=String(fd.get("xs")||""),xsv=xsr===""?0:parseInt(xsr,10);if(!(xsv>=0&&xsv<=20000))return bad("الخطوات بدون الهاتف بين 0 و 20000.");if(xsv>0)N.xs=xsv;else delete N.xs;
     N.prof={sex:fd.get("sex")==="f"?"f":"m",by:by,h:h};
     N.rate=Number.isFinite(rate)?rate:0;N.pkg=pkg;N.fpct=fp;N.tmode=fd.get("tmode")==="day"?"day":"avg";N.gmet=gm||0;
     S.nu.msg="";saveConfig();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
@@ -3202,7 +3206,7 @@ document.addEventListener("input",e=>{
     saveN(k);lastKeep=Date.now();const en=energyOn(k),el=$("#nu-swk"),swE=effSwim(k);if(el)el.innerHTML=swimLine(en,swE.a,swE.def);const t2=$("#nu-tot");if(t2&&en)t2.innerHTML=L(kc0(en.stepsK+en.ex))+" سعرة فوق الراحة";return}
   if(id==="nu-steps"||id==="nu-km"){const k=e.target.dataset.k||S.nu.cur,d=nDay(k),raw=e.target.value,key=id==="nu-steps"?"steps":"km",mx=id==="nu-steps"?100000:100;
     if(raw==="")delete d[key];else{const v=id==="nu-steps"?parseInt(raw,10):parseFloat(raw);if(!Number.isFinite(v)||v<0||v>mx)return;d[key]=id==="nu-steps"?v:Math.round(v*100)/100}
-    saveN(k);if(key==="steps")syncStepsHabit(k);lastKeep=Date.now();const en2=energyOn(k),el=$("#nu-stk"),es2=effSteps(k);if(el)el.innerHTML=stepsLine(en2,es2.v,es2.def,es2.hk);const t2=$("#nu-tot");if(t2&&en2)t2.innerHTML=L(kc0(en2.stepsK+en2.ex))+" سعرة فوق الراحة";return}
+    saveN(k);if(key==="steps")syncStepsHabit(k);lastKeep=Date.now();const en2=energyOn(k),el=$("#nu-stk"),es2=effSteps(k);if(el)el.innerHTML=stepsLine(en2,es2.v,es2.def,es2.hk,es2.x);const t2=$("#nu-tot");if(t2&&en2)t2.innerHTML=L(kc0(en2.stepsK+en2.ex))+" سعرة فوق الراحة";return}
   if(id==="wn"){const w=activeWo();if(w){w.note=e.target.value;lastKeep=Date.now();saveWo(w.id)}return}
   if(id&&id.indexOf("xn-")===0){setExNote(id.slice(3),e.target.value);lastKeep=Date.now();return}
   if(id&&id.indexOf("ws-")===0){const w=activeWo();if(!w)return;const p=id.split("-"),ex=w.ex[+p[1]],st=ex&&ex.sets[+p[2]];if(!st)return;st[p[3]]=e.target.value;e.target.classList.remove("need");lastKeep=Date.now();saveWo(w.id);return}
