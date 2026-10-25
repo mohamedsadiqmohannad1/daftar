@@ -1843,7 +1843,7 @@ function NUT(){if(!S.nut||typeof S.nut!=="object")S.nut=nutDef();const n=S.nut;[
 function nDay(k){if(!S.nutri[k])S.nutri[k]={d:k,it:[]};const d=S.nutri[k];if(!Array.isArray(d.it))d.it=[];if(!Array.isArray(d.act))d.act=[];d.d=k;return d}
 function saveN(k){
   const d=S.nutri[k];
-  if(d&&!(d.it||[]).length&&!(d.act||[]).length&&!(d.gx||[]).length&&!(+d.steps>0)&&!(+d.km>0)&&!d.st){delete S.nutri[k];queueWrite("nutri/"+k,null)}
+  if(d&&!(d.it||[]).length&&!(d.act||[]).length&&!(d.gx||[]).length&&(d.steps===undefined||d.steps===null)&&!(+d.km>0)&&!d.st){delete S.nutri[k];queueWrite("nutri/"+k,null)}
   else queueWrite("nutri/"+k,d?JSON.parse(JSON.stringify(d)):null);
   enReset();
 }
@@ -1928,7 +1928,10 @@ function wOn(k){
 function bfFromDay(k){
   const d=S.days[k],p=nProf();if(!d)return null;
   if(+d.bf>=3&&+d.bf<=65)return {bf:+d.bf,m:"device"};
-  if(!p||!(+d.waist>0))return null;const H=+p.h,w=+d.waist,n=+d.neck,hp=+d.hip;let bf=null,m="";
+  return bfTape(d,p);
+}
+function bfTape(d,p){
+  if(!p||!d||!(+d.waist>0))return null;const H=+p.h,w=+d.waist,n=+d.neck,hp=+d.hip;let bf=null,m="";
   if(n>0&&p.sex==="m"&&w-n>0){bf=495/(1.0324-0.19077*Math.log10(w-n)+0.15456*Math.log10(H))-450;m="navy"}
   else if(n>0&&p.sex==="f"&&hp>0&&w+hp-n>0){bf=495/(1.29579-0.35004*Math.log10(w+hp-n)+0.22100*Math.log10(H))-450;m="navy"}
   else{bf=(p.sex==="m"?64:76)-20*H/w;m="rfm"}
@@ -1940,7 +1943,7 @@ function compOn(k){ // latest measurement up to day k, used for 120 days; lean m
   if(!best||diffD(best,k)>120)return null;const r=bfFromDay(best);if(!r)return null;
   const W=wOn(best);if(!Number.isFinite(W))return null;return Object.assign(r,{k:best,W:W,lbm:W*(1-r.bf/100)});
 }
-const BF_M={device:"قراءة جهاز",navy:"معادلة البحرية الأمريكية",rfm:"كتلة الدهون النسبية (RFM)"};
+const BF_M={device:"إدخال مباشر",navy:"معادلة البحرية الأمريكية",rfm:"كتلة الدهون النسبية (RFM)"};
 function bmrOn(k){
   const p=nProf();if(!p)return null;const W=wOn(k);if(!Number.isFinite(W))return null;
   const age=+k.slice(0,4)-(+p.by),c=compOn(k);
@@ -1962,20 +1965,26 @@ function groupEst(gid,k,W,bmr){
   else{const sec=g.ex.reduce((a,e)=>a+(+e.sets||3)*((+e.rest||S.gym.rest)+40),0);min=sec/60;const gm=+NUT().gmet,t=Math.max(0,Math.min(1,(4-TR())/4));met=gm>0?gm:3.5+2.5*t;src="من عدد جولاتها وأوقات الراحة، بلا جلسات سابقة"}
   return {n:g.name,min:min,met:met,src:src,kc:netK(met,min,W,bmr)};
 }
+/* usual day: default steps and swimming from settings, used on days you did not type a number (from the day you saved them) */
+function actDef(k){const a=S.nut&&S.nut.ad;if(!a||!a.from||k<a.from||k>todayK())return null;return a}
+function effSteps(k){const d=S.nutri[k]||{};if(d.steps!==undefined&&d.steps!==null&&d.steps!=="")return {v:+d.steps||0,def:false};const a=actDef(k);return a&&+a.steps>0?{v:+a.steps,def:true}:{v:0,def:false}}
+function effSwim(k){const d=S.nutri[k]||{},sw=(d.act||[]).find(x=>x.id==="swim");if(sw)return {a:sw,def:false};const a=actDef(k);
+  if(a&&+a.swim>0){const t=ACT_BY[a.swc]||ACT_BY["18240"];return {a:{id:"swim",c:t[0],n:t[2],met:t[1],min:+a.swim},def:true}}return {a:null,def:false}}
 function energyOn(k){
   if(EN_C[k])return EN_C[k];
   const p=nProf(),b=bmrOn(k);if(!b)return null;
   const d=S.nutri[k]||{},W=b.W,neat=0.15*b.v;
-  const km=+d.steps>0?d.steps*strideM()/1000:0,est=false;
+  const es=effSteps(k),km=es.v>0?es.v*strideM()/1000:0,est=false;
   const stepsK=km*W*WALK_NET;
   const logged=doneWos().filter(w=>w.date===k);
   const gym=logged.map(w=>{const min=Math.max(0,Math.min(240,(new Date(w.end)-new Date(w.start))/60000)),g=gymMet(w);return {id:w.id,n:w.gname,min:min,met:g.met,r:g.r,fixed:g.fixed,kc:netK(g.met,min,W,b.v)}});
   const lg=new Set(logged.map(w=>w.gid));
   (Array.isArray(d.gx)?d.gx:[]).forEach(gid=>{if(lg.has(gid))return;const x=groupEst(gid,k,W,b.v);if(x)gym.push(Object.assign(x,{id:"gx:"+gid,gid:gid,pick:true}))});
-  const act=(d.act||[]).map(a=>({id:a.id,n:a.n,min:+a.min||0,met:+a.met||0,c:a.c,kc:+a.kc>0?+a.kc:netK(+a.met||0,+a.min||0,W,b.v),watch:+a.kc>0}));
+  const swE=effSwim(k),acts=(d.act||[]).filter(a=>a.id!=="swim").concat(swE.a?[swE.a]:[]);
+  const act=acts.map(a=>({id:a.id,n:a.n,min:+a.min||0,met:+a.met||0,c:a.c,kc:+a.kc>0?+a.kc:netK(+a.met||0,+a.min||0,W,b.v),watch:+a.kc>0,def:a===swE.a&&swE.def}));
   const ex=gym.reduce((s,x)=>s+x.kc,0)+act.reduce((s,x)=>s+x.kc,0);
   const sub=b.v+neat+stepsK+ex,total=sub/0.9;
-  return EN_C[k]={W:W,b:b,neat:neat,km:km,est:est,steps:+d.steps||0,stepsK:stepsK,gym:gym,act:act,ex:ex,tef:total-sub,total:total};
+  return EN_C[k]={W:W,b:b,neat:neat,km:km,est:est,steps:es.v,stepsDef:es.def,stepsK:stepsK,gym:gym,act:act,ex:ex,tef:total-sub,total:total};
 }
 function intakeOk(k,F){const d=S.nutri[k];if(!d||d.st==="part")return null;const kc=vSum(d.it)[0];if(!(kc>0))return null;if(d.st!=="done"&&F&&kc<0.5*F)return null;return kc}
 function adaptive(){
@@ -2075,18 +2084,19 @@ function recentActs(k){
 }
 const actShort=a=>(+a.kc>0?"من الساعة "+Math.round(a.kc)+" سعرة":String(a.n).split("،")[0]+" · "+Math.round(+a.min||0)+" د");
 function lastSwimC(k){const ks=Object.keys(S.nutri).filter(x=>x<k).sort().reverse();for(const x of ks){const a=(S.nutri[x].act||[]).find(q=>ACT_BY[q.c]);if(a)return a.c}return "18240"}
-function swimLine(en,sw){if(!sw)return "اكتب دقائق السباحة الفعلية إن سبحت اليوم.";const x=en&&en.act.find(q=>q.id===sw.id);return x?"= "+L(kc0(x.kc))+" سعرة فوق الراحة.":"السعرات تظهر بعد إعداد الهدف وتسجيل الوزن."}
+function swimLine(en,sw,def){if(!sw||!(+sw.min>0))return def===false&&sw?"لا سباحة في هذا اليوم.":"اكتب دقائق السباحة الفعلية إن سبحت اليوم.";const x=en&&en.act.find(q=>q.id==="swim");return (def?"الافتراضي "+sw.min+" دقيقة":"")+(x?(def?" ":"")+"= "+L(kc0(x.kc))+" سعرة فوق الراحة.":def?".":"السعرات تظهر بعد إعداد الهدف وتسجيل الوزن.")+(def?" اكتب 0 إن لم تسبح.":"")}
 function actHTML(k){
   const d=S.nutri[k]||{},en=energyOn(k),gyms=doneWos().filter(w=>w.date===k),picked=Array.isArray(d.gx)?d.gx:[],lg=new Set(gyms.map(w=>w.gid));
   let s='<section class="panel sec"><div class="sec-h"><h2>النشاط</h2>'+(en?'<span class="lbl" id="nu-tot">'+L(kc0(en.stepsK+en.ex))+' سعرة فوق الراحة</span>':"")+'</div>';
   // steps
-  s+='<div class="fld"><label for="nu-steps">الخطوات</label><input id="nu-steps" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(+d.steps>0?d.steps:"")+'" placeholder="0"></div>'+
-    '<span class="lbl" id="nu-stk">'+stepsLine(en,+d.steps||0)+'</span>';
+  const es=effSteps(k),hasS=d.steps!==undefined&&d.steps!==null&&d.steps!=="";
+  s+='<div class="fld"><label for="nu-steps">الخطوات</label><input id="nu-steps" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(hasS?d.steps:"")+'" placeholder="'+(es.def?es.v+" · افتراضي":"0")+'"></div>'+
+    '<span class="lbl" id="nu-stk">'+stepsLine(en,es.v,es.def)+'</span>';
   // swimming: one fixed entry per day
-  const sw=(d.act||[]).find(a=>a.id==="swim")||null,swc=sw?sw.c:lastSwimC(k);
-  s+='<div class="two" style="margin-top:4px"><div class="fld"><label for="nu-swm">السباحة (دقائق)</label><input id="nu-swm" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(sw?sw.min:"")+'" placeholder="0"></div>'+
+  const swE=effSwim(k),sw=swE.a,swc=sw?sw.c:lastSwimC(k);
+  s+='<div class="two" style="margin-top:4px"><div class="fld"><label for="nu-swm">السباحة (دقائق)</label><input id="nu-swm" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(sw&&!swE.def?sw.min:"")+'" placeholder="'+(swE.def?sw.min+" · افتراضي":"0")+'"></div>'+
     '<div class="fld"><label for="nu-swc">نوعها</label><select id="nu-swc" data-k="'+k+'" class="sel">'+ACTS[0][1].map(a=>'<option value="'+a[0]+'"'+(a[0]===swc?" selected":"")+'>'+esc(a[2])+'</option>').join("")+'</select></div></div>'+
-    '<span class="lbl" id="nu-swk">'+swimLine(en,sw)+'</span>';
+    '<span class="lbl" id="nu-swk">'+swimLine(en,sw,swE.def)+'</span>';
   (d.act||[]).filter(a=>a.id!=="swim").forEach(a=>{const x=en&&en.act.find(q=>q.id===a.id);s+='<div class="erow"><span>'+esc(a.n)+' <span class="lbl">'+(+a.kc>0?"من الساعة":Math.round(+a.min||0)+' دقيقة')+'</span></span><span class="row" style="gap:6px;flex-wrap:nowrap"><b class="num">'+(x?L(kc0(x.kc)):"–")+'</b><button class="iconbtn sm2" data-act="nActDel" data-k="'+k+'" data-id="'+a.id+'" aria-label="حذف">×</button></span></div>'});
   // gym: every day group always listed; logged sessions come from the gym log
   s+='<div class="fld" style="margin-top:4px"><span class="lbl2">التمرين</span><div class="hlist">';
@@ -2102,9 +2112,10 @@ function actHTML(k){
     (!en?'<span class="lbl">السعرات تظهر بعد إعداد الهدف في قسم التغذية وتسجيل وزنك.</span>':"")+'</section>';
   return s;
 }
-function stepsLine(en,steps){
+function stepsLine(en,steps,def){
   const st=strideM();
   if(!(steps>0))return "أدخل خطوات اليوم من تطبيق الصحة في هاتفك. المسافة تُحسب بطول خطوتك "+L(num(st*100,1))+" سم.";
+  if(def)return "الافتراضي "+steps.toLocaleString("en")+" خطوة"+(en?" = "+L(kc0(en.stepsK))+" سعرة فوق الراحة":"")+". اكتب العدد الفعلي إن اختلف.";
   const km=steps*st/1000;
   return "نحو "+L(num(km,1))+" كم بطول خطوتك "+L(num(st*100,1))+" سم"+(en?" = "+L(kc0(en.stepsK))+" سعرة فوق الراحة":"")+".";
 }
@@ -2338,6 +2349,11 @@ function vNutSet(){
     '<div class="fld"><span class="lbl2">طريقة الهدف اليومي</span><div class="seg2"><label><input type="radio" name="tmode" value="avg"'+(N.tmode!=="day"?" checked":"")+'><span>ثابت من متوسط أسبوعين</span></label><label><input type="radio" name="tmode" value="day"'+(N.tmode==="day"?" checked":"")+'><span>يتغير مع نشاط اليوم</span></label></div>'+
       '<span class="lbl">الثابت يعطيك رقماً واحداً كل يوم ويوزع حرق تمارينك على الأسبوع. المتغير يرفع الهدف في يوم التمرين ويخفضه في يوم الراحة.</span></div>'+
     '<div class="fld"><label for="np-st">طول خطوتك (سم)</label><input id="np-st" name="stride" class="ltr" type="number" inputmode="decimal" min="40" max="120" step="0.1" value="'+num(strideM()*100,1)+'" style="max-width:160px"><span class="lbl">القيمة الافتراضية 66.4 سم محسوبة من 7 قراءات من هاتفك: 41.2 كم في 62,016 خطوة. لتحديثها اقسم مسافة يوم على خطواته من تطبيق الصحة.</span></div>'+
+    '<div class="sec-h" style="margin-top:6px"><h2>يومك المعتاد</h2></div>'+
+    '<div class="three"><div class="fld"><label for="np-ds">الخطوات</label><input id="np-ds" name="ds" class="ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(N.ad&&+N.ad.steps>0?N.ad.steps:"")+'" placeholder="10000"></div>'+
+    '<div class="fld"><label for="np-dw">السباحة (دقائق)</label><input id="np-dw" name="dw" class="ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(N.ad&&+N.ad.swim>0?N.ad.swim:"")+'" placeholder="60"></div>'+
+    '<div class="fld"><label for="np-dc">نوع السباحة</label><select id="np-dc" name="dc" class="sel">'+ACTS[0][1].map(a=>'<option value="'+a[0]+'"'+(a[0]===(N.ad&&N.ad.swc||lastSwimC(todayK()))?" selected":"")+'>'+esc(a[2])+'</option>').join("")+'</select></div></div>'+
+    '<span class="lbl">تُحسب هذه القيم تلقائياً في كل يوم لا تكتب فيه رقماً، ابتداءً من يوم حفظها'+(N.ad&&N.ad.from?" ("+esc(fShort(N.ad.from))+")":"")+'. في اليوم المختلف اكتب الرقم الفعلي، و0 إن لم تمشِ أو لم تسبح. مهمة الخطوات لا تُنجز من القيمة الافتراضية، فقط من رقم تكتبه.</span>'+
     '<div class="fld"><label for="np-gm">شدة جلسة الجم (MET)</label><input id="np-gm" name="gmet" class="ltr" type="number" inputmode="decimal" min="0" max="9" step="0.1" value="'+(+N.gmet>0?N.gmet:"")+'" placeholder="تلقائي من العدات الباقية" style="max-width:240px"><span class="lbl">اتركه فارغاً ليُحسب لكل جلسة: 6 MET إذا وصلت للفشل، وتنخفض حتى 3.5 كلما بقيت عدات أكثر.</span></div>'+
     '<p class="err" id="np-err"'+(S.nu.msg?"":" hidden")+'>'+esc(S.nu.msg||"")+'</p><div class="row"><button class="btn pri" type="submit">حفظ</button></div></form>';
   const k=todayK(),tg=targetOn(k),e=energyOn(k);
@@ -2360,15 +2376,16 @@ S.bc={sel:todayK(),msg:""};
 function compHTML(){
   const p=nProf(),k=S.bc.sel,d=S.days[k]||{},c=compOn(todayK()),ks=compKeys().slice().reverse(),f=p&&p.sex==="f";
   let s='<section class="panel sec"><div class="sec-h"><h2>نسبة الدهون</h2>'+(c?'<span class="lbl">آخر قياس '+esc(fShort(c.k))+'</span>':"")+'</div>';
-  if(c)s+='<div class="kv"><div><b>'+L(num(c.bf,1)+"%")+'</b><span>نسبة الدهون</span></div><div><b>'+L(num(c.lbm,1))+'</b><span>الكتلة الخالية من الدهون (كغم)</span></div><div><b>'+L(num(c.W-c.lbm,1))+'</b><span>كتلة الدهون (كغم)</span></div><div><b class="small">'+esc(BF_M[c.m])+'</b><span>طريقة الحساب</span></div></div>';
+  if(c)s+='<div class="kv"><div><b>'+L(num(c.bf,1)+"%")+'</b><span>نسبة الدهون</span></div><div><b>'+L(num(c.lbm,1))+'</b><span>الكتلة الخالية من الدهون (كغم)</span></div><div><b>'+L(num(c.W-c.lbm,1))+'</b><span>كتلة الدهون (كغم)</span></div><div><b class="small">'+esc(BF_M[c.m])+'</b><span>طريقة الحساب</span></div></div>'+
+    (c.m==="device"&&+((S.days[c.k]||{}).waist)>0&&p?(()=>{const dd=S.days[c.k],tape=bfTape(dd,p);return tape?'<p class="lbl" style="margin:0">للمقارنة، الشريط يعطي '+L(num(tape.bf,1)+"%")+' ('+esc(BF_M[tape.m])+'). الفرق بين الطريقتين يعكس حدود الاثنتين.</p>':""})():"");
   if(!p)s+='<p class="small" style="margin:0">الحساب يحتاج طولك وجنسك. أدخلهما في التغذية ← الأهداف والإعدادات.</p>';
   s+='<form id="bcform" class="f" autocomplete="off"><div class="two"><div class="fld"><label for="bc-d">اليوم</label><input id="bc-d" class="keep ltr datein" type="date" max="'+todayK()+'" value="'+k+'"></div>'+
     '<div class="fld"><label for="bc-w">محيط الخصر (سم)</label><input id="bc-w" class="keep ltr" type="number" inputmode="decimal" min="40" max="200" step="0.1" value="'+(+d.waist>0?d.waist:"")+'"></div>'+
     '<div class="fld"><label for="bc-n">محيط الرقبة (سم، اختياري)</label><input id="bc-n" class="keep ltr" type="number" inputmode="decimal" min="20" max="70" step="0.1" value="'+(+d.neck>0?d.neck:"")+'"></div>'+
     (f?'<div class="fld"><label for="bc-h">محيط الورك (سم)</label><input id="bc-h" class="keep ltr" type="number" inputmode="decimal" min="50" max="200" step="0.1" value="'+(+d.hip>0?d.hip:"")+'"></div>':"")+
-    '<div class="fld"><label for="bc-bf">أو نسبة من جهاز (%)</label><input id="bc-bf" class="keep ltr" type="number" inputmode="decimal" min="3" max="65" step="0.1" value="'+(+d.bf>0?d.bf:"")+'" placeholder="اختياري"></div></div>'+
+    '<div class="fld"><label for="bc-bf">أو نسبة الدهون مباشرة (%)</label><input id="bc-bf" class="keep ltr" type="number" inputmode="decimal" min="3" max="65" step="0.1" value="'+(+d.bf>0?d.bf:"")+'" placeholder="اختياري"></div></div>'+
     '<p class="err" id="bc-err"'+(S.bc.msg?"":" hidden")+'>'+esc(S.bc.msg)+'</p><div class="row"><button class="btn pri sm" type="submit">حفظ القياس</button>'+((+d.waist>0||+d.bf>0)?'<button class="btn sm danger" type="button" data-act="bcDel" data-k="'+k+'">حذف قياس هذا اليوم</button>':"")+'</div></form>'+
-    '<p class="lbl" style="margin:0">'+(f?'الخصر عند أضيق نقطة، والورك عند أعرض نقطة، والرقبة تحت الحنجرة.':'الخصر على مستوى السرة، والرقبة تحت تفاحة آدم مباشرة.')+' قِس صباحاً قبل الأكل، والشريط ملاصق للجلد بلا ضغط، وبنفس الطريقة كل مرة. مع الرقبة تُستخدم معادلة البحرية الأمريكية، وبدونها معادلة كتلة الدهون النسبية من الطول والخصر فقط. قراءة جهاز DEXA أدق من الاثنتين وتُقدَّم عليهما. كل الطرق بالشريط تقديرية، وفائدتها الأكبر في متابعة الاتجاه.</p>';
+    '<p class="lbl" style="margin:0">'+(f?'الخصر عند أضيق نقطة، والورك عند أعرض نقطة، والرقبة تحت الحنجرة.':'الخصر على مستوى السرة، والرقبة تحت تفاحة آدم مباشرة.')+' قِس صباحاً قبل الأكل، والشريط ملاصق للجلد بلا ضغط، وبنفس الطريقة كل مرة. مع الرقبة تُستخدم معادلة البحرية الأمريكية، وبدونها معادلة كتلة الدهون النسبية من الطول والخصر فقط. النسبة المباشرة، من جهاز أو من تقديرك بالنظر، تُقدَّم على حساب الشريط إن كتبتها. كل الطرق بالشريط تقديرية، وفائدتها الأكبر في متابعة الاتجاه.</p>';
   const pts=ks.slice().reverse().map(x=>{const r=bfFromDay(x);return r?[x,r.bf]:null}).filter(Boolean);
   if(pts.length>=2){const x0=pts[0][0],xs=pts.map(q=>[diffD(x0,q[0]),q[1]]),xm=Math.max(1,xs[xs.length-1][0]),mn=Math.min.apply(null,xs.map(q=>q[1])),mx=Math.max.apply(null,xs.map(q=>q[1])),pad=Math.max(0.5,(mx-mn)*.2);
     s+=chart(W=>lineChart({w:W,h:150,xMin:0,xMax:xm,yMin:mn-pad,yMax:mx+pad,series:[{pts:xs,cls:"a"}],yTicks:[[mn,num(mn,1)+"%"],[mx,num(mx,1)+"%"]],xTicks:[[0,fNum(x0)],[xm,fNum(pts[pts.length-1][0])]],label:"نسبة الدهون"}))}
@@ -2975,6 +2992,9 @@ document.addEventListener("submit",e=>{
     if(!(pkg>=0.8&&pkg<=3.5))return bad("البروتين بين 0.8 و 3.5 غ لكل كغم.");
     if(!(fp>=15&&fp<=50))return bad("نسبة الدهون من السعرات بين 15 و 50.");
     if(gm&&!(gm>=2&&gm<=9))return bad("شدة جلسة الجم بين 2 و 9، أو اتركها فارغة.");
+    const dsr=String(fd.get("ds")||""),dwr=String(fd.get("dw")||""),dsv=dsr===""?0:parseInt(dsr,10),dwv=dwr===""?0:parseInt(dwr,10);
+    if(!(dsv>=0&&dsv<=100000))return bad("الخطوات المعتادة بين 0 و 100000.");if(!(dwv>=0&&dwv<=600))return bad("دقائق السباحة المعتادة بين 0 و 600.");
+    if(dsv>0||dwv>0){const old=N.ad||{};N.ad={steps:dsv,swim:dwv,swc:ACT_BY[fd.get("dc")]?String(fd.get("dc")):"18240",from:old.from||todayK()}}else delete N.ad;
     const stc=parseFloat(fd.get("stride"));if(!(stc>=40&&stc<=120))return bad("طول الخطوة بين 40 و 120 سم.");N.stride=Math.round(stc*10)/1000;
     N.prof={sex:fd.get("sex")==="f"?"f":"m",by:by,h:h};
     N.rate=Number.isFinite(rate)?rate:0;N.pkg=pkg;N.fpct=fp;N.tmode=fd.get("tmode")==="day"?"day":"avg";N.gmet=gm||0;
@@ -2989,7 +3009,7 @@ document.addEventListener("submit",e=>{
 document.addEventListener("change",e=>{
   if(e.target.id==="an-ex"){S.anEx=e.target.value;render(true);return}
   if(e.target.id==="fs-u"&&FS&&FS.f){const g=fsGrams(),ni=+e.target.value,units=[["غرام",1]].concat(FS.f.u||[]),u=units[ni]||units[0];FS.ui=ni;FS.qty=g>0?Math.round(g/(+u[1])*1000)/1000:FS.qty;const n=$("#fs-n");if(n)n.value=FS.qty;const t2=$("#fs-tot");if(t2)t2.innerHTML=fsTotHTML();return}
-  if(e.target.id==="nu-swc"){const k=e.target.dataset.k||S.nu.cur,d=S.nutri[k],sw=d&&(d.act||[]).find(a=>a.id==="swim"),a2=ACT_BY[e.target.value];if(sw&&a2){sw.c=a2[0];sw.n=a2[2];sw.met=a2[1];saveN(k);render(true)}return}
+  if(e.target.id==="nu-swc"){const k=e.target.dataset.k||S.nu.cur,a2=ACT_BY[e.target.value],swE=effSwim(k);if(!a2)return;if(swE.a&&!swE.def){swE.a.c=a2[0];swE.a.n=a2[2];swE.a.met=a2[1];saveN(k);render(true)}else if(swE.a&&swE.def){const d=nDay(k);d.act.push({id:"swim",c:a2[0],n:a2[2],met:a2[1],min:+swE.a.min});saveN(k);render(true)}return}
   if(e.target.id==="bc-d"){const k=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&k<=todayK()){S.bc.sel=k;S.bc.msg="";e.target.blur();render(true)}return}
   if(e.target.id==="fs-raw"&&FS){FS.raw=e.target.checked;fsResults();return}
   if(e.target.name==="basis"&&e.target.closest("#cf-form")){const bx=$("#cf-svbox");if(bx)bx.hidden=e.target.value!=="sv";return}
@@ -3019,11 +3039,11 @@ document.addEventListener("input",e=>{
   if(id==="fs-q"&&FS){FS.q=e.target.value;if(/[a-z]/i.test(FS.q))loadFDB();fsResults();return}
   if(id==="fs-n"&&FS&&FS.f){const v=parseFloat(e.target.value);FS.qty=Number.isFinite(v)?v:null;const t2=$("#fs-tot");if(t2)t2.innerHTML=fsTotHTML();return}
   if(id==="nu-swm"){const k=e.target.dataset.k||S.nu.cur,d=nDay(k),raw=e.target.value,v=parseInt(raw,10),sel=$("#nu-swc"),a2=ACT_BY[sel?sel.value:"18240"]||ACT_BY["18240"];
-    d.act=(d.act||[]).filter(a=>a.id!=="swim");if(raw!==""&&!(v>=0&&v<=600))return;if(v>0)d.act.push({id:"swim",c:a2[0],n:a2[2],met:a2[1],min:v});
-    saveN(k);lastKeep=Date.now();const en=energyOn(k),el=$("#nu-swk");if(el)el.innerHTML=swimLine(en,d.act.find(a=>a.id==="swim"));const t2=$("#nu-tot");if(t2&&en)t2.innerHTML=L(kc0(en.stepsK+en.ex))+" سعرة فوق الراحة";return}
+    if(raw!==""&&!(v>=0&&v<=600))return;d.act=(d.act||[]).filter(a=>a.id!=="swim");if(raw!=="")d.act.push({id:"swim",c:a2[0],n:a2[2],met:a2[1],min:v});
+    saveN(k);lastKeep=Date.now();const en=energyOn(k),el=$("#nu-swk"),swE=effSwim(k);if(el)el.innerHTML=swimLine(en,swE.a,swE.def);const t2=$("#nu-tot");if(t2&&en)t2.innerHTML=L(kc0(en.stepsK+en.ex))+" سعرة فوق الراحة";return}
   if(id==="nu-steps"||id==="nu-km"){const k=e.target.dataset.k||S.nu.cur,d=nDay(k),raw=e.target.value,key=id==="nu-steps"?"steps":"km",mx=id==="nu-steps"?100000:100;
-    if(raw==="")delete d[key];else{const v=id==="nu-steps"?parseInt(raw,10):parseFloat(raw);if(!Number.isFinite(v)||v<0||v>mx)return;if(v>0)d[key]=id==="nu-steps"?v:Math.round(v*100)/100;else delete d[key]}
-    saveN(k);if(key==="steps")syncStepsHabit(k);lastKeep=Date.now();const en2=energyOn(k),el=$("#nu-stk");if(el)el.innerHTML=stepsLine(en2,+d.steps||0);const t2=$("#nu-tot");if(t2&&en2)t2.innerHTML=L(kc0(en2.stepsK+en2.ex))+" سعرة فوق الراحة";return}
+    if(raw==="")delete d[key];else{const v=id==="nu-steps"?parseInt(raw,10):parseFloat(raw);if(!Number.isFinite(v)||v<0||v>mx)return;d[key]=id==="nu-steps"?v:Math.round(v*100)/100}
+    saveN(k);if(key==="steps")syncStepsHabit(k);lastKeep=Date.now();const en2=energyOn(k),el=$("#nu-stk"),es2=effSteps(k);if(el)el.innerHTML=stepsLine(en2,es2.v,es2.def);const t2=$("#nu-tot");if(t2&&en2)t2.innerHTML=L(kc0(en2.stepsK+en2.ex))+" سعرة فوق الراحة";return}
   if(id==="wn"){const w=activeWo();if(w){w.note=e.target.value;lastKeep=Date.now();saveWo(w.id)}return}
   if(id&&id.indexOf("xn-")===0){setExNote(id.slice(3),e.target.value);lastKeep=Date.now();return}
   if(id&&id.indexOf("ws-")===0){const w=activeWo();if(!w)return;const p=id.split("-"),ex=w.ex[+p[1]],st=ex&&ex.sets[+p[2]];if(!st)return;st[p[3]]=e.target.value;e.target.classList.remove("need");lastKeep=Date.now();saveWo(w.id);return}
