@@ -382,7 +382,9 @@ h3 .pts{vertical-align:middle;margin-inline-start:4px}
 .setl .pr{color:var(--warm);font-weight:600}
 .rest{position:fixed;left:0;right:0;bottom:calc(62px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--ink);color:var(--bg);padding-block:10px 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-shadow:0 -6px 20px rgba(0,0,0,.18)}
 .rt-in{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:12px;padding-bottom:10px}
-.rt-l{font-size:13px;opacity:.8}
+.rt-l{font-size:13px;opacity:.8;white-space:nowrap}
+.rt-nx{max-width:720px;margin:0 auto;font-size:15px;font-weight:600;padding-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.resting.rest-tx #app{padding-bottom:110px}
 .rt-t{font-size:26px;font-weight:500;flex:1}
 .rt-btns{display:flex;gap:6px}
 .rest .btn{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 35%,transparent)}
@@ -438,7 +440,7 @@ nav.tabs button{font-size:11px}
 .sw-pin{width:30px;height:26px;border-radius:7px;background:color-mix(in srgb,var(--snote-ink) 22%,transparent);display:grid;place-items:center;flex:none}
 .sw-pin svg{width:15px;height:15px;stroke:var(--snote-ink);fill:none;stroke-width:2}
 .sw-tbl{display:flex;flex-direction:column;margin-inline:-14px}
-.sw-r{display:grid;grid-template-columns:52px minmax(0,1.5fr) 72px 64px 46px;gap:8px;align-items:center;padding:6px 14px}
+.sw-r{display:grid;grid-template-columns:52px minmax(0,1.5fr) 64px 72px 46px;gap:8px;align-items:center;padding:6px 14px}
 .sw-hd{font-weight:700;font-size:14px;color:var(--ink);padding-block:4px}
 .sw-hd span{text-align:center}
 .sw-hd span:nth-child(2){text-align:center}
@@ -459,7 +461,7 @@ nav.tabs button{font-size:11px}
 .sw-big.blue{background:var(--sblue-bg);color:var(--sblue);margin-top:10px}
 .sw-big.red{background:var(--sred-bg);color:var(--sred)}
 .mlist2 .btn{text-align:start}
-@media (max-width:420px){.sw-r{grid-template-columns:40px minmax(0,1.4fr) 64px 54px 42px;gap:6px}.sw-p{font-size:12.5px}}
+@media (max-width:420px){.sw-r{grid-template-columns:40px minmax(0,1.4fr) 54px 64px 42px;gap:6px}.sw-p{font-size:12.5px}}
 .sw-sug{background:var(--sblue-bg);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.65}
 .sw-sug b{color:var(--sblue)}
 .sw-rir{display:flex;align-items:center;gap:6px;padding:4px 14px 8px;background:var(--sgreen-bg);flex-wrap:wrap}
@@ -610,6 +612,11 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
 .hkc code{flex:1;min-width:0;display:block;font-family:var(--f-num);font-size:12px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;word-break:break-all;overflow-wrap:anywhere;direction:ltr;text-align:left;-webkit-user-select:all;user-select:all}
 .hkd summary{cursor:pointer;font-weight:600;padding:4px 0}
 .hkd ol{margin:6px 0 0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px}
+.sw-el{font-size:20px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;direction:ltr}
+.sw-sgn{display:block;margin-top:4px}
+.sw-sgn .chip-link{margin-inline-start:6px}
+.chk{display:flex;gap:10px;align-items:center;font-size:14px}
+.chk input{width:20px;height:20px;accent-color:var(--accent);flex:none}
 </style>
 </head>
 <body>
@@ -634,7 +641,7 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
   <main id="view" class="view"><div class="loading">جارٍ فتح السجل…</div></main>
 </div>
 
-<div id="rest" class="rest" hidden dir="rtl" lang="ar"><div class="rt-in"><span class="rt-l">راحة</span><span class="rt-t num">0:00</span><div class="rt-btns"><button class="btn sm" data-act="rtAdj" data-n="-15">−15</button><button class="btn sm" data-act="rtAdj" data-n="15">+15</button><button class="btn sm" data-act="rtSkip">تخطي</button></div></div><div class="rt-b"><i></i></div></div>
+<div id="rest" class="rest" hidden dir="rtl" lang="ar"><div class="rt-nx" hidden></div><div class="rt-in"><span class="rt-l">راحة</span><span class="rt-t num">0:00</span><div class="rt-btns"><button class="btn sm" data-act="rtAdj" data-n="-15">−15</button><button class="btn sm" data-act="rtAdj" data-n="15">+15</button><button class="btn sm" data-act="rtSkip">تخطي</button></div></div><div class="rt-b"><i></i></div></div>
 <div id="sheet" hidden dir="rtl" lang="ar"><div class="sheet-card" role="dialog" aria-modal="true" id="sheet-card"></div></div>
 
 <script>
@@ -1477,9 +1484,19 @@ function openGroup(g){
 // S.gym = {groups:[{id,name,ex:[{id,name,sets,rest}]}], rest}; workouts/{id} = {id,gid,gname,date,start,end,ex:[{eid,name,rest,sets:[{w,r,done}]}]}
 let TMR=null;try{TMR=JSON.parse(localStorage.getItem("dt-timer")||"null")}catch(e){}
 let ACX=null;
-function unlockAudio(){try{if(!ACX){const C=window.AudioContext||window.webkitAudioContext;if(C)ACX=new C()}if(ACX&&ACX.state==="suspended")ACX.resume()}catch(e){}}
+function unlockAudio(){try{if(!ACX){const C=window.AudioContext||window.webkitAudioContext;if(C)ACX=new C()}if(ACX&&ACX.state!=="running")ACX.resume()}catch(e){}}
+// iOS suspends audio when the app goes to the background; any tap during a session brings it back
+["touchend","click"].forEach(t=>document.addEventListener(t,()=>{if(activeWo()||TMR){unlockAudio();wakeSync(true)}},{capture:true,passive:true}));
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&ACX&&ACX.state!=="running")try{ACX.resume()}catch(e){}wakeSync()});
+// keep the screen on during a session so the timer can sound (iOS 18.4 and later for home-screen apps)
+let WL=null,WLP=false,WLT=0;
+function wakeSync(tap){
+  const want=!!activeWo()&&S.gym.wl!==false&&document.visibilityState==="visible";
+  if(want&&!WL&&!WLP&&navigator.wakeLock&&(tap||Date.now()-WLT>15000)){WLP=true;WLT=Date.now();navigator.wakeLock.request("screen").then(x=>{WL=x;WLP=false;x.addEventListener("release",()=>{WL=null})}).catch(()=>{WLP=false})}
+  else if(!want&&WL){const x=WL;WL=null;try{x.release()}catch(e){}}
+}
 function beep(){
-  if(ACX){tones([[988,0,.22,.4],[1319,.24,.3,.4],[988,.7,.22,.4],[1319,.94,.34,.4]]);try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}return}
+  if(ACX){tones(SND[sndKey()].end);try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}return}
   try{if(ACX){[0,.28,.56].forEach(t=>{const o=ACX.createOscillator(),g=ACX.createGain(),t0=ACX.currentTime+t;o.type="sine";o.frequency.value=880;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.35,t0+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+.2);o.connect(g);g.connect(ACX.destination);o.start(t0);o.stop(t0+.22)})}}catch(e){}
   try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
 }
@@ -1488,23 +1505,29 @@ const setsP=n=>nAr(n,"جولة","جولتان","جولات","جولة"),exP=n=>n
 const fmtS=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
 const fmtDur=s=>{s=Math.max(0,Math.floor(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+":"+String(m).padStart(2,"0"):m)+":"+String(x).padStart(2,"0")};
 const saveTmr=()=>{try{if(TMR)localStorage.setItem("dt-timer",JSON.stringify(TMR));else localStorage.removeItem("dt-timer")}catch(e){}};
-function startRest(sec){if(!(sec>0))return;TMR={end:Date.now()+sec*1000,total:sec*1000,done:false};saveTmr();tickRest()}
+function startRest(sec,nx){if(!(sec>0))return;TMR={end:Date.now()+sec*1000,total:sec*1000,done:false};if(nx)TMR.l=String(nx);saveTmr();tickRest()}
 function stopRest(){TMR=null;saveTmr();tickRest()}
 function tickRest(){
   const el=$("#rest");if(!el)return;
-  if(!TMR){el.hidden=true;document.body.classList.remove("resting");return}
+  if(!TMR){el.hidden=true;document.body.classList.remove("resting","rest-tx");return}
   const left=(TMR.end-Date.now())/1000;
   if(left<=0&&!TMR.done){TMR.done=true;saveTmr();beep()}
+  else if(left>0&&left<=3.05&&S.gym.cd!==false&&TMR.total>6000){const c=Math.ceil(left);if(TMR.ct!==c){TMR.ct=c;if(c<=3)tones(SND[sndKey()].tick)}}
   if(left<=-8){stopRest();return}
   el.hidden=false;document.body.classList.add("resting");
   el.querySelector(".rt-t").textContent=left>0?fmtS(left):"0:00";
-  el.querySelector(".rt-l").textContent=left>0?"راحة":"انتهت الراحة";
+  el.querySelector(".rt-l").textContent=TMR.l?(left>0?"انتقال":"ابدأ الآن"):(left>0?"راحة":"انتهت الراحة");
+  const nxe=el.querySelector(".rt-nx");if(nxe){nxe.hidden=!TMR.l;const h2=TMR.l?'التالي: <bdi>'+esc(TMR.l)+'</bdi>':"";if(nxe.innerHTML!==h2)nxe.innerHTML=h2}document.body.classList.toggle("rest-tx",!!TMR.l);
   el.classList.toggle("over",left<=0);
   el.querySelector(".rt-b i").style.width=Math.max(0,Math.min(100,left*1000/TMR.total*100))+"%";
 }
 const activeWo=()=>Object.values(S.wos).find(w=>!w.end)||null;
+// transition between exercises: per-exercise value, else the gym default; 0 means use the normal rest
+const exDef=eid=>{for(const g of S.gym.groups){const e=(g.ex||[]).find(x=>x.id===eid);if(e)return e}return null};
+function exTx(ex){const d=exDef(ex.eid),v=d&&+d.tx>0?+d.tx:+S.gym.tx;return v>0?v:0}
+function nextEx(w,ei){const n=w.ex.length;for(let k=1;k<n;k++){const x=w.ex[(ei+k)%n];if(x.sets.some(q=>!q.done))return x}return null}
 const saveWo=id=>queueWrite("workouts/"+id,S.wos[id]||null);
-setInterval(()=>{tickRest();const x=$("#wk-el"),w=activeWo();if(x&&w)x.textContent=fmtDur((Date.now()-new Date(w.start))/1000)},500);
+setInterval(()=>{tickRest();const x=$("#wk-el"),w=activeWo();if(x&&w)x.textContent=fmtDur((Date.now()-new Date(w.start))/1000);wakeSync()},500);
 const woSets=w=>(w.ex||[]).reduce((a,x)=>a+x.sets.filter(s=>s.done).length,0);
 const woVol=w=>(w.ex||[]).reduce((a,x)=>a+x.sets.reduce((b,s)=>b+(s.done?(+s.w||0)*(+s.r||0):0),0),0);
 const e1rm=(w,r)=>(+w||0)*(1+(+r||0)/30);
@@ -1533,12 +1556,20 @@ function markTraining(k){
 }
 /* ---------- gym: sounds, notes, calendar, monthly report ---------- */
 function tones(seq){ // seq: [[freq, startSec, durSec, gain]]
-  try{if(!ACX)return;if(ACX.state==="suspended")ACX.resume();
-    seq.forEach(q=>{const o=ACX.createOscillator(),g=ACX.createGain(),t0=ACX.currentTime+q[1];o.type="sine";o.frequency.value=q[0];
+  try{if(!ACX)return;if(ACX.state!=="running")ACX.resume();
+    seq.forEach(q=>{const o=ACX.createOscillator(),g=ACX.createGain(),t0=ACX.currentTime+q[1];o.type=q[4]||"sine";o.frequency.value=q[0];
       g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(q[3]||.3,t0+.015);g.gain.exponentialRampToValueAtTime(.0001,t0+q[2]);
       o.connect(g);g.connect(ACX.destination);o.start(t0);o.stop(t0+q[2]+.03)})}catch(e){}
 }
-const sndSet=()=>tones([[784,0,.12,.28],[1175,.09,.18,.28]]);
+// [freq Hz, start s, length s, gain, wave]
+const SND={
+  duo:{n:"نغمتان صاعدتان",set:[[784,0,.12,.28],[1175,.09,.18,.28]],end:[[988,0,.22,.4],[1319,.24,.3,.4],[988,.7,.22,.4],[1319,.94,.34,.4]],tick:[[1175,0,.07,.22]]},
+  beep:{n:"صفارة رقمية",set:[[1046,0,.08,.3,"square"]],end:[[1046,0,.14,.32,"square"],[1046,.22,.14,.32,"square"],[1046,.44,.14,.32,"square"],[1568,.7,.45,.32,"square"]],tick:[[1046,0,.06,.22,"square"]]},
+  bell:{n:"جرس",set:[[1568,0,.35,.3],[3136,0,.2,.08]],end:[[1319,0,1.1,.42],[2637,0,.6,.12],[3951,0,.3,.05],[1319,.55,1.1,.42],[2637,.55,.6,.12]],tick:[[1568,0,.12,.2]]},
+  soft:{n:"هادئ",set:[[660,0,.1,.22,"triangle"]],end:[[660,0,.2,.32,"triangle"],[880,.22,.2,.32,"triangle"],[1046,.44,.4,.32,"triangle"]],tick:[[880,0,.08,.18,"triangle"]]}
+};
+const sndKey=()=>SND[S.gym.snd]?S.gym.snd:"duo";
+const sndSet=()=>tones(SND[sndKey()].set);
 const sndFinish=()=>tones([[523,0,.16,.3],[659,.13,.16,.3],[784,.26,.16,.3],[1047,.39,.35,.32]]);
 const exNote=eid=>(S.gym.xn&&S.gym.xn[eid])||"";
 function setExNote(eid,txt){if(!S.gym.xn)S.gym.xn={};if(txt.trim())S.gym.xn[eid]=txt;else delete S.gym.xn[eid];saveConfig()}
@@ -1626,7 +1657,14 @@ function suggestEx(w,e){
     if(k>0)up=true;if(k<0)down=true;
     W=Math.round(W*100)/100;return {w:W,r:Math.max(1,Math.round(reps(W)))};
   });
-  return {E:E,prevE:prevE,today:doneE>0,d:d,R:R,sets:sets,up:up,down:down};
+  return {E:E,prevE:prevE,today:doneE>0,d:d,R:R,sets:sets,up:up,down:down,ei:w.ex.indexOf(e)};
+}
+// a set from the previous session; extra sets copy its last set
+const lastSet=(prev,si)=>prev&&prev.length?prev[Math.min(si,prev.length-1)]:null;
+function sugNums(sg,prev,e){
+  const xs=sg.sets.map((q,i)=>q&&!(e&&e.sets[i]&&e.sets[i].done)?{q:q,p:lastSet(prev,i)}:null).filter(Boolean);if(!xs.length)return "";
+  const same=xs.every(x=>x.p&&+x.p.w===+x.q.w&&+x.p.r===+x.q.r);
+  return '<span class="sw-sgn">'+(same?' الاقتراح نفس أرقام الجلسة السابقة.':' الأرقام: <bdi dir="ltr" class="num">'+xs.map(x=>num(+x.q.w,2)+"×"+x.q.r).join("  ")+'</bdi> <button class="chip-link" data-act="sugApply" data-e="'+sg.ei+'">تعبئة بالاقتراح</button>')+'</span>';
 }
 function sugText(sg){
   if(!sg)return "";
@@ -1703,20 +1741,19 @@ const IC_TMR='<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M
 const IC_DOTS='<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>';
 const IC_PIN='<svg viewBox="0 0 24 24"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3zM12 14v7"/></svg>';
 function woView(w){
-  let s='<div class="sw"><div class="sw-top"><button class="sw-tmr'+(TMR?" on":"")+'" data-act="tmrBtn" aria-label="مؤقت الراحة">'+IC_TMR+'</button><button class="sw-fin" data-act="woFinish">إنهاء</button></div>'+
+  let s='<div class="sw"><div class="sw-top"><button class="sw-tmr'+(TMR?" on":"")+'" data-act="tmrBtn" aria-label="مؤقت الراحة">'+IC_TMR+'</button><span class="sw-el num" id="wk-el" aria-label="مدة الجلسة">'+fmtDur((Date.now()-new Date(w.start))/1000)+'</span><button class="sw-fin" data-act="woFinish">إنهاء</button></div>'+
     '<div class="sw-head"><div class="sw-tl"><h2>'+esc(w.gname)+'</h2><button class="sw-dots" data-act="woMenu" aria-label="خيارات الجلسة">'+IC_DOTS+'</button></div>'+
-    '<div class="sw-time num" id="wk-el">'+fmtDur((Date.now()-new Date(w.start))/1000)+'</div>'+
     '<input id="wn" class="keep sw-notes" maxlength="200" value="'+esc(w.note||"")+'" placeholder="ملاحظات" aria-label="ملاحظات الجلسة"></div>';
   w.ex.forEach((e,ei)=>{
     const prev=prevSets(e.eid,e.name,w.start),nt=exNote(e.eid),showN=nt||NOTE_OPEN.has(e.eid),sg=suggestEx(w,e);
     s+='<section class="sw-ex"><div class="sw-exh"><button class="sw-exn" data-act="exHist" data-eid="'+e.eid+'" data-n="'+esc(e.name)+'">'+esc(e.name)+'</button><button class="sw-dots sm" data-act="exMenu" data-e="'+ei+'" aria-label="خيارات التمرين">'+IC_DOTS+'</button></div>'+
       (showN?'<label class="sw-note"><input id="xn-'+e.eid+'" class="keep" maxlength="160" value="'+esc(nt)+'" placeholder="ملاحظة ثابتة لهذا التمرين"><span class="sw-pin">'+IC_PIN+'</span></label>':"")+
-      (sg&&e.sets.some(x=>!x.done)?'<div class="sw-sug"><b>اقتراح اليوم</b> '+sugText(sg)+'</div>':"")+
-      '<div class="sw-tbl"><div class="sw-r sw-hd"><span>الجولة</span><span>السابق</span><span>كغم</span><span>العدات</span><span>'+ICON.check+'</span></div>'+
-      e.sets.map((st,si)=>{const p=prev&&prev[si],ids="ws-"+ei+"-"+si,q=sg&&sg.sets[si],ph=q||(p?{w:p.w,r:p.r}:null);
+      (sg&&e.sets.some(x=>!x.done)?'<div class="sw-sug"><b>اقتراح اليوم</b> '+sugText(sg)+sugNums(sg,prev,e)+'</div>':"")+
+      '<div class="sw-tbl"><div class="sw-r sw-hd"><span>الجولة</span><span>السابق</span><span>العدات</span><span>كغم</span><span>'+ICON.check+'</span></div>'+
+      e.sets.map((st,si)=>{const p=prev&&prev[si],ids="ws-"+ei+"-"+si,q=sg&&sg.sets[si],pl=lastSet(prev,si),ph=pl?{w:pl.w,r:pl.r}:(q||null);
         return '<div class="sw-r'+(st.done?" done":"")+'"><span class="sw-n num">'+(si+1)+'</span><span class="sw-p num">'+(p?L(num(+p.w,2)+" × "+p.r):"—")+'</span>'+
-          '<input id="'+ids+'-w" class="keep ltr sw-in" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'" placeholder="'+(ph?esc(ph.w):"")+'" aria-label="الوزن">'+
           '<input id="'+ids+'-r" class="keep ltr sw-in" type="number" inputmode="numeric" step="1" min="0" value="'+esc(st.r)+'" placeholder="'+(ph?esc(ph.r):"")+'" aria-label="العدات">'+
+          '<input id="'+ids+'-w" class="keep ltr sw-in" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'" placeholder="'+(ph?esc(ph.w):"")+'" aria-label="الوزن">'+
           '<button class="sw-ck" data-act="setDone" data-e="'+ei+'" data-s="'+si+'" aria-pressed="'+!!st.done+'" aria-label="إنهاء الجولة">'+ICON.check+'</button></div>'+
           (st.done?'<div class="sw-rir"><span>عدات باقية</span>'+[0,1,2,3,4].map(v=>'<button class="'+(rirOf(st)===v&&hasRir(st)?"on":"")+'" data-act="rir" data-e="'+ei+'" data-s="'+si+'" data-v="'+v+'">'+(v===0?"0 فشل":v===4?"4+":v)+'</button>').join("")+'</div>':"")}).join("")+
       '</div><button class="sw-add" data-act="setAdd" data-e="'+ei+'">+ إضافة جولة</button></section>';
@@ -1776,6 +1813,7 @@ function openExForm(g,e){
     '<div class="two"><div class="fld"><label for="ex-sets">عدد الجولات</label><input class="ltr" id="ex-sets" name="sets" type="number" inputmode="numeric" min="1" max="20" step="1" required value="'+(e?+e.sets||3:3)+'"></div>'+
     '<div class="fld"><label for="ex-rest">الراحة بالثواني</label><input class="ltr" id="ex-rest" name="rest" type="number" inputmode="numeric" min="0" max="900" step="5" value="'+(e&&+e.rest?+e.rest:"")+'" placeholder="'+S.gym.rest+'"></div></div>'+
     '<span class="lbl">اترك الراحة فارغة لاستخدام المدة الافتراضية ('+S.gym.rest+' ثانية).</span>'+
+    '<div class="fld"><label for="ex-tx">الانتقال بعد آخر جولة بالثواني</label><input class="ltr" id="ex-tx" name="tx" type="number" inputmode="numeric" min="0" max="900" step="5" value="'+(e&&+e.tx?+e.tx:"")+'" placeholder="'+(+S.gym.tx>0?S.gym.tx:"غير مفعّل")+'" style="max-width:160px"><span class="lbl">'+(+S.gym.tx>0?"فارغ يعني المدة العامة ("+S.gym.tx+" ثانية).":"فارغ يعني راحة عادية بعد آخر جولة. المدة العامة لكل التمارين في إعدادات الجم.")+'</span></div>'+
     '<div class="three"><div class="fld"><label for="ex-lo">أقل عدات</label><input class="ltr" id="ex-lo" name="lo" type="number" inputmode="numeric" min="1" max="50" value="'+(e&&+e.lo?+e.lo:8)+'"></div>'+
     '<div class="fld"><label for="ex-hi">أعلى عدات</label><input class="ltr" id="ex-hi" name="hi" type="number" inputmode="numeric" min="1" max="50" value="'+(e&&+e.hi?+e.hi:12)+'"></div>'+
     '<div class="fld"><label for="ex-step">خطوة الوزن (كغم)</label><input class="ltr" id="ex-step" name="step" type="number" inputmode="decimal" min="0.25" max="50" step="any" value="'+(e&&+e.step?+e.step:2.5)+'"></div></div>'+
@@ -1787,6 +1825,7 @@ function openExForm(g,e){
     if(!name){err.textContent="اكتب اسم التمرين.";err.hidden=false;return}
     if(!Number.isFinite(sets)||sets<1||sets>20){err.textContent="عدد الجولات من 1 إلى 20.";err.hidden=false;return}
     if(rest!==null&&(!Number.isFinite(rest)||rest<0||rest>900)){err.textContent="الراحة من 0 إلى 900 ثانية.";err.hidden=false;return}
+    const txr=String(fd.get("tx")||""),tx=txr===""?0:parseInt(txr,10);if(!Number.isFinite(tx)||tx<0||tx>900){err.textContent="مدة الانتقال من 0 إلى 900 ثانية.";err.hidden=false;return}
     const gg=findG(g.id);if(!gg){closeSheet();render();return}
     const cur=e&&gg.ex.find(x=>x.id===e.id);
     const note=String(fd.get("note")||""),lo=parseInt(fd.get("lo"),10),hi=parseInt(fd.get("hi"),10),step=parseFloat(fd.get("step"));
@@ -1794,20 +1833,29 @@ function openExForm(g,e){
     if(!(step>0&&step<=50)){err.textContent="خطوة الوزن رقم أكبر من صفر.";err.hidden=false;return}
     let eid;
     if(cur){cur.name=name;cur.sets=sets;if(rest)cur.rest=rest;else delete cur.rest;eid=cur.id}else{const ne={id:uid(),name:name,sets:sets};if(rest)ne.rest=rest;gg.ex.push(ne);eid=ne.id}
-    const tgt=gg.ex.find(x=>x.id===eid);if(tgt){tgt.lo=lo;tgt.hi=hi;tgt.step=step}
+    const tgt=gg.ex.find(x=>x.id===eid);if(tgt){tgt.lo=lo;tgt.hi=hi;tgt.step=step;if(tx>0)tgt.tx=tx;else delete tgt.tx}
     setExNote(eid,note);closeSheet();render();
   });
 }
 function openGymSet(){
   openSheet('<h2>إعدادات الجم</h2><form class="f" id="gs-form"><div class="fld"><label for="gs-rest">مدة الراحة الافتراضية بالثواني</label><input class="ltr" id="gs-rest" name="rest" type="number" inputmode="numeric" min="10" max="900" step="5" value="'+S.gym.rest+'" style="max-width:140px"></div>'+
+    '<div class="fld"><label for="gs-tx">مؤقت الانتقال بين التمارين بالثواني</label><input class="ltr" id="gs-tx" name="tx" type="number" inputmode="numeric" min="0" max="900" step="5" value="'+(+S.gym.tx>0?+S.gym.tx:"")+'" placeholder="غير مفعّل" style="max-width:140px"><span class="lbl">يبدأ لوحده بعد آخر جولة من كل تمرين بدل مؤقت الراحة، ويعرض اسم التمرين التالي. اتركه فارغاً لتبقى الراحة العادية. تقدر تحدد مدة خاصة لكل تمرين من صفحة تعديله.</span></div>'+
     '<div class="fld"><label for="gs-wk">هدف أيام التمرين في الأسبوع</label><input class="ltr" id="gs-wk" name="wk" type="number" inputmode="numeric" min="1" max="7" step="1" value="'+gymWk()+'" style="max-width:140px"><span class="lbl">يُستخدم لحساب سلسلة الأسابيع. الأسبوع يبدأ بالسبت.</span></div>'+
+    '<div class="fld"><label for="gs-snd">صوت المؤقت والجولات</label><div class="row" style="gap:8px;flex-wrap:nowrap"><select id="gs-snd" name="snd" class="sel" style="flex:1">'+Object.keys(SND).map(k=>'<option value="'+k+'"'+(k===sndKey()?" selected":"")+'>'+SND[k].n+'</option>').join("")+'</select><button class="btn sm" type="button" data-act="sndTry">تجربة</button></div></div>'+
+    '<label class="chk"><input type="checkbox" name="cd"'+(S.gym.cd!==false?" checked":"")+'><span>نقرة في كل ثانية من آخر 3 ثوانٍ للمؤقت</span></label>'+
+    '<label class="chk"><input type="checkbox" name="wl"'+(S.gym.wl!==false?" checked":"")+'><span>إبقاء الشاشة مضاءة أثناء الجلسة</span></label>'+
+    '<span class="lbl">الأصوات لا تعمل والآيفون على الوضع الصامت، ولا والشاشة مقفلة أو البرنامج في الخلفية؛ هذا حدّ من الآيفون لتطبيقات الويب. إبقاء الشاشة مضاءة يمنع القفل التلقائي، ويحتاج iOS 18.4 أو أحدث.</span>'+
     '<div class="fld"><label for="gs-tr">العدات الباقية المستهدفة في كل جولة</label><input class="ltr" id="gs-tr" name="tr" type="number" inputmode="numeric" min="0" max="3" step="1" value="'+TR()+'" style="max-width:140px"><span class="lbl">صفر يعني أن الاقتراح يحسب كل جولة حتى الفشل.</span></div>'+
     '<p class="lbl" style="margin:0">تُستخدم لكل تمرين لم تحدد له راحة خاصة. عند انتهاء المؤقت يصدر البرنامج صوتاً إن كان مفتوحاً على الشاشة.</p>'+
     '<p class="err" id="gs-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{
     const r=parseInt(fd.get("rest"),10);if(!Number.isFinite(r)||r<10||r>900){const e=$("#gs-err");e.textContent="المدة من 10 إلى 900 ثانية.";e.hidden=false;return}
     const wk=parseInt(fd.get("wk"),10);if(!Number.isFinite(wk)||wk<1||wk>7){const e=$("#gs-err");e.textContent="هدف الأسبوع من 1 إلى 7 أيام.";e.hidden=false;return}
     const tr=parseInt(fd.get("tr"),10);if(!Number.isFinite(tr)||tr<0||tr>3){const e=$("#gs-err");e.textContent="العدات الباقية المستهدفة من 0 إلى 3.";e.hidden=false;return}
-    S.gym.rest=r;S.gym.wk=wk;S.gym.tr=tr;saveConfig();closeSheet();render();
+    const txr=String(fd.get("tx")||""),tx=txr===""?0:parseInt(txr,10);if(!Number.isFinite(tx)||tx<0||tx>900){const e=$("#gs-err");e.textContent="مؤقت الانتقال من 0 إلى 900 ثانية، أو اتركه فارغاً.";e.hidden=false;return}
+    S.gym.rest=r;S.gym.wk=wk;S.gym.tr=tr;if(tx>0)S.gym.tx=tx;else delete S.gym.tx;
+    const sk=String(fd.get("snd")||"");if(SND[sk]&&sk!=="duo")S.gym.snd=sk;else delete S.gym.snd;
+    if(fd.get("cd"))delete S.gym.cd;else S.gym.cd=false;if(fd.get("wl"))delete S.gym.wl;else S.gym.wl=false;
+    saveConfig();closeSheet();render();wakeSync();
   });
 }
 function openAddEx(){
@@ -1831,8 +1879,8 @@ function woEditHTML(){
   return '<h2>تعديل الجلسة</h2><form class="f" id="we-form" autocomplete="off"><div class="fld"><label for="we-n">الاسم</label><input id="we-n" maxlength="60" value="'+esc(WE.gname)+'"></div>'+
     '<div class="two"><div class="fld"><label for="we-d">اليوم</label><input id="we-d" class="ltr" type="date" max="'+todayK()+'" value="'+WE.date+'"></div><div class="fld"><label for="we-m">المدة (دقيقة)</label><input id="we-m" class="ltr" type="number" inputmode="numeric" min="1" max="300" value="'+WE._min+'"></div></div>'+
     WE.ex.map((e,ei)=>'<div class="fld"><span class="lbl2" style="color:var(--ink);font-weight:600"><bdi>'+esc(e.name)+'</bdi></span>'+
-      '<div class="wer wer-h"><span>#</span><span>كغم</span><span>عدات</span><span>باقية</span><span></span></div>'+
-      e.sets.map((st,si)=>'<div class="wer"><span class="num">'+(si+1)+'</span><input id="we-'+ei+'-'+si+'-w" class="ltr qin" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'"><input id="we-'+ei+'-'+si+'-r" class="ltr qin" type="number" inputmode="numeric" step="1" min="0" value="'+esc(st.r)+'">'+
+      '<div class="wer wer-h"><span>#</span><span>عدات</span><span>كغم</span><span>باقية</span><span></span></div>'+
+      e.sets.map((st,si)=>'<div class="wer"><span class="num">'+(si+1)+'</span><input id="we-'+ei+'-'+si+'-r" class="ltr qin" type="number" inputmode="numeric" step="1" min="0" value="'+esc(st.r)+'"><input id="we-'+ei+'-'+si+'-w" class="ltr qin" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'">'+
         '<select id="we-'+ei+'-'+si+'-q" class="sel" style="padding:6px">'+['',0,1,2,3,4].map(v=>'<option value="'+v+'"'+((v===''&&!hasRir(st))||(v!==''&&hasRir(st)&&+st.rir===v)?" selected":"")+'>'+(v===''?"–":v===4?"4+":v)+'</option>').join("")+'</select>'+
         '<button class="chip-link" type="button" data-act="weSetDel" data-e="'+ei+'" data-s="'+si+'" aria-label="حذف الجولة">×</button></div>').join("")+
       '<button class="chip-link" type="button" data-act="weSetAdd" data-e="'+ei+'" style="align-self:flex-start">+ جولة</button></div>').join("")+
@@ -2979,18 +3027,23 @@ document.addEventListener("click",e=>{
     case "exDel":{if(confirmArm[a+id]){const g=findG(b.dataset.g);if(g){g.ex=g.ex.filter(x=>x.id!==id);saveConfig()}closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف التمرين"},4000)}break}
     case "gymSet":openGymSet();break;
     case "setDone":{const w=activeWo();if(!w)break;const ei=+b.dataset.e,si=+b.dataset.s,ex=w.ex[ei],st=ex&&ex.sets[si];if(!st)break;
-      if(!st.done){const prev=prevSets(ex.eid,ex.name,w.start),sg=suggestEx(w,ex),p=(sg&&sg.sets[si])||(prev&&prev[si]),wi=$("#ws-"+ei+"-"+si+"-w"),ri=$("#ws-"+ei+"-"+si+"-r");
+      if(!st.done){const prev=prevSets(ex.eid,ex.name,w.start),sg=suggestEx(w,ex),p=lastSet(prev,si)||(sg&&sg.sets[si]),wi=$("#ws-"+ei+"-"+si+"-w"),ri=$("#ws-"+ei+"-"+si+"-r");
         if(wi&&wi.value!=="")st.w=wi.value;if(ri&&ri.value!=="")st.r=ri.value;
         if(st.w===""&&p)st.w=String(p.w);if(st.r===""&&p)st.r=String(p.r);
         if(st.r===""||!(+st.r>0)){if(ri){ri.classList.add("need");ri.focus()}clickForce=false;break}
         if(st.w==="")st.w="0";
-        st.done=true;if(!hasRir(st))st.rir=TR();unlockAudio();sndSet();startRest(+ex.rest||S.gym.rest)}else st.done=false;
+        st.done=true;if(!hasRir(st))st.rir=TR();unlockAudio();sndSet();
+        const allD=ex.sets.every(q=>q.done),tx=allD?exTx(ex):0;
+        if(tx>0){const nx=nextEx(w,ei);if(nx)startRest(tx,nx.name);else stopRest()}else startRest(+ex.rest||S.gym.rest)}else st.done=false;
       saveWo(w.id);render();break}
     case "setAdd":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];if(ex){ex.sets.push({w:"",r:"",done:false});saveWo(w.id);render()}break}
     case "setDel":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];if(ex&&ex.sets.length>1){ex.sets.pop();saveWo(w.id);closeSheet();render()}break}
     case "restNow":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];unlockAudio();startRest(ex&&+ex.rest||S.gym.rest);closeSheet();render();break}
     case "rtAdj":if(TMR){TMR.end+=(+b.dataset.n)*1000;TMR.total=Math.max(TMR.total,TMR.end-Date.now());if(TMR.end>Date.now())TMR.done=false;saveTmr();tickRest()}break;
     case "rtSkip":stopRest();render();break;
+    case "sugApply":{const w=activeWo(),ex=w&&w.ex[+b.dataset.e];if(!ex)break;const sg=suggestEx(w,ex);if(!sg)break;
+      ex.sets.forEach((st,i)=>{const q=sg.sets[i];if(!st.done&&q){st.w=String(q.w);st.r=String(q.r)}});saveWo(w.id);render(true);break}
+    case "sndTry":{unlockAudio();const sel=$("#gs-snd");const k=sel&&SND[sel.value]?sel.value:sndKey();tones(SND[k].end);break}
     case "woFinish":{const w=activeWo();if(!w)break;const n=woSets(w);
       if(!n){if(confirmArm.woF){delete confirmArm.woF;delete S.wos[w.id];saveWo(w.id);stopRest();render()}else{confirmArm.woF=1;b.textContent="لا جولات منجزة، اضغط مرة أخرى للإلغاء";setTimeout(()=>{delete confirmArm.woF;if(b.isConnected)b.textContent="إنهاء التمرين"},4000)}break}
       w.ex=w.ex.map(x=>Object.assign({},x,{sets:x.sets.filter(q=>q.done)})).filter(x=>x.sets.length);w.end=new Date().toISOString();saveWo(w.id);stopRest();unlockAudio();sndFinish();markTraining(w.date);S.gsel=w.id;render();window.scrollTo(0,0);break}
