@@ -617,6 +617,28 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
 .sw-sgn .chip-link{margin-inline-start:6px}
 .chk{display:flex;gap:10px;align-items:center;font-size:14px}
 .chk input{width:20px;height:20px;accent-color:var(--accent);flex:none}
+.mob-only{display:none}
+#tbar{display:none}
+.gok{color:var(--good);font-weight:700}
+@media (max-width:700px){
+  .mob-only{display:block}
+  .xrow>.xdel{display:none}
+  .xrow .hrow{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .xrow .hrow.lp{transform:scale(.985);transition:transform .2s}
+  .xrow button.hrow{display:grid;grid-template-columns:26px minmax(0,1fr) auto;column-gap:12px;row-gap:2px;padding:9px 12px;min-height:52px;align-items:center}
+  .xrow button.hrow .box{grid-column:1;grid-row:1/span 2}
+  .xrow button.hrow .nmw{grid-column:2;grid-row:1/span 2;flex-direction:row;flex-wrap:wrap;column-gap:10px;row-gap:2px;align-items:center}
+  .xrow button.hrow .nmw .nm{flex-basis:100%}
+  .xrow button.hrow .dots{grid-column:2;grid-row:2;justify-self:end;align-self:end;margin-bottom:4px}
+  .xrow button.hrow .pts{grid-column:3;grid-row:1/span 2}
+  .xrow .hrow .nm{line-height:1.35}
+  .hlist{gap:6px}
+  #tbar{display:flex;position:fixed;top:0;left:0;right:0;z-index:25;align-items:center;gap:10px;font-size:13px;color:var(--ink);background:var(--surface);border-bottom:1px solid var(--line);
+    padding:calc(env(safe-area-inset-top,0px) + 7px) max(16px,env(safe-area-inset-right,0px)) 7px max(16px,env(safe-area-inset-left,0px));transform:translateY(-110%);transition:transform .2s;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+  #tbar.on{transform:none}
+  #tbar .tb{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+  #tbar .tb i{display:block;height:100%;background:var(--accent);border-radius:3px}
+}
 </style>
 </head>
 <body>
@@ -1038,6 +1060,33 @@ function dots7(h,k){
   return s+'</span>';
 }
 const ptsTag=p=>'<span class="pts">'+L("+"+p)+'</span>';
+const MOB=()=>{try{return matchMedia("(max-width:700px)").matches}catch(e){return false}};
+const FOPEN=new Set(); // completed groups the user opened again on the phone
+// long press on a task opens its editor; the phone layout hides the edit buttons
+let LP_T=null,LP_X=0,LP_Y=0,LP_EL=null,LP_FIRED=0;
+document.addEventListener("pointerdown",e=>{
+  const r=e.target.closest&&e.target.closest(".xrow .hrow");if(!r||e.button>0||e.target.closest("input,.qb"))return;
+  LP_EL=r;LP_X=e.clientX;LP_Y=e.clientY;clearTimeout(LP_T);r.classList.add("lp");
+  LP_T=setTimeout(()=>{LP_T=null;r.classList.remove("lp");const id=r.dataset.id||(r.id||"").replace(/^qr-/,"");let ed=r.isConnected&&r.parentElement?r.parentElement.querySelector(".xdel"):null;
+    if(!ed&&id)ed=document.querySelector('.xrow .xdel[data-id="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');if(!ed)return;LP_FIRED=Date.now();try{navigator.vibrate&&navigator.vibrate(15)}catch(x){}ed.click()},520);
+},{passive:true});
+const lpCancel=()=>{clearTimeout(LP_T);LP_T=null;if(LP_EL)LP_EL.classList.remove("lp");LP_EL=null};
+["pointerup","pointercancel"].forEach(t=>document.addEventListener(t,lpCancel,{passive:true,capture:true}));
+window.addEventListener("scroll",lpCancel,{passive:true});
+document.addEventListener("pointermove",e=>{if(LP_T&&(Math.abs(e.clientX-LP_X)>10||Math.abs(e.clientY-LP_Y)>10))lpCancel()},{passive:true});
+document.addEventListener("click",e=>{if(LP_FIRED&&Date.now()-LP_FIRED<800&&e.target.closest&&e.target.closest(".xrow .hrow")){e.stopPropagation();e.preventDefault();LP_FIRED=0}},true);
+document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest(".xrow .hrow"))e.preventDefault()});
+// slim progress bar that appears once the day summary scrolls away (phone only)
+let TB_IO=null;
+function tbarSync(){
+  let el=$("#tbar");if(!el){el=document.createElement("div");el.id="tbar";el.setAttribute("aria-hidden","true");document.body.appendChild(el)}
+  if(TB_IO){TB_IO.disconnect();TB_IO=null}
+  const sm=S.tab==="today"&&(S.mode==="db"||S.mode==="local")?$("#view .summary"):null;
+  if(!sm||!MOB()||!("IntersectionObserver" in window)){el.classList.remove("on");return}
+  const sc=dayScore(S.cur),p=sc.max?Math.min(1,sc.got/sc.max):0;
+  el.innerHTML='<b class="num">'+L(Math.round(p*100)+"%")+'</b><span class="tb"><i style="width:'+Math.round(p*100)+'%"></i></span><span class="num">'+L(num(sc.got,1)+" / "+num(sc.max,1))+'</span>';
+  TB_IO=new IntersectionObserver(es=>{el.classList.toggle("on",!es[0].isIntersecting)});TB_IO.observe(sm);
+}
 let HIDE_DONE=false;try{HIDE_DONE=localStorage.getItem("dt-hidedone")==="1"}catch(e){}
 function taskRow(x,k){
   const t=todayK(),on=isDone(x,k),st=curStreak(x),wk=isWk(x),ws=weekStartK(k),wc=wk?weekCount(x,ws):0,wkMet=wk&&wc>=+x.wk&&!on;
@@ -1128,16 +1177,16 @@ function vToday(){
     const blocks=groupedLive().map(bk=>{
       const items=bk.items.slice().sort((p,q)=>((isSched(q,k)||isWk(q))?1:0)-((isSched(p,k)||isWk(p))?1:0));
       const vis=items.filter(h=>!hidden(h));nHidden+=items.length-vis.length;
-      const gs=scoreOf(bk.items,k),gid=bk.g?bk.g.id:"",ck=gKey(bk.g),closed=COLL.has(ck),dn=bk.items.filter(h=>isDone(h,k)).length;
-      const full=gs.max>0&&gs.got>=gs.max;
-      return '<div class="grp tli'+(closed?" closed":"")+(full?" full":"")+'" style="--gc:'+gColor(bk.g)+'"><div class="grp-h">'+gToggle(bk.g,closed)+'<span class="gsc">'+(closed?L(dn+"/"+bk.items.length)+' مهام · ':"")+L(num(gs.got,1)+" / "+num(gs.max,1))+'</span>'+
+      const gs=scoreOf(bk.items,k),gid=bk.g?bk.g.id:"",ck=gKey(bk.g),dn=bk.items.filter(h=>isDone(h,k)).length;
+      const full=gs.max>0&&gs.got>=gs.max,autoC=full&&MOB()&&!COLL.has(ck)&&!FOPEN.has(ck+"|"+k),closed=COLL.has(ck)||autoC;
+      return '<div class="grp tli'+(closed?" closed":"")+(full?" full":"")+'" style="--gc:'+gColor(bk.g)+'"><div class="grp-h">'+gToggle(bk.g,closed,autoC)+'<span class="gsc">'+(closed?(full?'<span class="gok">✓</span> ':"")+L(dn+"/"+bk.items.length)+' مهام · ':"")+L(num(gs.got,1)+" / "+num(gs.max,1))+'</span>'+
         (bk.g?'<button class="iconbtn sm2" data-act="editGroup" data-id="'+gid+'" aria-label="تعديل المجموعة">'+ICON.edit+'</button>':"")+
         '<button class="iconbtn sm2" data-act="newHabitIn" data-g="'+gid+'" aria-label="إضافة مهمة إلى هذه المجموعة">+</button></div>'+
         '<div class="gbar"><i style="width:'+(gs.max?Math.round(Math.min(1,gs.got/gs.max)*100):0)+'%"></i></div>'+
         (closed?"":vis.length?'<div class="hlist">'+vis.map(x=>taskRow(x,k)).join("")+'</div>':'<p class="muted small" style="margin:0">'+(items.length?"كل مهام هذه المجموعة منجزة.":"لا مهام في هذه المجموعة بعد.")+'</p>')+'</div>'}).join("");
     const anyOff=live.some(x=>!isSched(x,k)&&!isWk(x));
     main=summary+'<section class="sec"><div class="sec-h" style="flex-wrap:wrap"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="hideDone" aria-pressed="'+HIDE_DONE+'">'+(HIDE_DONE?"إظهار المنجز"+(nHidden?" ("+nHidden+")":""):"إخفاء المنجز")+'</button><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div><div class="tl">'+blocks+'</div>'+
-      (anyOff&&!off?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'</section>';
+      (anyOff&&!off?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'<p class="lbl mob-only" style="margin:0">لتعديل مهمة أو حذفها اضغط عليها ضغطة مطوّلة. المجموعة المكتملة تنطوي، واضغط اسمها لفتحها.</p></section>';
   }
   const side=todoPanel(k)+actHTML(k);
   return head+'<div class="tg"><div class="tg-main">'+main+'</div><div class="tg-side">'+side+'</div></div>';
@@ -1454,7 +1503,7 @@ let COLL=new Set();try{COLL=new Set(JSON.parse(localStorage.getItem("dt-coll")||
 const gKey=g=>g?g.id:"_none";
 const gColor=g=>{const i=g?S.groups.findIndex(x=>x.id===g.id):-1;return i<0?"var(--muted)":"var(--g"+(i%8+1)+")"};
 let JUST=null;
-function gToggle(g,closed){return '<button class="gtog" data-act="gColl" data-k="'+gKey(g)+'" aria-expanded="'+!closed+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg><span class="gname">'+(g?esc(g.name):"بدون مجموعة")+'</span></button>'}
+function gToggle(g,closed,auto){return '<button class="gtog" data-act="gColl" data-k="'+gKey(g)+'"'+(auto?' data-auto="1"':"")+' aria-expanded="'+!closed+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg><span class="gname">'+(g?esc(g.name):"بدون مجموعة")+'</span></button>'}
 const groupOf=h=>h.g&&S.groups.some(g=>g.id===h.g)?h.g:"";
 function groupedLive(){
   const live=liveHabits(),out=S.groups.map(g=>({g:g,items:live.filter(h=>groupOf(h)===g.id)}));
@@ -2790,7 +2839,7 @@ function render(force){
   if(S.tab==="habits")drawTaskChart();
   if(S.tab==="weight")drawWeightChart();
   if(S.tab==="notes")drawNotesList();
-  queueShare();
+  queueShare();tbarSync();
 }
 let pendingRender=false;
 document.addEventListener("focusout",e=>{if(e.target&&e.target.classList&&e.target.classList.contains("keep")&&pendingRender){setTimeout(()=>{const a=document.activeElement;if(!(a&&a.classList&&a.classList.contains("keep")))render()},0)}});
@@ -3076,7 +3125,7 @@ document.addEventListener("click",e=>{
     case "ypYear":S.yr.year=+b.dataset.r;render();break;
     case "ypick":{const k=b.dataset.k;if(k&&k<=todayK()){S.mem.sel=k;if(k<memRangeStart())S.mem.range="all";refreshMemEditor()}break}
     case "wgClear":S.wgoal=null;saveConfig();render();break;
-    case "gColl":{const ck=b.dataset.k;if(COLL.has(ck))COLL.delete(ck);else COLL.add(ck);try{localStorage.setItem("dt-coll",JSON.stringify(Array.from(COLL)))}catch(er){}render();break}
+    case "gColl":{const ck=b.dataset.k,fk=ck+"|"+S.cur;if(b.dataset.auto==="1"){FOPEN.add(fk);render();break}if(FOPEN.has(fk)&&!COLL.has(ck)){FOPEN.delete(fk);render();break}if(COLL.has(ck))COLL.delete(ck);else COLL.add(ck);try{localStorage.setItem("dt-coll",JSON.stringify(Array.from(COLL)))}catch(er){}render();break}
     case "newHabitIn":openHabit(null,b.dataset.g||"");break;
     case "newGroup":openGroup(null);break;
     case "editGroup":{const g=S.groups.find(x=>x.id===id);if(g)openGroup(g);break}
