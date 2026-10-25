@@ -601,7 +601,15 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
 .cmpdot{width:12px;height:12px;border-radius:50%;flex:none;background:var(--accent)}
 .cmpdot.w{background:var(--warm)}.cmpdot.c3{background:var(--g4)}.cmpdot.c4{background:var(--g6)}.cmpdot.c5{background:var(--g5)}
 .ln.c3{stroke:var(--g4)}.dot.c3{fill:var(--g4)}.ln.c4{stroke:var(--g6)}.dot.c4{fill:var(--g6)}.ln.c5{stroke:var(--g5)}.dot.c5{fill:var(--g5)}
+
+.wer{display:grid;grid-template-columns:24px minmax(0,1fr) minmax(0,1fr) 64px 28px;gap:6px;align-items:center}
+.wer .qin{width:100%;box-sizing:border-box}
+.wer.wer-h{font-size:11px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.hkc{display:flex;gap:8px;align-items:flex-start}
+.hkc code{flex:1;min-width:0;display:block;font-family:var(--f-num);font-size:12px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;word-break:break-all;overflow-wrap:anywhere;direction:ltr;text-align:left;-webkit-user-select:all;user-select:all}
+.hkd summary{cursor:pointer;font-weight:600;padding:4px 0}
+.hkd ol{margin:6px 0 0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px}
 </style>
 </head>
 <body>
@@ -746,19 +754,22 @@ function mkDB(M,fs,uid){
     uid:uid,
     shareSet:d=>M.setDoc(M.doc(fs,"shares/"+uid),d),
     shareWatch:(fu,n,e)=>M.onSnapshot(M.doc(fs,"shares/"+fu),x=>n(x.exists()?x.data():null),e),
+    rawWatch:(p,n,e)=>M.onSnapshot(M.doc(fs,p),x=>n(x.exists()?x.data():null),e),
+    rawSet:(p,d)=>M.setDoc(M.doc(fs,p),d),
+    rawDel:p=>M.deleteDoc(M.doc(fs,p)),
     batch:async ops=>{for(let i=0;i<ops.length;i+=400){const b=M.writeBatch(fs);ops.slice(i,i+400).forEach(o=>{const r=M.doc(fs,base+o.path);if(o.data===null)b.delete(r);else b.set(r,o.data)});await b.commit()}}
   };
 }
 let unsubs=[];
 function startDB(db){
-  stopFriends();SH_LAST="";SH_ERR="";
+  stopFriends();stopHK();SH_LAST="";SH_ERR="";
   DB=db;S.mode="loading";render();
   unsubs.forEach(u=>{try{u()}catch(e){}});unsubs=[];
   let got={c:false,d:false,g:false,n:false,t:false,w:false,u:false};
   const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&got.w&&got.u&&S.mode==="loading"){S.mode="db";setSync();migrateX()}render()};
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
-    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];setTimeout(watchFriends,0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};saveUiLocal();applyTheme()}}
+    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};saveUiLocal();applyTheme()}}
     got.c=true;ready();
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -798,7 +809,7 @@ function startDB(db){
     S.notes=nn;got.n=true;ready();
   },onErr));
 }
-function resetState(){stopFriends();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
@@ -1061,7 +1072,17 @@ function todoRow(t,k){
   const on=!!t.doneAt;
   return '<div class="xrow"><button class="hrow'+(on?" on":"")+'" data-act="tdo" data-id="'+t.id+'" aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+esc(t.name)+'</span>'+
     '<span class="st">'+(on?"أُنجزت "+esc(ago(parse(t.doneAt).toISOString()))+" · ":"")+'أُضيفت '+esc(ago(t.created))+'</span></span>'+(+t.pts?ptsTag(+t.pts):"")+'</button>'+
-    '<button class="iconbtn xdel" data-act="tdel" data-id="'+t.id+'" aria-label="حذف المهمة">×</button></div>';
+    '<button class="iconbtn xdel" data-act="tedit" data-id="'+t.id+'" aria-label="تعديل المهمة">'+ICON.edit+'</button></div>';
+}
+function openTodo(t){
+  openSheet('<h2>تعديل المهمة</h2><form class="f" id="td-form" autocomplete="off"><div class="fld"><label for="td-n">المهمة</label><input id="td-n" name="n" maxlength="80" required value="'+esc(t.name)+'"></div>'+
+    '<div class="fld"><label for="td-p">النقاط</label><input id="td-p" name="p" class="ltr" type="number" inputmode="numeric" min="0" max="1000" step="1" value="'+(+t.pts||0)+'" style="max-width:140px"></div>'+
+    '<p class="lbl" style="margin:0">أُضيفت '+esc(ago(t.created))+(t.doneAt?' · أُنجزت '+esc(fShort(t.doneAt)):"")+'</p>'+
+    '<p class="err" id="td-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button>'+(t.doneAt?'<button class="btn" type="button" data-act="tundo" data-id="'+t.id+'">إلغاء الإنجاز</button>':"")+'<button class="btn danger" type="button" data-act="tdel2" data-id="'+t.id+'">حذف المهمة</button></div></form>',fd=>{
+    const n=String(fd.get("n")||"").trim(),p=parseInt(fd.get("p")||"0",10),err=$("#td-err");
+    if(!n){err.textContent="اكتب اسم المهمة.";err.hidden=false;return}if(!(p>=0&&p<=1000)){err.textContent="النقاط من 0 إلى 1000.";err.hidden=false;return}
+    const c=S.todos[t.id];if(c){c.name=n;c.pts=p;saveTodo(c.id)}closeSheet();render();
+  });
 }
 function todoPanel(k){
   const all=Object.values(S.todos),byC=(a,b)=>(a.created||"")<(b.created||"")?-1:1;
@@ -1297,6 +1318,8 @@ function drawMemList(){
 }
 function syncMemEditor(){
   const d=S.days[S.mem.sel]||{},v=getHappy(d);
+  const cb=document.querySelector("[data-act=memClearVal]");if(cb)cb.hidden=!Number.isFinite(v);
+  const db=document.querySelector("[data-act=memDel]");if(db)db.hidden=!(Number.isFinite(v)||d.note);
   const lab=$("#me-val");if(lab)lab.innerHTML=hLabel(v);
   const rg=$("#me-range");if(rg){rg.classList.toggle("unset",!Number.isFinite(v));if(document.activeElement!==rg)rg.value=Number.isFinite(v)?v:0}
   const nm=$("#me-num");if(nm&&document.activeElement!==nm)nm.value=Number.isFinite(v)?Math.round(v):"";
@@ -1309,9 +1332,9 @@ function memEditorHTML(){
     '<input id="me-range" class="keep happy'+(Number.isFinite(v)?"":" unset")+'" type="range" min="-100" max="100" step="1" dir="ltr" value="'+(Number.isFinite(v)?v:0)+'">'+
     '<div class="scale" dir="ltr"><span>-100</span><span>0</span><span>+100</span></div>'+
     '<div class="row"><input id="me-num" class="keep ltr numin" type="number" min="-100" max="100" step="1" inputmode="numeric" placeholder="من -100 إلى 100" value="'+(Number.isFinite(v)?Math.round(v):"")+'" aria-label="قيمة المزاج بالأرقام">'+
-      (Number.isFinite(v)?'<button class="btn sm" data-act="memClearVal">مسح القيمة</button>':"")+'</div>'+
+      '<button class="btn sm" data-act="memClearVal"'+(Number.isFinite(v)?"":" hidden")+'>مسح القيمة</button></div>'+
     '<div class="fld"><label for="me-note">ماذا حدث في هذا اليوم؟</label><textarea id="me-note" class="keep" rows="7" placeholder="اكتب ما تريد تذكّره عن هذا اليوم">'+esc(d.note||"")+'</textarea></div>'+
-    '<div class="row" style="justify-content:space-between"><span class="lbl">يُحفظ تلقائياً أثناء الكتابة</span>'+((Number.isFinite(v)||d.note)?'<button class="btn sm danger" data-act="memDel">حذف ذكرى هذا اليوم</button>':"")+'</div>'+
+    '<div class="row" style="justify-content:space-between"><span class="lbl">يُحفظ تلقائياً أثناء الكتابة</span>'+'<button class="btn sm danger" data-act="memDel"'+((Number.isFinite(v)||d.note)?"":" hidden")+'>حذف ذكرى هذا اليوم</button></div>'+
   '</section>';
 }
 function vMem(){
@@ -1800,10 +1823,36 @@ function openAddEx(){
     w.ex.push({eid:ex.eid,name:ex.name,rest:ex.rest,sets:Array.from({length:ex.n},()=>({w:"",r:"",done:false}))});saveWo(w.id);closeSheet();render();
   });
 }
+let WE=null; // draft of a finished session being edited
+function openWoEdit(w){WE=JSON.parse(JSON.stringify(w));WE._min=Math.round((new Date(w.end)-new Date(w.start))/60000);card.innerHTML=woEditHTML();sheetSubmit=woEditSubmit}
+function weSync(){if(!WE)return;const g=id=>$("#"+id);const n=g("we-n"),d=g("we-d"),m=g("we-m");if(n)WE.gname=n.value;if(d)WE.date=d.value;if(m)WE._min=parseInt(m.value,10);
+  WE.ex.forEach((e,ei)=>e.sets.forEach((st,si)=>{const w=g("we-"+ei+"-"+si+"-w"),r=g("we-"+ei+"-"+si+"-r"),q=g("we-"+ei+"-"+si+"-q");if(w)st.w=w.value;if(r)st.r=r.value;if(q){if(q.value==="")delete st.rir;else st.rir=+q.value}}))}
+function woEditHTML(){
+  return '<h2>تعديل الجلسة</h2><form class="f" id="we-form" autocomplete="off"><div class="fld"><label for="we-n">الاسم</label><input id="we-n" maxlength="60" value="'+esc(WE.gname)+'"></div>'+
+    '<div class="two"><div class="fld"><label for="we-d">اليوم</label><input id="we-d" class="ltr" type="date" max="'+todayK()+'" value="'+WE.date+'"></div><div class="fld"><label for="we-m">المدة (دقيقة)</label><input id="we-m" class="ltr" type="number" inputmode="numeric" min="1" max="300" value="'+WE._min+'"></div></div>'+
+    WE.ex.map((e,ei)=>'<div class="fld"><span class="lbl2" style="color:var(--ink);font-weight:600"><bdi>'+esc(e.name)+'</bdi></span>'+
+      '<div class="wer wer-h"><span>#</span><span>كغم</span><span>عدات</span><span>باقية</span><span></span></div>'+
+      e.sets.map((st,si)=>'<div class="wer"><span class="num">'+(si+1)+'</span><input id="we-'+ei+'-'+si+'-w" class="ltr qin" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'"><input id="we-'+ei+'-'+si+'-r" class="ltr qin" type="number" inputmode="numeric" step="1" min="0" value="'+esc(st.r)+'">'+
+        '<select id="we-'+ei+'-'+si+'-q" class="sel" style="padding:6px">'+['',0,1,2,3,4].map(v=>'<option value="'+v+'"'+((v===''&&!hasRir(st))||(v!==''&&hasRir(st)&&+st.rir===v)?" selected":"")+'>'+(v===''?"–":v===4?"4+":v)+'</option>').join("")+'</select>'+
+        '<button class="chip-link" type="button" data-act="weSetDel" data-e="'+ei+'" data-s="'+si+'" aria-label="حذف الجولة">×</button></div>').join("")+
+      '<button class="chip-link" type="button" data-act="weSetAdd" data-e="'+ei+'" style="align-self:flex-start">+ جولة</button></div>').join("")+
+    '<p class="err" id="we-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ التعديل</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>';
+}
+function woEditSubmit(){
+  weSync();const err=$("#we-err"),bad=m=>{err.textContent=m;err.hidden=false};
+  if(!WE.gname.trim())return bad("اكتب اسم الجلسة.");if(!/^\d{4}-\d{2}-\d{2}$/.test(WE.date)||WE.date>todayK())return bad("اختر يوماً حتى اليوم.");
+  if(!(WE._min>=1&&WE._min<=300))return bad("المدة من 1 إلى 300 دقيقة.");
+  for(const e of WE.ex)for(const st of e.sets){if(!(+st.r>0))return bad("كل جولة تحتاج عدد عدات أكبر من صفر، أو احذفها.");if(st.w===""||!(+st.w>=0))st.w="0"}
+  const cur=S.wos[WE.id];if(!cur){closeSheet();render();return}
+  const d0=parse(WE.date),old=new Date(cur.start);d0.setHours(old.getHours(),old.getMinutes(),old.getSeconds(),0);
+  cur.gname=WE.gname.trim();cur.date=WE.date;cur.start=d0.toISOString();cur.end=new Date(d0.getTime()+WE._min*60000).toISOString();
+  cur.ex=WE.ex.map(e=>Object.assign({},e,{sets:e.sets.map(st=>Object.assign({},st,{done:true}))})).filter(e=>e.sets.length);
+  saveWo(cur.id);WE=null;closeSheet();render();
+}
 function woDetailHTML(w){
   return '<h2>'+esc(w.gname)+'</h2><div class="f"><div class="lbl">'+esc(fLong(w.date))+' · المدة '+fmtDur((new Date(w.end)-new Date(w.start))/1000)+' · الحجم '+L(num(woVol(w),0))+' كغم</div>'+
     (w.ex||[]).map(e=>'<div class="fld"><span class="lbl2" style="color:var(--ink);font-weight:600">'+esc(e.name)+'</span><div class="setl">'+e.sets.map((s,i)=>'<span class="num">'+L((i+1)+". "+num(+s.w||0,2)+" × "+(+s.r||0))+'</span>').join("")+'</div></div>').join("")+
-    '<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn" data-act="closeSheet">إغلاق</button><button class="btn sm danger" data-act="woDel" data-id="'+w.id+'">حذف الجلسة</button></div></div>';
+    '<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn" data-act="closeSheet">إغلاق</button><button class="btn sm" data-act="woEdit" data-id="'+w.id+'">تعديل الجلسة</button><button class="btn sm danger" data-act="woDel" data-id="'+w.id+'">حذف الجلسة</button></div></div>';
 }
 function exHistHTML(eid,name){
   const h=exHistory(eid,name);
@@ -1843,7 +1892,7 @@ function NUT(){if(!S.nut||typeof S.nut!=="object")S.nut=nutDef();const n=S.nut;[
 function nDay(k){if(!S.nutri[k])S.nutri[k]={d:k,it:[]};const d=S.nutri[k];if(!Array.isArray(d.it))d.it=[];if(!Array.isArray(d.act))d.act=[];d.d=k;return d}
 function saveN(k){
   const d=S.nutri[k];
-  if(d&&!(d.it||[]).length&&!(d.act||[]).length&&!(d.gx||[]).length&&(d.steps===undefined||d.steps===null)&&!(+d.km>0)&&!d.st){delete S.nutri[k];queueWrite("nutri/"+k,null)}
+  if(d&&!(d.it||[]).length&&!(d.act||[]).length&&!(d.gx||[]).length&&(d.steps===undefined||d.steps===null)&&!(+d.hk>0)&&!(+d.km>0)&&!d.st){delete S.nutri[k];queueWrite("nutri/"+k,null)}
   else queueWrite("nutri/"+k,d?JSON.parse(JSON.stringify(d)):null);
   enReset();
 }
@@ -1967,7 +2016,7 @@ function groupEst(gid,k,W,bmr){
 }
 /* usual day: default steps and swimming from settings, used on every day up to today where you did not type a number */
 function actDef(k){const a=S.nut&&S.nut.ad;if(!a||k>todayK())return null;return a}
-function effSteps(k){const d=S.nutri[k]||{};if(d.steps!==undefined&&d.steps!==null&&d.steps!=="")return {v:+d.steps||0,def:false};const a=actDef(k);return a&&+a.steps>0?{v:+a.steps,def:true}:{v:0,def:false}}
+function effSteps(k){const d=S.nutri[k]||{};if(d.steps!==undefined&&d.steps!==null&&d.steps!=="")return {v:+d.steps||0,def:false};if(+d.hk>0)return {v:Math.round(+d.hk),def:false,hk:true};const a=actDef(k);return a&&+a.steps>0?{v:+a.steps,def:true}:{v:0,def:false}}
 function effSwim(k){const d=S.nutri[k]||{},sw=(d.act||[]).find(x=>x.id==="swim");if(sw)return {a:sw,def:false};const a=actDef(k);
   if(a&&+a.swim>0){const t=ACT_BY[a.swc]||ACT_BY["18240"];return {a:{id:"swim",c:t[0],n:t[2],met:t[1],min:+a.swim},def:true}}return {a:null,def:false}}
 function energyOn(k){
@@ -2024,7 +2073,7 @@ function syncLogHabit(k){
   else if(nd&&nd.lh){delete dd.h[h.id];saveDay(k);delete nd.lh;saveN(k)}
 }
 function syncStepsHabit(k){
-  const h=linkHabit(/خطوة|خطوات/);if(!h)return;const nd=S.nutri[k],steps=nd&&+nd.steps>0?+nd.steps:0,dd=ensureDay(k);
+  const h=linkHabit(/خطوة|خطوات/);if(!h)return;const nd=S.nutri[k],es=effSteps(k),steps=nd&&!es.def&&es.v>0?es.v:0,dd=ensureDay(k);
   if(isQ(h)){if(steps>0)dd.h[h.id]=steps;else if(nd&&nd.sh)delete dd.h[h.id];if(nd){if(steps>0)nd.sh=1;else delete nd.sh}saveDay(k);return}
   const m=String(h.name).replace(/[٠-٩]/g,c=>"٠١٢٣٤٥٦٧٨٩".indexOf(c)).replace(/[,،]/g,"").match(/\d{3,6}/),need=m?+m[0]:10000;
   if(steps>=need){if(!dd.h[h.id]){dd.h[h.id]=1;touchStart(h,k);saveDay(k)}if(nd&&!nd.sh)nd.sh=1}
@@ -2090,8 +2139,8 @@ function actHTML(k){
   let s='<section class="panel sec"><div class="sec-h"><h2>النشاط</h2>'+(en?'<span class="lbl" id="nu-tot">'+L(kc0(en.stepsK+en.ex))+' سعرة فوق الراحة</span>':"")+'</div>';
   // steps
   const es=effSteps(k),hasS=d.steps!==undefined&&d.steps!==null&&d.steps!=="";
-  s+='<div class="fld"><label for="nu-steps">الخطوات</label><input id="nu-steps" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(hasS?d.steps:"")+'" placeholder="'+(es.def?es.v+" · افتراضي":"0")+'"></div>'+
-    '<span class="lbl" id="nu-stk">'+stepsLine(en,es.v,es.def)+'</span>';
+  s+='<div class="fld"><label for="nu-steps">الخطوات</label><input id="nu-steps" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(hasS?d.steps:"")+'" placeholder="'+(es.hk?es.v+" · من الصحة":es.def?es.v+" · افتراضي":"0")+'"></div>'+
+    '<span class="lbl" id="nu-stk">'+stepsLine(en,es.v,es.def,es.hk)+'</span>';
   // swimming: one fixed entry per day
   const swE=effSwim(k),sw=swE.a,swc=sw?sw.c:lastSwimC(k);
   s+='<div class="two" style="margin-top:4px"><div class="fld"><label for="nu-swm">السباحة (دقائق)</label><input id="nu-swm" data-k="'+k+'" class="keep ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(sw&&!swE.def?sw.min:"")+'" placeholder="'+(swE.def?sw.min+" · افتراضي":"0")+'"></div>'+
@@ -2112,8 +2161,9 @@ function actHTML(k){
     (!en?'<span class="lbl">السعرات تظهر بعد إعداد الهدف في قسم التغذية وتسجيل وزنك.</span>':"")+'</section>';
   return s;
 }
-function stepsLine(en,steps,def){
+function stepsLine(en,steps,def,hk){
   const st=strideM();
+  if(hk)return "من تطبيق الصحة: "+steps.toLocaleString("en")+" خطوة، نحو "+L(num(steps*st/1000,1))+" كم"+(en?" = "+L(kc0(en.stepsK))+" سعرة فوق الراحة":"")+". اكتب رقماً هنا فقط إن أردت تجاوزه.";
   if(!(steps>0))return "أدخل خطوات اليوم من تطبيق الصحة في هاتفك. المسافة تُحسب بطول خطوتك "+L(num(st*100,1))+" سم.";
   if(def)return "الافتراضي "+steps.toLocaleString("en")+" خطوة"+(en?" = "+L(kc0(en.stepsK))+" سعرة فوق الراحة":"")+". اكتب العدد الفعلي إن اختلف.";
   const km=steps*st/1000;
@@ -2178,7 +2228,7 @@ function fsFoodHTML(){
       '<div class="ntot" id="fs-tot">'+fsTotHTML()+'</div>'+
       (recipe?"":fsMealSeg(FS.m))+
       '<p class="err" id="fs-err" hidden></p>'+
-      '<div class="row"><button class="btn pri" type="submit">'+(ed?"حفظ التعديل":recipe?"إضافة للوصفة":"إضافة")+'</button>'+(ed?'<button class="btn danger" type="button" data-act="nDelEntry">حذف من اليوم</button>':"")+'</div></form>'+
+      '<div class="row"><button class="btn pri" type="submit">'+(ed||(recipe&&FS.rEditI!=null)?"حفظ التعديل":recipe?"إضافة للوصفة":"إضافة")+'</button>'+(ed?'<button class="btn danger" type="button" data-act="nDelEntry">حذف من اليوم</button>':"")+'</div></form>'+
     '<details class="unitbox"><summary class="chip-link">إضافة وحدة خاصة لهذا الطعام</summary><form id="fs-unit" class="two" autocomplete="off" style="margin-top:8px"><div class="fld"><label for="fu-l">الاسم</label><input id="fu-l" maxlength="24" placeholder="مثال: صمونة"></div><div class="fld"><label for="fu-g">الوزن بالغرام</label><input id="fu-g" class="ltr" type="number" inputmode="decimal" min="0.1" step="any" placeholder="90"></div><button class="btn sm" type="submit">حفظ الوحدة</button></form>'+
       (userUnits(f.fid).length?'<div class="setl" style="margin-top:6px">'+userUnits(f.fid).map((u,i)=>'<span>'+esc(u[0])+' '+L(num(+u[1],1)+" غ")+' <button class="chip-link" data-act="fuDel" data-i="'+i+'">حذف</button></span>').join("")+'</div>':"")+'</details></div>';
 }
@@ -2217,7 +2267,7 @@ function fsSubmit(fd,form){
   if(id==="fs-amt"){
     const g=fsGrams(),err=$("#fs-err");if(!(g>0)){err.textContent="أدخل كمية أكبر من صفر.";err.hidden=false;return}
     if(g>5000){err.textContent="الكمية كبيرة جداً، تأكد منها (أكثر من 5 كغم).";err.hidden=false;return}
-    if(FS.mode==="recipe"){RD.it.push({f:FS.fid,n:FS.f.n,g:r1(g),v:FS.f.v.slice()});FS.view="recipe";fsShow();return}
+    if(FS.mode==="recipe"){if(FS.rEditI!=null&&RD.it[FS.rEditI])RD.it[FS.rEditI].g=r1(g);else RD.it.push({f:FS.fid,n:FS.f.n,g:r1(g),v:FS.f.v.slice()});FS.rEditI=null;FS.view="recipe";fsShow();return}
     const m=+(fd.get("m")||FS.m)||0;
     if(FS.edit){const d=S.nutri[FS.k],e=d&&(d.it||[]).find(x=>x.id===FS.edit);if(e){e.g=r1(g);e.m=m;saveN(FS.k)}closeSheet();FS=null;render();return}
     addEntry(FS.k,{id:uid(),f:FS.fid,n:FS.f.n,g:r1(g),m:m,v:FS.f.v.slice()});FS.m=m;FS.added.push(FS.f.n);FS.view="list";FS.q="";fsShow();render();return;
@@ -2281,7 +2331,7 @@ function recipeHTML(){
   const rv=recipeV(RD);
   return '<h2>'+(RD.isNew?"وصفة جديدة":"تعديل الوصفة")+'</h2><form id="rc-form" class="f" autocomplete="off">'+
     '<div class="fld"><label for="rc-n">اسم الأكلة</label><input id="rc-n" name="n" maxlength="60" value="'+esc(RD.n)+'" placeholder="مثال: مرق باميا بلحم الغنم"></div>'+
-    '<div class="fld"><span class="lbl2">المكوّنات بأوزانها كما دخلت القدر</span>'+(RD.it.length?'<div class="entries" style="max-height:none">'+RD.it.map((e,i)=>'<div><span dir="auto">'+esc(eName(e))+'</span><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="num">'+L(num(+e.g,1))+' غ</span><button class="chip-link" type="button" data-act="rcDel" data-i="'+i+'">حذف</button></span></div>').join("")+'</div>':'<p class="muted small" style="margin:0">لا مكونات بعد.</p>')+
+    '<div class="fld"><span class="lbl2">المكوّنات بأوزانها كما دخلت القدر</span>'+(RD.it.length?'<div class="entries" style="max-height:none">'+RD.it.map((e,i)=>'<div><button class="chip-link" type="button" data-act="rcEditIt" data-i="'+i+'" dir="auto" style="text-align:start;color:var(--ink)">'+esc(eName(e))+'</button><span class="row" style="gap:8px;flex-wrap:nowrap"><button class="chip-link num" type="button" data-act="rcEditIt" data-i="'+i+'">'+L(num(+e.g,1))+' غ</button><button class="chip-link" type="button" data-act="rcDel" data-i="'+i+'">حذف</button></span></div>').join("")+'</div>':'<p class="muted small" style="margin:0">لا مكونات بعد.</p>')+
       '<button class="btn sm" type="button" data-act="rcAdd" style="align-self:flex-start">+ مكوّن</button><span class="lbl">للمكونات النيئة كالرز واللحم والزيت قبل الطبخ اكتب بالإنكليزية في البحث، مثل: rice raw أو lamb raw أو olive oil.</span></div>'+
     '<div class="two"><div class="fld"><label for="rc-tw">وزن الأكلة بعد الطبخ (غ)</label><input id="rc-tw" name="tw" class="ltr" type="number" inputmode="decimal" min="1" step="any" value="'+(+RD.tw>0?RD.tw:"")+'" placeholder="زن القدر بعد الطبخ واطرح وزنه فارغاً"></div>'+
       '<div class="fld"><label for="rc-sv">عدد الحصص (اختياري)</label><input id="rc-sv" name="sv" class="ltr" type="number" inputmode="numeric" min="1" max="100" step="1" value="'+(+RD.sv>0?RD.sv:"")+'"></div></div>'+
@@ -2302,6 +2352,17 @@ function openSaveMeal(k,m){
     '<p class="lbl" style="margin:0">'+me.length+' أصناف بأوزانها الحالية. تظهر في البحث فتضيفها كلها بضغطة.</p><div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{
     const n=String(fd.get("n")||"").trim();if(!n)return;const id=uid();NUT().meals[id]={id:id,n:n,it:me.map(e=>({f:e.f,n:e.n,g:e.g,v:e.v}))};saveConfig();closeSheet();render();
   });
+}
+let SM=null; // saved-meal draft while editing
+function openMealEdit(id){const m=NUT().meals[id];if(!m)return;SM=JSON.parse(JSON.stringify(m));openSheet(mealEditHTML(),(fd,form)=>{if(form.id!=="sme-form")return;smSync();const err=$("#sme-err");
+  if(!SM.n.trim()){err.textContent="اكتب اسماً للوجبة.";err.hidden=false;return}if(!SM.it.length){err.textContent="الوجبة فارغة. احذفها بدل حفظها فارغة.";err.hidden=false;return}
+  if(SM.it.some(e=>!(+e.g>0&&+e.g<=5000))){err.textContent="كل وزن بين 0.1 و 5000 غ.";err.hidden=false;return}
+  NUT().meals[SM.id]=SM;saveConfig();SM=null;closeSheet();render()})}
+function smSync(){if(!SM)return;const n=$("#sme-n");if(n)SM.n=n.value;SM.it.forEach((e,i)=>{const el=$("#sme-g"+i);if(el){const v=parseFloat(el.value);if(Number.isFinite(v))e.g=r1(v)}})}
+function mealEditHTML(){const t=vSum(SM.it);
+  return '<h2>تعديل الوجبة الجاهزة</h2><form id="sme-form" class="f" autocomplete="off"><div class="fld"><label for="sme-n">الاسم</label><input id="sme-n" maxlength="50" value="'+esc(SM.n)+'"></div>'+
+    '<div class="entries" style="max-height:none">'+SM.it.map((e,i)=>'<div><span dir="auto" style="flex:1;min-width:0">'+esc(eName(e))+'</span><span class="row" style="gap:6px;flex-wrap:nowrap"><input id="sme-g'+i+'" class="ltr qin" type="number" inputmode="decimal" min="0.1" step="any" value="'+e.g+'" aria-label="الوزن بالغرام"><span class="lbl">غ</span><button class="chip-link" type="button" data-act="smItDel" data-i="'+i+'">حذف</button></span></div>').join("")+'</div>'+
+    '<p class="lbl" style="margin:0">المجموع الحالي '+L(kc0(t[0]))+' سعرة.</p><p class="err" id="sme-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>';
 }
 function openAct(k){
   openSheet('<h2>إضافة سباحة</h2><form class="f" id="ac-form" autocomplete="off"><div class="fld"><label for="ac-c">النوع</label><select id="ac-c" name="c" class="sel">'+ACTS[0][1].map(a=>'<option value="'+a[0]+'">'+esc(a[2])+' · '+a[1]+' MET</option>').join("")+'</select></div>'+
@@ -2353,7 +2414,7 @@ function vNutSet(){
     '<div class="three"><div class="fld"><label for="np-ds">الخطوات</label><input id="np-ds" name="ds" class="ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(N.ad&&+N.ad.steps>0?N.ad.steps:"")+'" placeholder="10000"></div>'+
     '<div class="fld"><label for="np-dw">السباحة (دقائق)</label><input id="np-dw" name="dw" class="ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(N.ad&&+N.ad.swim>0?N.ad.swim:"")+'" placeholder="60"></div>'+
     '<div class="fld"><label for="np-dc">نوع السباحة</label><select id="np-dc" name="dc" class="sel">'+ACTS[0][1].map(a=>'<option value="'+a[0]+'"'+(a[0]===(N.ad&&N.ad.swc||lastSwimC(todayK()))?" selected":"")+'>'+esc(a[2])+'</option>').join("")+'</select></div></div>'+
-    '<span class="lbl">تُحسب هذه القيم تلقائياً في كل يوم لا تكتب فيه رقماً، بما فيها الأيام السابقة. في اليوم المختلف اكتب الرقم الفعلي، و0 إن لم تمشِ أو لم تسبح. مهمة الخطوات لا تُنجز من القيمة الافتراضية، فقط من رقم تكتبه.</span>'+
+    '<span class="lbl">تُحسب هذه القيم تلقائياً في كل يوم لا تكتب فيه رقماً، بما فيها الأيام السابقة. في اليوم المختلف اكتب الرقم الفعلي، و0 إن لم تمشِ أو لم تسبح. مهمة الخطوات لا تُنجز من القيمة الافتراضية، فقط من رقم تكتبه أو يصل من تطبيق الصحة.</span>'+
     '<div class="fld"><label for="np-gm">شدة جلسة الجم (MET)</label><input id="np-gm" name="gmet" class="ltr" type="number" inputmode="decimal" min="0" max="9" step="0.1" value="'+(+N.gmet>0?N.gmet:"")+'" placeholder="تلقائي من العدات الباقية" style="max-width:240px"><span class="lbl">اتركه فارغاً ليُحسب لكل جلسة: 6 MET إذا وصلت للفشل، وتنخفض حتى 3.5 كلما بقيت عدات أكثر.</span></div>'+
     '<p class="err" id="np-err"'+(S.nu.msg?"":" hidden")+'>'+esc(S.nu.msg||"")+'</p><div class="row"><button class="btn pri" type="submit">حفظ</button></div></form>';
   const k=todayK(),tg=targetOn(k),e=energyOn(k);
@@ -2361,11 +2422,12 @@ function vNutSet(){
     '<p class="lbl" style="margin:0">الحرق '+L(kc0(tg.base))+(tg.adj?' '+(tg.adj<0?"ناقص ":"زائد ")+L(kc0(Math.abs(tg.adj)))+' لمعدل '+L(signed(+N.rate,2))+' كغم أسبوعياً، على أساس أن الكيلو من وزن الجسم يعادل نحو 7700 سعرة.':".")+'</p>'+(tg.warn.length?'<p class="err" style="margin:0">'+tg.warn.map(esc).join(" ")+'</p>':"")+'</section>';
   else if(nProf()&&!e)s+='<section class="panel"><p class="small" style="margin:0">سجّل وزنك في قسم الوزن ليظهر هدفك.</p></section>';
   s+=adaptHTML(A);
+  s+=hkHTML();
   // manage
   const fs=Object.values(N.foods),rs=Object.values(N.recipes),ms=Object.values(N.meals);
   s+='<section class="panel sec"><div class="sec-h"><h2>أطعمتك</h2><button class="btn sm" data-act="cfNew2">طعام جديد</button></div>'+(fs.length?'<div class="exl">'+fs.map(c=>'<button class="exi" data-act="cfEdit" data-id="'+c.id+'"><span>'+esc(c.n)+'</span><span class="lbl">'+L(kc0(+c.v[0]))+' سعرة / 100 غ</span></button>').join("")+'</div>':'<p class="muted small" style="margin:0">أضف هنا ما ليس في القائمة من ملصقه، مثل البروتين الذي تستخدمه.</p>')+'</section>';
   s+='<section class="panel sec"><div class="sec-h"><h2>وصفاتك</h2><button class="btn sm" data-act="rcNew">وصفة جديدة</button></div>'+(rs.length?'<div class="exl">'+rs.map(r=>{const rv=recipeV(r);return '<button class="exi" data-act="rcEdit" data-id="'+r.id+'"><span>'+esc(r.n)+'</span><span class="lbl">'+r.it.length+' مكونات · '+L(kc0(rv.v[0]))+' سعرة / 100 غ</span></button>'}).join("")+'</div>':'<p class="muted small" style="margin:0">الأكلات العراقية المركبة كالمرق والدولمة والكبة ليست في قاعدة USDA. سجّل مكوناتها مرة واحدة بأوزانها ووزن القدر بعد الطبخ، ثم تزن صحنك وتختارها كأي طعام.</p>')+'</section>';
-  if(ms.length)s+='<section class="panel sec"><div class="sec-h"><h2>وجباتك الجاهزة</h2></div><div class="exl">'+ms.map(m=>'<div class="exi"><span>'+esc(m.n)+' <span class="lbl">'+m.it.length+' أصناف · '+L(kc0(vSum(m.it)[0]))+' سعرة</span></span><button class="chip-link" data-act="smDel" data-id="'+m.id+'">حذف</button></div>').join("")+'</div></section>';
+  if(ms.length)s+='<section class="panel sec"><div class="sec-h"><h2>وجباتك الجاهزة</h2></div><div class="exl">'+ms.map(m=>'<div class="exi"><span>'+esc(m.n)+' <span class="lbl">'+m.it.length+' أصناف · '+L(kc0(vSum(m.it)[0]))+' سعرة</span></span><span class="row" style="gap:14px;flex-wrap:nowrap"><button class="chip-link" data-act="smEdit" data-id="'+m.id+'">تعديل</button><button class="chip-link" data-act="smDel" data-id="'+m.id+'">حذف</button></span></div>').join("")+'</div></section>';
   return s;
 }
 function compLine(){
@@ -2501,6 +2563,92 @@ function settingsSubmit(fd,form){
   if(S.cmp.length>=4)return bad("الحد أربعة أصدقاء.");
   S.cmp.push({uid:u,name:n});saveConfig();SH_LAST="";queueShare();watchFriends();refreshSettings();
 }
+
+/* ---------- steps from the iPhone Health app ---------- */
+// An iOS shortcut writes the day's step total to hk/{id} through the public Firestore REST API, without signing in.
+// {id} is a random 32-character code kept in this user's private settings. The document holds only {v:{date:steps}},
+// so anyone who learns the code can see or change step counts and nothing else.
+let HK_UN=null,HK_ID="",HK_ERR="",HK_LAST=null,HK_RT=null;
+const hkDig=s=>String(s==null?"":s).replace(/[٠-٩]/g,c=>"٠١٢٣٤٥٦٧٨٩".indexOf(c)).replace(/[۰-۹]/g,c=>"۰۱۲۳۴۵۶۷۸۹".indexOf(c));
+// the phone may format the date and the number with its own digits and separators
+function hkKey(s){
+  const m=hkDig(s).match(/(\d{4})\D{1,3}(\d{1,2})\D{1,3}(\d{1,2})/);if(!m)return null;
+  const k=m[1]+"-"+m[2].padStart(2,"0")+"-"+m[3].padStart(2,"0");
+  return /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(k)?k:null;
+}
+function hkNum(s){
+  const t=hkDig(s).replace(/٫/g,".").replace(/[\s  ‏‎٬,'’]/g,""),m=t.match(/\d+(?:\.\d+)?/);if(!m)return null;
+  let x=m[0];if(/^\d{1,3}(\.\d{3})+$/.test(x))x=x.replace(/\./g,"");
+  const v=Math.round(+x);return Number.isFinite(v)&&v>=0&&v<=150000?v:null;
+}
+function hkApply(doc){
+  const v=doc&&doc.v&&typeof doc.v==="object"?doc.v:{},t=todayK(),lim=addD(t,1),old=addD(t,-40);
+  let last=null,ch=false;const drop=[];
+  Object.keys(v).forEach(raw=>{
+    const k=hkKey(raw),n=hkNum(v[raw]);
+    if(!k||k<old){drop.push(raw);return}
+    if(n==null||k>lim)return;
+    if(!last||k>last.k)last={k:k,n:n};
+    const cur=S.nutri[k];if(cur&&Math.round(+cur.hk||0)===n)return;if(!cur&&!(n>0))return;
+    const d=nDay(k);if(n>0)d.hk=n;else delete d.hk;saveN(k);syncStepsHabit(k);ch=true;
+  });
+  HK_LAST=last;
+  if(drop.length&&DB&&DB.rawSet&&HK_ID){const nv={};Object.keys(v).forEach(r=>{if(!drop.includes(r))nv[r]=String(v[r])});DB.rawSet("hk/"+HK_ID,{v:nv}).catch(()=>{})}
+  if(ch)render();else hkRefresh();
+}
+function stopHK(){clearTimeout(HK_RT);try{HK_UN&&HK_UN()}catch(e){}HK_UN=null;HK_ID="";HK_ERR="";HK_LAST=null}
+function watchHK(){
+  const id=S.nut&&typeof S.nut.hk==="string"?S.nut.hk:"";
+  if(!DB||!DB.rawWatch||S.mode==="local"||!id){if(HK_ID||HK_UN)stopHK();return}
+  if(id===HK_ID&&HK_UN)return;
+  stopHK();HK_ID=id;
+  HK_UN=DB.rawWatch("hk/"+id,d=>{HK_ERR="";hkApply(d)},e=>{
+    HK_ERR=(e&&e.code)||"err";HK_UN=null;hkRefresh();
+    HK_RT=setTimeout(()=>{if(HK_ID===id&&!HK_UN){HK_ID="";watchHK()}},60000);
+  });
+}
+function hkNewId(){const a=new Uint8Array(16);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,"0")).join("")}
+function hkURL(){const c=getCfg()||{};return "https://firestore.googleapis.com/v1/projects/"+(c.projectId||"")+"/databases/(default)/documents/hk/"+(S.nut&&S.nut.hk||"")+"?key="+(c.apiKey||"")+"&updateMask.fieldPaths=v.%60"}
+const HK_BODY='{"fields":{"v":{"mapValue":{"fields":{"DATE":{"stringValue":"STEPS"}}}}}}';
+function hkCopyRow(label,val,id){return '<div class="fld"><span class="lbl2">'+label+'</span><div class="hkc"><code class="ltr" id="'+id+'">'+esc(val)+'</code><button class="btn sm" type="button" data-act="hkCopy" data-t="'+id+'">نسخ</button></div></div>'}
+function hkStatus(){
+  if(HK_ERR)return '<p class="err" style="margin:0">'+(HK_ERR==="permission-denied"?"قاعدة البيانات ترفض قراءة الخطوات. انشر قواعد الأمان الجديدة في Firebase، والبرنامج يعيد المحاولة كل دقيقة.":"تعذّرت قراءة الخطوات الآن، والبرنامج يعيد المحاولة كل دقيقة.")+' <bdi dir="ltr">['+esc(HK_ERR)+']</bdi></p>';
+  if(!HK_LAST)return '<p class="small" style="margin:0">لم تصل أي قراءة بعد. شغّل الاختصار مرة من تطبيق الاختصارات للتجربة.</p>';
+  return '<p class="small" style="margin:0">آخر قراءة وصلت: <b class="num">'+L(HK_LAST.n.toLocaleString("en"))+'</b> خطوة ليوم '+esc(fShort(HK_LAST.k))+'.</p>';
+}
+function hkRefresh(){const el=$("#hk-st");if(el)el.innerHTML=hkStatus()}
+function hkHTML(){
+  const N=NUT();
+  let s='<section class="panel sec" id="hk-sec"><div class="sec-h"><h2>الخطوات من الآيفون</h2></div>';
+  if(S.mode!=="db")return s+'<p class="small" style="margin:0">تحتاج تسجيل الدخول والمزامنة لتعمل هذه الميزة.</p></section>';
+  if(!N.hk)return s+'<p class="small" style="margin:0">اختصار في تطبيق الاختصارات يقرأ خطوات اليوم من تطبيق الصحة ويرسلها هنا، فتحل محل الرقم الافتراضي بدون ما تكتبها. يشتغل لوحده كلما فتحت تطبيقاً تختاره.</p><div class="row"><button class="btn pri sm" data-act="hkOn">تفعيل</button></div></section>';
+  s+='<div id="hk-st">'+hkStatus()+'</div>'+
+    hkCopyRow('الرابط، وبعده التاريخ ثم <bdi dir="ltr">%60</bdi>',hkURL(),"hk-u")+
+    hkCopyRow("نص الطلب",HK_BODY,"hk-b")+
+    '<details class="hkd"><summary>خطوات إعداد الاختصار</summary><ol class="small">'+
+    '<li>في تطبيق الاختصارات اضغط + لاختصار جديد، وأضف هذه الإجراءات بالترتيب.</li>'+
+    '<li><bdi dir="ltr">Find Health Samples</bdi>: النوع <bdi dir="ltr">Steps</bdi>، وتاريخ البدء <bdi dir="ltr">is today</bdi>، والتجميع <bdi dir="ltr">Group By: Day</bdi>.</li>'+
+    '<li><bdi dir="ltr">Format Date</bdi>: التاريخ <bdi dir="ltr">Current Date</bdi>، والصيغة <bdi dir="ltr">ISO 8601</bdi>، وأطفئ <bdi dir="ltr">Include ISO 8601 Time</bdi>.</li>'+
+    '<li><bdi dir="ltr">Text</bdi>: الصق نص الطلب. امسح كلمة <bdi dir="ltr">DATE</bdi> وضع مكانها متغير <bdi dir="ltr">Formatted Date</bdi>، وامسح <bdi dir="ltr">STEPS</bdi> وضع مكانها متغير <bdi dir="ltr">Health Samples</bdi>، ثم اضغط عليه واختر <bdi dir="ltr">Value</bdi>.</li>'+
+    '<li><bdi dir="ltr">Get Contents of URL</bdi>: الصق الرابط، وبعده مباشرة متغير <bdi dir="ltr">Formatted Date</bdi>، ثم اكتب <bdi dir="ltr">%60</bdi>. افتح <bdi dir="ltr">Show More</bdi>: الطريقة <bdi dir="ltr">PATCH</bdi>، وأضف ترويسة <bdi dir="ltr">Content-Type</bdi> قيمتها <bdi dir="ltr">application/json</bdi>، ونوع الجسم <bdi dir="ltr">File</bdi> واختر متغير <bdi dir="ltr">Text</bdi>.</li>'+
+    '<li>شغّل الاختصار مرة، واسمح له بقراءة الصحة. يجب أن يظهر الرقم في الأعلى خلال ثوانٍ وهذه الصفحة مفتوحة.</li>'+
+    '<li>قارن الرقم برقم تطبيق الصحة لليوم. إن كان أكبر بكثير وعندك ساعة أبل، فالخطوات تنحسب مرتين.</li>'+
+    '<li>للتشغيل التلقائي: تبويب <bdi dir="ltr">Automation</bdi> ثم + ثم <bdi dir="ltr">App</bdi>، واختر تطبيقات تفتحها كثيراً، و<bdi dir="ltr">Is Opened</bdi>، و<bdi dir="ltr">Run Immediately</bdi>، ثم اختر الاختصار. الآيفون يظهر إشعاراً صغيراً عند كل تشغيل.</li>'+
+    '</ol></details>'+
+    '<p class="lbl" style="margin:0">الرقم الذي تكتبه بيدك في يوم ما يتقدم على رقم الصحة. الرابط فيه رمز خاص بك: من يحصل عليه يستطيع رؤية خطواتك أو تغييرها فقط، ولا يصل لباقي بياناتك. إن تسرّب، أنشئ رمزاً جديداً وحدّث الرابط في الاختصار.</p>'+
+    '<div class="row"><button class="btn sm" data-act="hkNew">رمز جديد</button><button class="btn sm danger" data-act="hkOff">إيقاف</button></div></section>';
+  return s;
+}
+function hkAct(a,b){
+  const N=NUT(),arm=(key,label,fn)=>{if(confirmArm[key]){delete confirmArm[key];fn()}else{confirmArm[key]=1;const t=b.textContent;b.textContent="اضغط مرة أخرى";setTimeout(()=>{delete confirmArm[key];if(b.isConnected)b.textContent=t},4000)}};
+  if(a==="hkOn"){N.hk=hkNewId();saveConfig();watchHK();render(true);return true}
+  if(a==="hkNew"){arm("hkNew",b.textContent,()=>{const o=N.hk;N.hk=hkNewId();saveConfig();if(o&&DB&&DB.rawDel)DB.rawDel("hk/"+o).catch(()=>{});watchHK();render(true)});return true}
+  if(a==="hkOff"){arm("hkOff",b.textContent,()=>{const o=N.hk;delete N.hk;saveConfig();if(o&&DB&&DB.rawDel)DB.rawDel("hk/"+o).catch(()=>{});stopHK();render(true)});return true}
+  if(a==="hkCopy"){const el=$("#"+b.dataset.t),txt=el?el.textContent:"";const done=()=>{b.textContent="نُسخ";setTimeout(()=>{if(b.isConnected)b.textContent="نسخ"},1500)};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,()=>{hkSel(el)});else hkSel(el);return true}
+  return false;
+}
+function hkSel(el){if(!el)return;const r=document.createRange();r.selectNodeContents(el);const sl=getSelection();sl.removeAllRanges();sl.addRange(r)}
 
 /* ---------- appearance ---------- */
 S.ui={pal:"",thm:""};try{const u=JSON.parse(localStorage.getItem("dt-ui")||"{}");S.ui={pal:u.pal==="pink"?"pink":"",thm:u.thm==="light"||u.thm==="dark"?u.thm:""}}catch(e){}
@@ -2740,7 +2888,7 @@ function logForm(g){
   '<div class="fld"><label for="lf-d">التاريخ</label><input class="ltr" id="lf-d" name="d" type="date" required max="'+t+'" min="'+esc(g.startDate)+'" value="'+t+'"></div></div>'+
   '<p class="err" id="lf-err" hidden></p>'+
   '<div class="row"><button class="btn pri" type="submit">تسجيل</button><button class="btn" type="button" data-act="closeSheet">إغلاق</button></div>'+
-  (en.length?'<div class="fld"><span class="lbl2">القراءات السابقة</span><div class="entries">'+en.map(e=>'<div><span class="num">'+num(+e.v,2)+' '+esc(g.unit||"")+'</span><span class="muted small">'+esc(fShort(e.d))+'</span><button class="btn sm" type="button" data-act="delEntry" data-id="'+g.id+'" data-d="'+e.d+'" aria-label="حذف القراءة">حذف</button></div>').join("")+'</div><span class="lbl">قراءة جديدة في نفس اليوم تستبدل القديمة.</span></div>':"")+
+  (en.length?'<div class="fld"><span class="lbl2">القراءات السابقة</span><div class="entries">'+en.map(e=>'<div><button class="chip-link num" type="button" data-act="entFill" data-v="'+e.v+'" data-d="'+e.d+'">'+num(+e.v,2)+' '+esc(g.unit||"")+'</button><span class="muted small">'+esc(fShort(e.d))+'</span><button class="btn sm" type="button" data-act="delEntry" data-id="'+g.id+'" data-d="'+e.d+'" aria-label="حذف القراءة">حذف</button></div>').join("")+'</div><span class="lbl">لتصحيح قراءة اضغط على رقمها، عدّله، ثم «تسجيل». قراءة جديدة في نفس اليوم تستبدل القديمة.</span></div>':"")+
   '</form>';
 }
 function openLog(g){
@@ -2846,6 +2994,9 @@ document.addEventListener("click",e=>{
     case "woCancel":{const w=activeWo();if(!w)break;if(confirmArm.woC){delete confirmArm.woC;delete S.wos[w.id];saveWo(w.id);stopRest();render()}else{confirmArm.woC=1;b.textContent="اضغط مرة أخرى لحذف الجلسة";setTimeout(()=>{delete confirmArm.woC;if(b.isConnected)b.textContent="إلغاء الجلسة"},4000)}break}
     case "woAddEx":openAddEx();break;
     case "woView":{const w=S.wos[id];if(w)openSheet(woDetailHTML(w),null);break}
+    case "woEdit":{const w=S.wos[id];if(w&&w.end)openWoEdit(w);break}
+    case "weSetDel":if(WE){weSync();const e2=WE.ex[+b.dataset.e];if(e2){e2.sets.splice(+b.dataset.s,1);if(!e2.sets.length)WE.ex.splice(+b.dataset.e,1)}card.innerHTML=woEditHTML()}break;
+    case "weSetAdd":if(WE){weSync();const e2=WE.ex[+b.dataset.e];if(e2){const l=e2.sets[e2.sets.length-1]||{w:"",r:""};e2.sets.push({w:l.w,r:l.r,done:true})}card.innerHTML=woEditHTML()}break;
     case "woDel":{if(confirmArm[a+id]){delete S.wos[id];saveWo(id);if(S.gsel===id)S.gsel=null;closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف الجلسة"},4000)}break}
     case "exHist":openSheet(exHistHTML(b.dataset.eid,b.dataset.n),null);break;
     case "gselClose":S.gsel=null;render();break;
@@ -2891,6 +3042,7 @@ document.addEventListener("click",e=>{
     case "editGoal":{const g=S.goals[id];if(g)openGoal(g);break}
     case "logGoal":{const g=S.goals[id];if(g)openLog(g);break}
     case "delGoal":{if(confirmArm[a+id]){delete S.goals[id];saveGoal(id);closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف الهدف"},4000)}break}
+    case "entFill":{const v=$("#lf-v"),d2=$("#lf-d");if(v)v.value=b.dataset.v;if(d2)d2.value=b.dataset.d;if(v)v.focus();break}
     case "delEntry":{const g=S.goals[id];if(g){g.entries=(g.entries||[]).filter(x=>x.d!==b.dataset.d);saveGoal(id);card.innerHTML=logForm(g);render()}break}
     case "closeSheet":closeSheet();break;
     case "settings":openSheet(settingsHTML(),settingsSubmit);break;
@@ -2904,6 +3056,9 @@ document.addEventListener("click",e=>{
     case "impGo":{if(!IMP)break;b.disabled=true;b.textContent="جارٍ الاستيراد…";applyImport(IMP).then(()=>{IMP=null;closeSheet();render(true)}).catch(er=>{const e2=$("#imp-err2");if(e2){e2.textContent="تعذّر الاستيراد: "+((er&&er.code)||"خطأ");e2.hidden=false}b.disabled=false;b.textContent="استيراد"});break}
     case "tdo":{const t=S.todos[id];if(t){t.doneAt=t.doneAt?null:S.cur;saveTodo(id);render()}break}
     case "tdAll":TD_ALL=!TD_ALL;render();break;
+    case "tedit":{const t=S.todos[id];if(t)openTodo(t);break}
+    case "tundo":{const t=S.todos[id];if(t){t.doneAt=null;saveTodo(id)}closeSheet();render();break}
+    case "tdel2":{if(confirmArm[a+id]){delete S.todos[id];saveTodo(id);delete confirmArm[a+id];closeSheet();render()}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف المهمة"},4000)}break}
     case "tdel":{if(confirmArm[a+id]){delete S.todos[id];saveTodo(id);delete confirmArm[a+id];render()}else{confirmArm[a+id]=1;b.textContent="؟";b.classList.add("arm");setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected){b.textContent="×";b.classList.remove("arm")}},3000)}break}
     case "xdel":{const d=ensureDay(S.cur);d.x=(d.x||[]).filter(q=>q.id!==id);if(!d.x.length)delete d.x;saveDay(S.cur);render();break}
     case "tkRange":S.tk.range=b.dataset.r;S.tk.sel=null;render();break;
@@ -2920,6 +3075,7 @@ document.addEventListener("click",e=>{
     case "cmpTog":CMP_ON=!CMP_ON;try{localStorage.setItem("dt-cmp",CMP_ON?"1":"0")}catch(er){}render();break;
     case "cmpCopy":{const u=DB&&DB.uid;if(!u)break;const done=()=>{b.textContent="نُسخ ✓";setTimeout(()=>{if(b.isConnected)b.textContent="نسخ"},2000)};
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done).catch(()=>{const c=card.querySelector("code");if(c){const r=document.createRange();r.selectNodeContents(c);const sl=getSelection();sl.removeAllRanges();sl.addRange(r)}});else done();break}
+    case "hkOn":case "hkNew":case "hkOff":case "hkCopy":hkAct(a,b);break;
     case "cmpDel":{const u=b.dataset.u;if(confirmArm[a+u]){S.cmp=S.cmp.filter(c=>c.uid!==u);saveConfig();SH_LAST="";queueShare();watchFriends();delete confirmArm[a+u];refreshSettings();render()}else{confirmArm[a+u]=1;b.textContent="اضغط مرة أخرى";setTimeout(()=>{delete confirmArm[a+u];if(b.isConnected)b.textContent="إزالة"},4000)}break}
     case "nView":S.nu.view=b.dataset.v||"";S.nu.msg="";render(true);window.scrollTo(0,0);break;
     case "nDay":{let k=addD(S.nu.cur,+b.dataset.n);if(k>todayK())k=todayK();S.nu.cur=k;render();break}
@@ -2940,7 +3096,10 @@ document.addEventListener("click",e=>{
     case "nEnergy":openSheet(energyHTML(S.nu.view?todayK():S.nu.cur),null);break;
     case "nAnR":S.nu.an=b.dataset.r;render();break;
     case "fsPick":fsPick(b.dataset.f,+b.dataset.g||null);break;
-    case "fsBack":if(FS){FS.view=FS.mode==="recipe"&&!FS.f?"recipe":"list";FS.edit=null;FS.f=null;fsShow()}break;
+    case "fsBack":if(FS){FS.view=FS.mode==="recipe"&&(!FS.f||FS.rEditI!=null)?"recipe":"list";FS.rEditI=null;FS.edit=null;FS.f=null;fsShow()}break;
+    case "rcEditIt":{if(!FS||!RD)break;rcSync();const i=+b.dataset.i,e2=RD.it[i];if(!e2)break;const f=food(e2.f)||foodOr(e2);Object.assign(FS,{view:"food",f:f,fid:e2.f,ui:0,qty:+e2.g,edit:null,rEditI:i});fsShow();break}
+    case "smEdit":openMealEdit(id);break;
+    case "smItDel":if(SM){smSync();SM.it.splice(+b.dataset.i,1);card.innerHTML=mealEditHTML()}break;
     case "fsQuick":if(FS){FS.view="quick";FS.edit=null;fsShow()}break;
     case "fsMeal":{const ml=NUT().meals[id];if(!FS||!ml)break;const d=nDay(FS.k);ml.it.forEach(e=>d.it.push({id:uid(),f:e.f,n:e.n,g:e.g,m:FS.m,v:e.v}));saveN(FS.k);FS.added.push(ml.n);fsShow();render();break}
     case "nDelEntry":{if(!FS||!FS.edit)break;const d=S.nutri[FS.k];if(d){d.it=(d.it||[]).filter(e=>e.id!==FS.edit);saveN(FS.k)}closeSheet();FS=null;render();break}
@@ -3031,7 +3190,7 @@ document.addEventListener("input",e=>{
   if(id==="td-range"){const v=+e.target.value;setHappy(S.cur,v);lastKeep=Date.now();e.target.classList.remove("unset");const l=$("#td-val");if(l)l.innerHTML=hLabel(v);return}
   if(id==="me-range"){setHappy(S.mem.sel,+e.target.value);lastKeep=Date.now();syncMemEditor();drawMemChart();drawMemList();return}
   if(id==="me-num"){const raw=e.target.value;if(raw===""){setHappy(S.mem.sel,null)}else{const v=parseFloat(raw);if(!Number.isFinite(v)||v<-100||v>100)return;setHappy(S.mem.sel,v)}lastKeep=Date.now();syncMemEditor();drawMemChart();drawMemList();return}
-  if(id==="me-note"){const had=!!(S.days[S.mem.sel]&&S.days[S.mem.sel].note);setNote(S.mem.sel,e.target.value);lastKeep=Date.now();if(had!==!!(S.days[S.mem.sel]&&S.days[S.mem.sel].note))drawMemChart();drawMemList();return}
+  if(id==="me-note"){const had=!!(S.days[S.mem.sel]&&S.days[S.mem.sel].note);setNote(S.mem.sel,e.target.value);lastKeep=Date.now();syncMemEditor();if(had!==!!(S.days[S.mem.sel]&&S.days[S.mem.sel].note))drawMemChart();drawMemList();return}
   if(id==="mem-q"){S.mem.q=e.target.value;drawMemList();return}
   if(id==="nt-title"||id==="nt-body"){const n=S.notes[S.nt.sel];if(!n)return;n[id==="nt-title"?"title":"body"]=e.target.value;n.updated=new Date().toISOString();n.saved=true;saveNote(n.id);lastKeep=Date.now();drawNotesList();return}
   if(id==="nt-q"){S.nt.q=e.target.value;drawNotesList();return}
@@ -3043,7 +3202,7 @@ document.addEventListener("input",e=>{
     saveN(k);lastKeep=Date.now();const en=energyOn(k),el=$("#nu-swk"),swE=effSwim(k);if(el)el.innerHTML=swimLine(en,swE.a,swE.def);const t2=$("#nu-tot");if(t2&&en)t2.innerHTML=L(kc0(en.stepsK+en.ex))+" سعرة فوق الراحة";return}
   if(id==="nu-steps"||id==="nu-km"){const k=e.target.dataset.k||S.nu.cur,d=nDay(k),raw=e.target.value,key=id==="nu-steps"?"steps":"km",mx=id==="nu-steps"?100000:100;
     if(raw==="")delete d[key];else{const v=id==="nu-steps"?parseInt(raw,10):parseFloat(raw);if(!Number.isFinite(v)||v<0||v>mx)return;d[key]=id==="nu-steps"?v:Math.round(v*100)/100}
-    saveN(k);if(key==="steps")syncStepsHabit(k);lastKeep=Date.now();const en2=energyOn(k),el=$("#nu-stk"),es2=effSteps(k);if(el)el.innerHTML=stepsLine(en2,es2.v,es2.def);const t2=$("#nu-tot");if(t2&&en2)t2.innerHTML=L(kc0(en2.stepsK+en2.ex))+" سعرة فوق الراحة";return}
+    saveN(k);if(key==="steps")syncStepsHabit(k);lastKeep=Date.now();const en2=energyOn(k),el=$("#nu-stk"),es2=effSteps(k);if(el)el.innerHTML=stepsLine(en2,es2.v,es2.def,es2.hk);const t2=$("#nu-tot");if(t2&&en2)t2.innerHTML=L(kc0(en2.stepsK+en2.ex))+" سعرة فوق الراحة";return}
   if(id==="wn"){const w=activeWo();if(w){w.note=e.target.value;lastKeep=Date.now();saveWo(w.id)}return}
   if(id&&id.indexOf("xn-")===0){setExNote(id.slice(3),e.target.value);lastKeep=Date.now();return}
   if(id&&id.indexOf("ws-")===0){const w=activeWo();if(!w)return;const p=id.split("-"),ex=w.ex[+p[1]],st=ex&&ex.sets[+p[2]];if(!st)return;st[p[3]]=e.target.value;e.target.classList.remove("need");lastKeep=Date.now();saveWo(w.id);return}
@@ -3056,7 +3215,7 @@ document.addEventListener("input",e=>{
 });
 let rz=null;window.addEventListener("resize",()=>{clearTimeout(rz);rz=setTimeout(()=>{if(S.tab!=="today"&&(S.mode==="db"||S.mode==="local"))render()},200)});
 // roll the date over at midnight if the page stays open
-let lastToday=todayK();setInterval(()=>{const t=todayK();if(t!==lastToday){if(S.cur===lastToday)S.cur=t;lastToday=t;render()}},60000);
+let lastToday=todayK();setInterval(()=>{const t=todayK();if(t!==lastToday){if(S.cur===lastToday)S.cur=t;if(S.nu&&S.nu.cur===lastToday)S.nu.cur=t;if(S.bc&&S.bc.sel===lastToday)S.bc.sel=t;if(S.wt&&S.wt.sel===lastToday)S.wt.sel=t;if(S.mem&&S.mem.sel===lastToday)S.mem.sel=t;lastToday=t;render()}},60000);
 
 render();setSync();init();
 })();
