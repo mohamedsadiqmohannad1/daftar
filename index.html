@@ -1965,8 +1965,8 @@ function groupEst(gid,k,W,bmr){
   else{const sec=g.ex.reduce((a,e)=>a+(+e.sets||3)*((+e.rest||S.gym.rest)+40),0);min=sec/60;const gm=+NUT().gmet,t=Math.max(0,Math.min(1,(4-TR())/4));met=gm>0?gm:3.5+2.5*t;src="من عدد جولاتها وأوقات الراحة، بلا جلسات سابقة"}
   return {n:g.name,min:min,met:met,src:src,kc:netK(met,min,W,bmr)};
 }
-/* usual day: default steps and swimming from settings, used on days you did not type a number (from the day you saved them) */
-function actDef(k){const a=S.nut&&S.nut.ad;if(!a||!a.from||k<a.from||k>todayK())return null;return a}
+/* usual day: default steps and swimming from settings, used on every day up to today where you did not type a number */
+function actDef(k){const a=S.nut&&S.nut.ad;if(!a||k>todayK())return null;return a}
 function effSteps(k){const d=S.nutri[k]||{};if(d.steps!==undefined&&d.steps!==null&&d.steps!=="")return {v:+d.steps||0,def:false};const a=actDef(k);return a&&+a.steps>0?{v:+a.steps,def:true}:{v:0,def:false}}
 function effSwim(k){const d=S.nutri[k]||{},sw=(d.act||[]).find(x=>x.id==="swim");if(sw)return {a:sw,def:false};const a=actDef(k);
   if(a&&+a.swim>0){const t=ACT_BY[a.swc]||ACT_BY["18240"];return {a:{id:"swim",c:t[0],n:t[2],met:t[1],min:+a.swim},def:true}}return {a:null,def:false}}
@@ -2006,7 +2006,7 @@ function targetOn(k){
   const p=nProf();if(!p)return null;const e=energyOn(k);if(!e)return null;const N=NUT(),f=calF();
   let base;
   if(N.tmode==="day")base=e.total*f;
-  else{const v=[];for(let i=1;i<=14;i++){const x=energyOn(addD(k,-i));if(x)v.push(x.total)}base=(v.length?avg(v):e.total)*f}
+  else{const v=[];for(let i=0;i<14;i++){const x=energyOn(addD(k,-i));if(x)v.push(x.total)}base=(v.length?avg(v):e.total)*f}
   const rate=Number.isFinite(+N.rate)?+N.rate:0,adj=rate*KCAL_PER_KG/7,kcal=Math.round(base+adj);
   const pr=(+N.pkg>0?+N.pkg:2)*e.W,fat=(+N.fpct>0?+N.fpct:25)/100*kcal/9,carb=Math.max(0,(kcal-4*pr-9*fat)/4);
   const warn=[];if(kcal<e.b.v)warn.push("الهدف أقل من معدل الأيض الأساسي لجسمك ("+Math.round(e.b.v)+" سعرة).");
@@ -2057,7 +2057,7 @@ function vNut(){
       '<div class="bar"><i style="width:'+Math.round(p*100)+'%'+(rem<0?";background:var(--bad)":"")+'"></i></div>'+
       '<div class="mac">'+macBox("البروتين",tot[1],tg.p,"--g3")+macBox("الكربوهيدرات",tot[2],tg.c,"--g2")+macBox("الدهون",tot[3],tg.f,"--g4")+macBox("الألياف",tot[4],tg.fib,"--g6")+'</div>'+
       (tg.warn.length?'<p class="err" style="margin:0">'+tg.warn.map(esc).join(" ")+'</p>':"")+
-      '<div class="row" style="justify-content:space-between"><span class="lbl">'+(NUT().tmode==="day"?"الهدف يتغير مع نشاط هذا اليوم.":"الهدف ثابت من متوسط آخر أسبوعين.")+' '+(adaptive().ok?"معاير من وزنك وأكلك.":"لم تتم المعايرة بعد.")+'</span><button class="chip-link" data-act="nEnergy">تفاصيل الحرق</button></div>';
+      '<div class="row" style="justify-content:space-between"><span class="lbl">'+(NUT().tmode==="day"?"الهدف يتغير مع نشاط هذا اليوم.":"الهدف ثابت من متوسط حرق آخر 14 يوماً، ومنها هذا اليوم.")+' '+(adaptive().ok?"معاير من وزنك وأكلك.":"لم تتم المعايرة بعد.")+'</span><button class="chip-link" data-act="nEnergy">تفاصيل الحرق</button></div>';
   }else{
     sum+='<div class="kv"><div><b>'+L(kc0(tot[0]))+'</b><span>سعرة</span></div><div><b>'+L(num(tot[1],0))+'</b><span>بروتين (غ)</span></div><div><b>'+L(num(tot[2],0))+'</b><span>كربوهيدرات (غ)</span></div><div><b>'+L(num(tot[3],0))+'</b><span>دهون (غ)</span></div></div>'+
       (!nProf()?'<div class="row" style="justify-content:space-between"><span class="small muted">أدخل جنسك وسنة ميلادك وطولك ليحسب البرنامج حرقك وهدفك اليومي.</span><button class="btn pri sm" data-act="nView" data-v="set">إعداد الهدف</button></div>'
@@ -2353,7 +2353,7 @@ function vNutSet(){
     '<div class="three"><div class="fld"><label for="np-ds">الخطوات</label><input id="np-ds" name="ds" class="ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(N.ad&&+N.ad.steps>0?N.ad.steps:"")+'" placeholder="10000"></div>'+
     '<div class="fld"><label for="np-dw">السباحة (دقائق)</label><input id="np-dw" name="dw" class="ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(N.ad&&+N.ad.swim>0?N.ad.swim:"")+'" placeholder="60"></div>'+
     '<div class="fld"><label for="np-dc">نوع السباحة</label><select id="np-dc" name="dc" class="sel">'+ACTS[0][1].map(a=>'<option value="'+a[0]+'"'+(a[0]===(N.ad&&N.ad.swc||lastSwimC(todayK()))?" selected":"")+'>'+esc(a[2])+'</option>').join("")+'</select></div></div>'+
-    '<span class="lbl">تُحسب هذه القيم تلقائياً في كل يوم لا تكتب فيه رقماً، ابتداءً من يوم حفظها'+(N.ad&&N.ad.from?" ("+esc(fShort(N.ad.from))+")":"")+'. في اليوم المختلف اكتب الرقم الفعلي، و0 إن لم تمشِ أو لم تسبح. مهمة الخطوات لا تُنجز من القيمة الافتراضية، فقط من رقم تكتبه.</span>'+
+    '<span class="lbl">تُحسب هذه القيم تلقائياً في كل يوم لا تكتب فيه رقماً، بما فيها الأيام السابقة. في اليوم المختلف اكتب الرقم الفعلي، و0 إن لم تمشِ أو لم تسبح. مهمة الخطوات لا تُنجز من القيمة الافتراضية، فقط من رقم تكتبه.</span>'+
     '<div class="fld"><label for="np-gm">شدة جلسة الجم (MET)</label><input id="np-gm" name="gmet" class="ltr" type="number" inputmode="decimal" min="0" max="9" step="0.1" value="'+(+N.gmet>0?N.gmet:"")+'" placeholder="تلقائي من العدات الباقية" style="max-width:240px"><span class="lbl">اتركه فارغاً ليُحسب لكل جلسة: 6 MET إذا وصلت للفشل، وتنخفض حتى 3.5 كلما بقيت عدات أكثر.</span></div>'+
     '<p class="err" id="np-err"'+(S.nu.msg?"":" hidden")+'>'+esc(S.nu.msg||"")+'</p><div class="row"><button class="btn pri" type="submit">حفظ</button></div></form>';
   const k=todayK(),tg=targetOn(k),e=energyOn(k);
