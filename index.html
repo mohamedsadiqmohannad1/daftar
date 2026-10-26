@@ -721,6 +721,8 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
 .cgd.on.a{background:var(--accent)}.cgd.on.w{background:var(--warm)}.cgd.on.c3{background:var(--g4)}.cgd.on.c4{background:var(--g6)}.cgd.on.c5{background:var(--g5)}
 .cmpst{display:flex;flex-direction:column;gap:2px}
 .cmpst .cmpdot{width:8px;height:8px;display:inline-block}
+#sheet{bottom:auto;height:100%;height:100dvh}
+.sheet-card{max-height:88%;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 </style>
 </head>
 <body>
@@ -3143,8 +3145,13 @@ const sheet=$("#sheet"),card=$("#sheet-card");
 let sheetSubmit=null,lastFocus=null;
 function openSheet(html,onSubmit){
   lastFocus=document.activeElement;card.innerHTML=html;sheetSubmit=onSubmit;sheet.hidden=false;
-  const f=card.querySelector("input");if(f)setTimeout(()=>f.focus(),30);
+  card.scrollTop=0;sheetVV();
+  const coarse=(()=>{try{return matchMedia("(pointer:coarse)").matches}catch(e){return false}})();
+  const f=card.querySelector("input");if(f&&!coarse)setTimeout(()=>f.focus(),30);
 }
+// keep the sheet inside the visible area when the keyboard is open (iOS shrinks only the visual viewport)
+function sheetVV(){const vv=window.visualViewport;if(!vv||sheet.hidden){sheet.style.height="";sheet.style.top="";return}sheet.style.top=vv.offsetTop+"px";sheet.style.height=vv.height+"px"}
+if(window.visualViewport){visualViewport.addEventListener("resize",sheetVV);visualViewport.addEventListener("scroll",sheetVV)}
 function closeSheet(){sheet.hidden=true;card.innerHTML="";sheetSubmit=null;if(lastFocus&&lastFocus.focus)try{lastFocus.focus()}catch(e){}}
 sheet.addEventListener("click",e=>{if(e.target===sheet)closeSheet()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!sheet.hidden)closeSheet()});
