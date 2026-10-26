@@ -697,6 +697,7 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
   html.navtop body.resting #app{padding-bottom:90px}
 }
 .cmpbox{gap:12px}
+.cmpb{align-self:flex-start}
 .seg3{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px}
 .seg3 button{flex:1;border:0;background:none;padding:8px 4px;border-radius:9px;color:var(--muted);font-size:14px}
 .seg3 button.on{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -2735,35 +2736,28 @@ function vNutAn(){
 }
 
 /* ---------- comparison with friends ---------- */
-// Each account publishes shares/{uid} = {readers:[uids it accepted], pct:{date: % of possible points}, and, only if the owner allows it,
-// grp:{date:{group name: %}}, gym:{date:{n sessions, s sets, m working minutes}}, st:{date: steps}}. Task names and everything else stay private.
-// A friend's sheet is readable once he has added your code, and you see his once you add his.
+// Each account publishes shares/{uid} = {readers:[uids it accepted], pct:{date: % of the day's scheduled points}, pn:{date: number of scheduled tasks}}.
+// Task names and everything else stay private. A friend's sheet is readable once he has added your code, and you see his once you add his.
 S.cmp=[];S.fr={};S.cmpS=null;
 let CMP_ON=false;try{CMP_ON=localStorage.getItem("dt-cmp")==="1"}catch(e){}
 let SH_LAST="",SH_T=null,FR_UNS={},SH_ERR="";
 const FR_CLS=["w","c3","c4","c5"];
-const shPref=()=>Object.assign({g:true,gym:false,st:false},S.cmpS||{});
-const r1c=v=>Math.round(v*10)/10;
-function dayPct(k){const sc=dayScore(k);return sc.max>0?Math.min(100,Math.round(sc.got/sc.max*1000)/10):null}
-function grpPct(k){const m={};groupedLive().forEach(b=>{if(!b.items.length)return;const sc=scoreOf(b.items,k);if(sc.max>0)m[b.g?b.g.name:"بدون مجموعة"]=Math.min(100,r1c(sc.got/sc.max*100))});return m}
-function gymDay(){const o={};doneWos().forEach(w=>{const x=o[w.date]||{n:0,s:0,m:0};x.n++;x.s+=woSets(w);x.m+=Math.round(woActive(w)/60);o[w.date]=x});return o}
-function realSteps(k){if(typeof effSteps!=="function")return null;const e=effSteps(k);return !e.def&&e.v>0?e.v:null}
-function sharePct(){
-  const fk=firstLogKey(),t=todayK(),o={};if(!fk)return o;
-  let k=fk>addD(t,-400)?fk:addD(t,-400);for(;k<=t;k=addD(k,1)){const v=dayPct(k);if(v!==null)o[k]=v}
-  return o;
+// for the comparison only the day's scheduled fixed tasks count: no pending tasks, no extra unscheduled or weekly tasks, no excused days
+function fairDay(k){
+  if(isOff(k))return null;let got=0,max=0,n=0;
+  S.habits.forEach(h=>{if(!activeOn(h,k)||!isSched(h,k))return;max+=hPts(h);got+=earned(h,k);n++});
+  return max>0?{p:Math.min(100,Math.round(got/max*1000)/10),n:n}:null;
 }
+function dayPct(k){const f=fairDay(k);return f?f.p:null}
 function shareData(){
-  const P=shPref(),t=todayK(),from=addD(t,-120),o={pct:sharePct()};
-  if(P.g){o.grp={};for(let k=from;k<=t;k=addD(k,1)){const m=grpPct(k);if(Object.keys(m).length)o.grp[k]=m}}
-  if(P.gym){const g=gymDay();o.gym={};Object.keys(g).forEach(k=>{if(k>=from)o.gym[k]=g[k]})}
-  if(P.st){o.st={};for(let k=from;k<=t;k=addD(k,1)){const v=realSteps(k);if(v)o.st[k]=v}}
+  const fk=firstLogKey(),t=todayK(),o={pct:{},pn:{}};if(!fk)return o;
+  let k=fk>addD(t,-400)?fk:addD(t,-400);for(;k<=t;k=addD(k,1)){const f=fairDay(k);if(f){o.pct[k]=f.p;o.pn[k]=f.n}}
   return o;
 }
 function queueShare(){
   if(!DB||!DB.shareSet||S.mode!=="db")return;
   clearTimeout(SH_T);SH_T=setTimeout(()=>{
-    const readers=S.cmp.map(c=>c.uid),d=Object.assign({readers:readers},readers.length?shareData():{pct:{}},{updated:new Date().toISOString()}),j=JSON.stringify(Object.assign({},d,{updated:0}));
+    const readers=S.cmp.map(c=>c.uid),d=Object.assign({readers:readers},readers.length?shareData():{pct:{},pn:{}},{updated:new Date().toISOString()}),j=JSON.stringify([d.readers,d.pct,d.pn]);
     if(j===SH_LAST)return;SH_LAST=j;
     DB.shareSet(d).then(()=>{if(SH_ERR){SH_ERR="";refreshSettings()}}).catch(e=>{SH_LAST="";SH_ERR=(e&&e.code)||"err";refreshSettings()});
   },2500);
@@ -2775,7 +2769,7 @@ function watchFriends(){
   const want=new Set(S.cmp.map(c=>c.uid));
   Object.keys(FR_UNS).forEach(u=>{if(!want.has(u)){try{FR_UNS[u]&&FR_UNS[u]()}catch(e){}delete FR_UNS[u];delete S.fr[u]}});
   want.forEach(u=>{if(FR_UNS[u])return;
-    FR_UNS[u]=DB.shareWatch(u,d=>{S.fr[u]=d?{pct:objOr(d.pct)||{},grp:objOr(d.grp),gym:objOr(d.gym),st:objOr(d.st),updated:d.updated||""}:{none:true};if(S.tab==="habits"&&CMP_ON)render();refreshSettings()},
+    FR_UNS[u]=DB.shareWatch(u,d=>{S.fr[u]=d?{pct:objOr(d.pct)||{},pn:objOr(d.pn),updated:d.updated||""}:{none:true};if(S.tab==="habits"&&CMP_ON)render();refreshSettings()},
       e=>{S.fr[u]={err:(e&&e.code)||"err"};FR_UNS[u]=null;if(S.tab==="habits"&&CMP_ON)render();refreshSettings();setTimeout(()=>{if(FR_UNS[u]===null){delete FR_UNS[u];watchFriends()}},60000)})});
 }
 function frStatus(c){
@@ -2787,121 +2781,71 @@ function frStatus(c){
 }
 
 /* comparison view */
-S.cmpV={r:"7",tab:"all"};
+S.cmpV={r:"7",adj:(()=>{try{return localStorage.getItem("dt-cmpadj")!=="0"}catch(e){return true}})()};
 const numOk=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(+v);
 function cmpPeople(){
-  const gy=gymDay(),me={name:"أنت",cls:"a",me:true,pct:k=>dayPct(k),grp:k=>grpPct(k),gym:k=>gy[k]||null,st:k=>realSteps(k),has:{grp:true,gym:true,st:true}};
-  return [me].concat(S.cmp.map((c,i)=>{const f=S.fr[c.uid]||{};return {name:c.name,cls:FR_CLS[i%FR_CLS.length],c:c,
-    pct:k=>f.pct&&numOk(f.pct[k])?+f.pct[k]:null,grp:k=>f.grp&&objOr(f.grp[k])||{},gym:k=>f.gym&&objOr(f.gym[k])||null,st:k=>f.st&&numOk(f.st[k])?+f.st[k]:null,
-    has:{grp:!!f.grp,gym:!!f.gym,st:!!f.st}}}));
+  const me={name:"أنت",cls:"a",me:true,hasN:true,pct:k=>dayPct(k),n:k=>{const f=fairDay(k);return f?f.n:null}};
+  return [me].concat(S.cmp.map((c,i)=>{const f=S.fr[c.uid]||{};return {name:c.name,cls:FR_CLS[i%FR_CLS.length],c:c,hasN:!!f.pn,
+    pct:k=>f.pct&&numOk(f.pct[k])?+f.pct[k]:null,n:k=>f.pn&&numOk(f.pn[k])?+f.pn[k]:null}}));
 }
 function cmpDays(){const t=todayK(),n=+S.cmpV.r||7,ks=[];for(let i=n-1;i>=0;i--)ks.push(addD(t,-i));return ks}
-// grouped bars, oldest on the left like the other charts
-function gBars(W,o){
-  const H=o.h||190,P={l:36,r:6,t:14,b:34},iw=W-P.l-P.r,ih=H-P.t-P.b,n=o.days.length,ns=o.series.length,gw=iw/n,bw=Math.min(22,gw*.8/ns),mx=o.max||1;
-  const Y=v=>P.t+ih-Math.max(0,Math.min(1,v/mx))*ih;
-  let s='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.label||"")+'">';
-  [0,.5,1].forEach(f=>{const v=mx*f;s+='<line class="grid" x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'"/><text class="ax" x="'+(P.l-6)+'" y="'+(Y(v)+4).toFixed(1)+'" text-anchor="end">'+esc(o.fmt(v))+'</text>'});
-  o.days.forEach((k,i)=>{const x0=P.l+i*gw+(gw-bw*ns)/2;
-    o.series.forEach((se,j)=>{const v=se.vals[i];if(!numOk(v))return;const x=x0+j*bw,y=Y(+v);
-      s+='<rect class="cb '+se.cls+'" x="'+(x+1).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+Math.max(2,bw-2).toFixed(1)+'" height="'+Math.max(1,P.t+ih-y).toFixed(1)+'" rx="2.5"><title>'+esc(se.name+" · "+fNum(k)+": "+o.fmt(+v))+'</title></rect>';
-      if(o.tops&&bw>=13)s+='<text class="cbv" x="'+(x+bw/2).toFixed(1)+'" y="'+(y-3).toFixed(1)+'" text-anchor="middle">'+esc(o.tops(+v))+'</text>'});
-    s+='<text class="ax" x="'+(P.l+i*gw+gw/2).toFixed(1)+'" y="'+(H-18)+'" text-anchor="middle">'+DAY_LETTER[dow(k)]+'</text><text class="ax" x="'+(P.l+i*gw+gw/2).toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle">'+parse(k).getDate()+'</text>'});
-  return s+'</svg>';
-}
-function rollAvg(vals,w){return vals.map((v,i)=>{const sl=vals.slice(Math.max(0,i-w+1),i+1).filter(numOk);return sl.length?avg(sl):null})}
 function cmpTable(people,rows){
-  // rows: [label, fn(person) -> {v:number|null, t:text}, higherIsBetter]
+  // rows: [label, fn(person) -> {v, t}, true = higher is better, false = lower is better, null = no winner]
   return '<div class="ctbl" style="--np:'+people.length+'"><div class="ctr cth"><span></span>'+people.map(p=>'<span class="ctp"><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi></span>').join("")+'</div>'+
-    rows.map(r=>{const cells=people.map(p=>r[1](p)),vs=cells.map(c=>c&&numOk(c.v)?+c.v:null).filter(v=>v!==null),best=vs.length>1?(r[2]===false?Math.min.apply(null,vs):Math.max.apply(null,vs)):null,tie=vs.filter(v=>v===best).length>1;
+    rows.map(r=>{const cells=people.map(p=>r[1](p)),vs=cells.map(c=>c&&numOk(c.v)?+c.v:null).filter(v=>v!==null),hb=r[2]===undefined?true:r[2];
+      const best=vs.length>1&&hb!==null?(hb===false?Math.min.apply(null,vs):Math.max.apply(null,vs)):null,tie=vs.filter(v=>v===best).length>1;
       return '<div class="ctr"><span class="ctl">'+r[0]+'</span>'+cells.map(c=>'<span class="num'+(best!==null&&!tie&&c&&+c.v===best?" best":"")+'">'+(c&&c.t!=null?c.t:"–")+'</span>').join("")+'</div>'}).join("")+'</div>';
 }
-function cmpAll(people,ks){
-  const t=todayK(),n=ks.length;
-  people.forEach(p=>{p.v=ks.map(k=>p.pct(k));p.ok=p.v.filter(numOk)});
-  const wins=people.map(()=>0);ks.forEach((k,i)=>{const vs=people.map(p=>p.v[i]);if(vs.filter(numOk).length<2)return;const mx=Math.max.apply(null,vs.filter(numOk));const w=vs.map((v,j)=>numOk(v)&&v===mx?j:-1).filter(j=>j>=0);if(w.length===1)wins[w[0]]++});
-  let s='<div class="ctoday">'+people.map(p=>{const v=p.pct(t);return '<div><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi><b class="num">'+(numOk(v)?L(Math.round(v)+"%"):"–")+'</b></div>'}).join("")+'<span class="lbl">اليوم حتى الآن</span></div>';
-  s+=cmpTable(people,[
-    ["متوسط النسبة",p=>p.ok.length?{v:avg(p.ok),t:L(Math.round(avg(p.ok))+"%")}:null],
-    ["أيام الفوز",p=>{const i=people.indexOf(p);return {v:wins[i],t:wins[i]+" من "+n}}],
-    ["أيام 100%",p=>{const c=p.ok.filter(v=>v>=99.95).length;return {v:c,t:String(c)}}],
-    ["أيام 80% فأكثر",p=>{const c=p.ok.filter(v=>v>=80).length;return {v:c,t:String(c)}}],
-    ["أفضل يوم",p=>p.ok.length?{v:Math.max.apply(null,p.ok),t:L(Math.round(Math.max.apply(null,p.ok))+"%")}:null],
-    ["أضعف يوم",p=>p.ok.length?{v:Math.min.apply(null,p.ok),t:L(Math.round(Math.min.apply(null,p.ok))+"%")}:null],
-    ["أيام بلا نقاط مسجلة",p=>{const c=n-p.ok.length;return {v:c,t:String(c)}},false]
-  ]);
-  const any=people.some(p=>p.ok.length);
-  if(any&&n<=14)s+=chart(W=>gBars(W,{days:ks,series:people.map(p=>({name:p.name,cls:p.cls,vals:p.v})),max:100,fmt:v=>Math.round(v)+"%",tops:v=>String(Math.round(v)),label:"نسبة الإنجاز اليومية"}));
-  else if(any)s+=chart(W=>lineChart({w:W,h:200,xMin:0,xMax:n-1,yMin:0,yMax:100,gap:3,series:people.map(p=>({pts:p.v.map((v,i)=>numOk(v)?[i,v]:null).filter(Boolean),cls:p.cls,ghost:true})).concat(people.map(p=>({pts:rollAvg(p.v,7).map((v,i)=>numOk(v)?[i,v]:null).filter(Boolean),cls:p.cls,dots:"last"}))),
-      yTicks:[[0,"0%"],[50,"50%"],[100,"100%"]],xTicks:[[0,fNum(ks[0])],[Math.round((n-1)/2),fNum(ks[Math.round((n-1)/2)])],[n-1,fNum(ks[n-1])]],label:"متوسط 7 أيام"}))+'<p class="lbl" style="margin:0">الخط متوسط آخر 7 أيام لكل يوم، والنقاط الباهتة نسبة كل يوم.</p>';
-  if(n>=30&&any){
-    const weeks=[];ks.forEach((k,i)=>{const w=weekStartK(k);let g=weeks[weeks.length-1];if(!g||g.w!==w){g={w:w,idx:[]};weeks.push(g)}g.idx.push(i)});
-    s+='<div class="lbl2" style="margin-top:4px">أسبوعاً بأسبوع</div>'+cmpTable(people,weeks.slice().reverse().map(g=>['من '+esc(fNum(g.w)),p=>{const vs=g.idx.map(i=>p.v[i]).filter(numOk);return vs.length?{v:avg(vs),t:L(Math.round(avg(vs))+"%")}:null}]));
-  }
-  return s+'<p class="lbl" style="margin:0">النسبة = نقاط اليوم ÷ أقصى نقاط ممكنة لذلك اليوم، فتصح المقارنة مع اختلاف المهام. يوم الفوز لمن كانت نسبته الأعلى، والتعادل لا يُحسب.</p>';
-}
-function cmpGroups(people,ks){
-  const missing=people.filter(p=>!p.has.grp);
-  const names=new Map();people.forEach((p,pi)=>{if(!p.has.grp)return;ks.forEach(k=>Object.keys(p.grp(k)).forEach(n=>{if(!names.has(n))names.set(n,new Set());names.get(n).add(pi)}))});
-  const shown=people.filter(p=>p.has.grp),common=[...names.entries()].filter(e=>e[1].size===shown.length&&shown.length>1).map(e=>e[0]),own=[...names.keys()].filter(n=>!common.includes(n));
-  let s="";
-  if(missing.length)s+='<p class="small" style="margin:0">'+missing.map(p=>'<bdi>'+esc(p.name)+'</bdi>').join("، ")+' لم يشارك نسب المجموعات بعد. يفعّلها من الإعدادات ← المقارنة مع صديق.</p>';
-  const avgFor=(p,n)=>{const vs=ks.map(k=>p.grp(k)[n]).filter(numOk);return vs.length?avg(vs):null};
-  if(common.length)s+=cmpTable(people,common.map(n=>['<bdi>'+esc(n)+'</bdi>',p=>{if(!p.has.grp)return null;const v=avgFor(p,n);return v===null?null:{v:v,t:L(Math.round(v)+"%")}}]));
-  else if(shown.length>1)s+='<p class="small" style="margin:0">لا توجد مجموعات بنفس الاسم عندكما. المقارنة هنا تكون بين المجموعات التي تحمل الاسم نفسه حرفياً.</p>';
-  if(own.length)s+='<div class="lbl2">مجموعات غير مشتركة</div>'+cmpTable(people,own.map(n=>['<bdi>'+esc(n)+'</bdi>',p=>{if(!p.has.grp)return null;const v=avgFor(p,n);return v===null?null:{v:v,t:L(Math.round(v)+"%")}}]));
-  return s+'<p class="lbl" style="margin:0">متوسط نسبة إنجاز كل مجموعة خلال الفترة، للمجموعات التي تحمل الاسم نفسه عندكما.</p>';
-}
-function cmpGym(people,ks){
-  const missing=people.filter(p=>!p.has.gym);let s="";
-  if(missing.length)s+='<p class="small" style="margin:0">'+missing.map(p=>'<bdi>'+esc(p.name)+'</bdi>').join("، ")+' لم يشارك بيانات الجم بعد. يفعّلها من الإعدادات ← المقارنة مع صديق.</p>';
-  const sum=(p,f)=>ks.reduce((a,k)=>{const g=p.gym(k);return a+(g?(+g[f]||0):0)},0),wk=ks.length/7;
-  s+=cmpTable(people,[
-    ["الجلسات",p=>p.has.gym?{v:sum(p,"n"),t:String(sum(p,"n"))}:null],
-    ["في الأسبوع",p=>p.has.gym?{v:sum(p,"n")/wk,t:L(num(sum(p,"n")/wk,1))}:null],
-    ["الجولات",p=>p.has.gym?{v:sum(p,"s"),t:String(sum(p,"s"))}:null],
-    ["وقت العمل",p=>{if(!p.has.gym)return null;const m=sum(p,"m");return {v:m,t:(m>=60?Math.floor(m/60)+" س ":"")+(m%60)+" د"}}],
-    ["أيام التمرين",p=>p.has.gym?{v:ks.filter(k=>p.gym(k)).length,t:String(ks.filter(k=>p.gym(k)).length)}:null]
-  ]);
-  if(ks.length<=14&&people.filter(p=>p.has.gym).length)s+='<div class="cgdays">'+people.filter(p=>p.has.gym).map(p=>'<div class="cgr"><span class="cgn"><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi></span>'+ks.map(k=>'<i class="cgd'+(p.gym(k)?" on "+p.cls:"")+'" title="'+esc(fNum(k))+'"></i>').join("")+'</div>').join("")+'</div>';
-  return s+'<p class="lbl" style="margin:0">وقت العمل محسوب من الجولات والراحة، لا من مدة فتح الجلسة.</p>';
-}
-function cmpSteps(people,ks){
-  const missing=people.filter(p=>!p.has.st);let s="";
-  if(missing.length)s+='<p class="small" style="margin:0">'+missing.map(p=>'<bdi>'+esc(p.name)+'</bdi>').join("، ")+' لم يشارك الخطوات بعد. يفعّلها من الإعدادات ← المقارنة مع صديق.</p>';
-  const vals=p=>ks.map(k=>p.st(k)).filter(numOk);
-  s+=cmpTable(people,[
-    ["متوسط اليوم",p=>{if(!p.has.st)return null;const v=vals(p);return v.length?{v:avg(v),t:Math.round(avg(v)).toLocaleString("en")}:null}],
-    ["أيام 10,000 فأكثر",p=>p.has.st?{v:vals(p).filter(v=>v>=10000).length,t:String(vals(p).filter(v=>v>=10000).length)}:null],
-    ["أعلى يوم",p=>{if(!p.has.st)return null;const v=vals(p);return v.length?{v:Math.max.apply(null,v),t:Math.max.apply(null,v).toLocaleString("en")}:null}],
-    ["المجموع",p=>{if(!p.has.st)return null;const v=vals(p);return v.length?{v:v.reduce((a,b)=>a+b,0),t:v.reduce((a,b)=>a+b,0).toLocaleString("en")}:null}]
-  ]);
-  const sh=people.filter(p=>p.has.st),mx=Math.max(10000,...sh.map(p=>Math.max(0,...vals(p))));
-  if(ks.length<=14&&sh.some(p=>vals(p).length))s+=chart(W=>gBars(W,{days:ks,series:sh.map(p=>({name:p.name,cls:p.cls,vals:ks.map(k=>p.st(k))})),max:Math.ceil(mx/2000)*2000,fmt:v=>v>=1000?Math.round(v/1000)+"k":String(Math.round(v)),label:"الخطوات اليومية"}));
-  return s+'<p class="lbl" style="margin:0">الأيام التي لم يُسجّل فيها رقم فعلي، من الآيفون أو باليد، لا تدخل في المتوسط.</p>';
+// adjusted score: the % scaled by the square root of the day's load relative to the busiest of you,
+// halfway between the plain % (unfair to the one with more tasks) and the count of tasks done (unfair to the one with fewer)
+function cmpScores(people,ks){
+  const adj=S.cmpV.adj&&people.every(p=>p.hasN);
+  people.forEach(p=>{p.raw=ks.map(k=>p.pct(k));p.nn=ks.map(k=>p.n(k));p.v=[]});
+  ks.forEach((k,i)=>{const ns=people.map(p=>p.nn[i]).filter(numOk),mx=ns.length?Math.max.apply(null,ns):0;
+    people.forEach(p=>{const v=p.raw[i];p.v[i]=!numOk(v)?null:adj&&numOk(p.nn[i])&&mx>0?Math.round(v*Math.sqrt(p.nn[i]/mx)*10)/10:v})});
+  people.forEach(p=>{p.ok=p.v.filter(numOk)});
+  return adj;
 }
 function cmpHTML(){
   if(!S.cmp.length)return '<div class="cmpbox"><p class="small" style="margin:0">لم تضف أحداً للمقارنة بعد. من الإعدادات (زر الترس) انسخ رمزك وأرسله لصديقك، وأضف رمزه عندك.</p><div class="row"><button class="btn sm" data-act="settings">فتح الإعدادات</button></div></div>';
-  const people=cmpPeople(),ks=cmpDays(),tab=S.cmpV.tab;
-  let s='<div class="cmpbox"><div class="sec-h" style="flex-wrap:wrap"><h3 style="font-size:16px;font-weight:600">المقارنة</h3><div class="rng" role="group" aria-label="الفترة">'+[["7","أسبوع"],["14","أسبوعان"],["30","شهر"],["90","3 أشهر"]].map(r=>'<button data-act="cmpR" data-r="'+r[0]+'" class="'+(S.cmpV.r===r[0]?"on":"")+'" aria-pressed="'+(S.cmpV.r===r[0])+'">'+r[1]+'</button>').join("")+'</div></div>'+
-    '<div class="seg3" role="tablist">'+[["all","الإنجاز"],["grp","المجموعات"],["gym","الجم"],["st","الخطوات"]].map(x=>'<button role="tab" data-act="cmpTab" data-t="'+x[0]+'" class="'+(tab===x[0]?"on":"")+'" aria-selected="'+(tab===x[0])+'">'+x[1]+'</button>').join("")+'</div>';
-  s+=tab==="grp"?cmpGroups(people,ks):tab==="gym"?cmpGym(people,ks):tab==="st"?cmpSteps(people,ks):cmpAll(people,ks);
+  const people=cmpPeople(),ks=cmpDays(),n=ks.length,adj=cmpScores(people,ks),unit=adj?"":"%",fmt=v=>L(Math.round(v)+unit);
+  const wins=people.map(()=>0);ks.forEach((k,i)=>{const vs=people.map(p=>p.v[i]);if(vs.filter(numOk).length<2)return;const mx=Math.max.apply(null,vs.filter(numOk)),w=vs.map((v,j)=>numOk(v)&&v===mx?j:-1).filter(j=>j>=0);if(w.length===1)wins[w[0]]++});
+  let s='<div class="cmpbox"><div class="sec-h" style="flex-wrap:wrap"><h3 style="font-size:16px;font-weight:600">المقارنة</h3><div class="rng" role="group" aria-label="الفترة">'+[["7","أسبوع"],["14","أسبوعان"],["30","شهر"],["90","3 أشهر"]].map(r=>'<button data-act="cmpR" data-r="'+r[0]+'" class="'+(S.cmpV.r===r[0]?"on":"")+'" aria-pressed="'+(S.cmpV.r===r[0])+'">'+r[1]+'</button>').join("")+'</div></div>';
+  s+='<div class="seg2 cmpb" role="radiogroup" aria-label="طريقة الحساب"><label><input type="radio" name="cmpadj" value="1"'+(S.cmpV.adj?" checked":"")+'><span>النسبة مع عدد المهام</span></label><label><input type="radio" name="cmpadj" value="0"'+(S.cmpV.adj?"":" checked")+'><span>النسبة فقط</span></label></div>';
+  if(S.cmpV.adj&&!adj)s+='<p class="small" style="margin:0">عدد مهام صديقك يصل بعد أن يفتح النسخة الجديدة من البرنامج، وإلى ذلك الحين تُعرض النسبة فقط.</p>';
+  s+='<div class="ctoday">'+people.map(p=>{const v=p.v[n-1];return '<div><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi><b class="num">'+(numOk(v)?fmt(v):"–")+'</b>'+(numOk(p.nn[n-1])?'<span class="lbl">'+p.nn[n-1]+' مهمة</span>':"")+'</div>'}).join("")+'<span class="lbl">اليوم حتى الآن</span></div>';
+  s+=cmpTable(people,[
+    [adj?"متوسط النتيجة":"متوسط النسبة",p=>p.ok.length?{v:avg(p.ok),t:fmt(avg(p.ok))}:null],
+    ["أيام الفوز",p=>{const i=people.indexOf(p);return {v:wins[i],t:wins[i]+" من "+n}}],
+    ["أيام 100%",p=>{const c=p.raw.filter(v=>numOk(v)&&v>=99.95).length;return {v:c,t:String(c)}}],
+    ["أيام 80% فأكثر",p=>{const c=p.raw.filter(v=>numOk(v)&&v>=80).length;return {v:c,t:String(c)}}],
+    ["أفضل يوم",p=>p.ok.length?{v:Math.max.apply(null,p.ok),t:fmt(Math.max.apply(null,p.ok))}:null],
+    ["أضعف يوم",p=>p.ok.length?{v:Math.min.apply(null,p.ok),t:fmt(Math.min.apply(null,p.ok))}:null],
+    ["متوسط المهام في اليوم",p=>{const ns=p.nn.filter(numOk);return ns.length?{v:avg(ns),t:L(num(avg(ns),1))}:null},null],
+    ["أيام بلا نقاط",p=>{const c=n-p.ok.length;return {v:c,t:String(c)}},false]
+  ]);
+  const any=people.some(p=>p.ok.length),top=Math.max(100,...people.map(p=>Math.max(0,...p.ok)));
+  if(any)s+=chart(W=>lineChart({w:W,h:200,xMin:0,xMax:n-1,yMin:0,yMax:top,gap:1.5,series:people.map(p=>({pts:p.v.map((v,i)=>numOk(v)?[i,v]:null).filter(Boolean),cls:p.cls})),
+      yTicks:[[0,"0"+unit],[50,"50"+unit],[100,"100"+unit]],xTicks:[[0,fNum(ks[0])],[Math.round((n-1)/2),fNum(ks[Math.round((n-1)/2)])],[n-1,fNum(ks[n-1])]],label:"مقارنة الإنجاز اليومي"}));
+  else s+='<p class="muted small" style="margin:0">لا نقاط في هذه الفترة بعد.</p>';
+  if(n>=30&&any){
+    const weeks=[];ks.forEach((k,i)=>{const w=weekStartK(k);let g=weeks[weeks.length-1];if(!g||g.w!==w){g={w:w,idx:[]};weeks.push(g)}g.idx.push(i)});
+    s+='<div class="lbl2" style="margin-top:4px">أسبوعاً بأسبوع</div>'+cmpTable(people,weeks.slice().reverse().map(g=>['من '+esc(fNum(g.w)),p=>{const vs=g.idx.map(i=>p.v[i]).filter(numOk);return vs.length?{v:avg(vs),t:fmt(avg(vs))}:null}]));
+  }
+  s+='<p class="lbl" style="margin:0">'+(adj?'النتيجة = نسبة الإنجاز × الجذر التربيعي لـ (عدد مهامك ÷ عدد مهام صاحب المهام الأكثر في ذلك اليوم). مثال: 20 مهمة كلها منجزة مقابل 40 مهمة: 100 × 0.71 = 71، و40 مهمة منجز منها 30 = 75. ':'')+
+    'تُحسب فقط المهام الثابتة المجدولة لذلك اليوم. المهام المعلقة، والمهام غير المجدولة والأسبوعية التي تنجزها زيادة، والأيام المعذورة لا تدخل في المقارنة. يوم الفوز لمن كانت نتيجته الأعلى، والتعادل لا يُحسب.</p>';
   s+='<div class="cmpst">'+people.filter(p=>p.c).map(p=>'<span class="lbl"><i class="cmpdot '+p.cls+'"></i> <bdi>'+esc(p.name)+'</bdi>: '+esc(frStatus(p.c))+'</span>').join("")+'</div>';
   return s+'</div>';
 }
 function cmpSettingsHTML(){
   if(S.mode!=="db"||!DB||!DB.uid)return "";
-  const P=shPref(),ck=(n,on,t)=>'<label class="chk"><input type="checkbox" name="'+n+'"'+(on?" checked":"")+'><span>'+t+'</span></label>';
   return '<div class="fld"><span class="lbl2">المقارنة مع صديق</span>'+
     '<div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:8px"><span class="small">رمزك</span><code class="code" dir="ltr" style="flex:1;min-width:0;overflow-x:auto;white-space:nowrap">'+esc(DB.uid)+'</code><button class="btn sm" type="button" data-act="cmpCopy">نسخ</button></div>'+
     (S.cmp.length?'<div class="entries" style="max-height:none">'+S.cmp.map(c=>'<div><span><bdi>'+esc(c.name)+'</bdi> <span class="lbl">'+esc(frStatus(c))+'</span></span><button class="chip-link" type="button" data-act="cmpDel" data-u="'+esc(c.uid)+'">إزالة</button></div>').join("")+'</div>':"")+
     '<form id="cmp-form" class="two" autocomplete="off"><div class="fld"><label for="cmp-n">اسم صديقك</label><input id="cmp-n" name="n" maxlength="24"></div><div class="fld"><label for="cmp-u">رمزه</label><input id="cmp-u" name="u" class="ltr" maxlength="64" spellcheck="false" autocapitalize="off"></div>'+
     '<button class="btn sm" type="submit" style="align-self:flex-end">إضافة</button></form><p class="err" id="cmp-err" hidden></p>'+
-    '<span class="lbl2" style="margin-top:4px">ما تشاركه مع من أضفتهم</span>'+
-    '<label class="chk"><input type="checkbox" checked disabled><span>نسبة الإنجاز اليومية</span></label>'+
-    ck("sh-g",P.g,"نسبة كل مجموعة مهام، مع اسم المجموعة")+ck("sh-gym",P.gym,"عدد جلسات الجم وجولاتها ووقت العمل")+ck("sh-st",P.st,"عدد الخطوات اليومي")+
-    (SH_ERR?'<p class="err" style="margin:0">'+(SH_ERR==="permission-denied"?"قاعدة البيانات لا تسمح بالمشاركة بعد. حدّث قواعد الأمان في لوحة Firebase.":"تعذّر نشر بياناتك ("+esc(SH_ERR)+").")+'</p>':"")+
-    '<span class="lbl">كل واحد يضيف رمز الآخر، وكل واحد يختار ما يشاركه. أسماء المهام والأكل والأوزان والتمارين نفسها لا تُشارك أبداً. الإزالة توقف المشاركة فوراً.</span></div>';
+    (SH_ERR?'<p class="err" style="margin:0">'+(SH_ERR==="permission-denied"?"قاعدة البيانات لا تسمح بالمشاركة بعد. حدّث قواعد الأمان في لوحة Firebase.":"تعذّر نشر نسبتك ("+esc(SH_ERR)+").")+'</p>':"")+
+    '<span class="lbl">كل واحد يضيف رمز الآخر. عندها يرى كل منكما نسبة إنجاز الآخر اليومية وعدد مهامه المجدولة فقط، لا المهام نفسها ولا أي بيانات أخرى. الإزالة توقف المشاركة فوراً.</span></div>';
 }
 function refreshSettings(){const box=$("#sheet-card");if(!sheet.hidden&&box&&box.querySelector("#cmp-form")){const y=box.scrollTop;box.innerHTML=settingsHTML();box.scrollTop=y}}
 function settingsSubmit(fd,form){
@@ -3441,7 +3385,6 @@ document.addEventListener("click",e=>{
     case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
     case "cmpR":S.cmpV.r=b.dataset.r||"7";render();break;
-    case "cmpTab":S.cmpV.tab=b.dataset.t||"all";render();break;
     case "cmpTog":CMP_ON=!CMP_ON;try{localStorage.setItem("dt-cmp",CMP_ON?"1":"0")}catch(er){}render();break;
     case "cmpCopy":{const u=DB&&DB.uid;if(!u)break;const done=()=>{b.textContent="نُسخ ✓";setTimeout(()=>{if(b.isConnected)b.textContent="نسخ"},2000)};
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done).catch(()=>{const c=card.querySelector("code");if(c){const r=document.createRange();r.selectNodeContents(c);const sl=getSelection();sl.removeAllRanges();sl.addRange(r)}});else done();break}
@@ -3543,7 +3486,7 @@ document.addEventListener("change",e=>{
   if(e.target.id==="bc-d"){const k=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&k<=todayK()){S.bc.sel=k;S.bc.msg="";e.target.blur();render(true)}return}
   if(e.target.id==="fs-raw"&&FS){FS.raw=e.target.checked;fsResults();return}
   if(e.target.name==="basis"&&e.target.closest("#cf-form")){const bx=$("#cf-svbox");if(bx)bx.hidden=e.target.value!=="sv";return}
-  if(/^sh-(g|gym|st)$/.test(e.target.name||"")&&e.target.closest("#sheet")){const P=shPref();P[e.target.name.slice(3)]=e.target.checked;S.cmpS=P;saveConfig();SH_LAST="";queueShare();return}
+  if(e.target.name==="cmpadj"){S.cmpV.adj=e.target.value==="1";try{localStorage.setItem("dt-cmpadj",S.cmpV.adj?"1":"0")}catch(er){}render();return}
   if(e.target.name==="navpos"&&e.target.closest("#sheet")){try{localStorage.setItem("dt-navpos",e.target.value)}catch(er){}document.documentElement.classList.toggle("navtop",e.target.value==="top");navH();return}
   if((e.target.name==="pal"||e.target.name==="thm")&&e.target.closest("#sheet")){S.ui[e.target.name]=e.target.value;saveUiLocal();applyTheme();saveConfig();return}
   if(e.target.id==="imp-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
