@@ -1289,11 +1289,13 @@ function todoRow(t,k){
 function openTodo(t){
   openSheet('<h2>تعديل المهمة</h2><form class="f" id="td-form" autocomplete="off"><div class="fld"><label for="td-n">المهمة</label><input id="td-n" name="n" maxlength="80" required value="'+esc(t.name)+'"></div>'+
     '<div class="fld"><label for="td-p">النقاط</label><input id="td-p" name="p" class="ltr" type="number" inputmode="numeric" min="0" max="1000" step="1" value="'+(+t.pts||0)+'" style="max-width:140px"></div>'+
+    '<div class="fld"><label for="td-d">تاريخ الإنجاز</label><input id="td-d" name="d" class="ltr datein" type="date" max="'+todayK()+'" value="'+(t.doneAt||"")+'" style="max-width:200px"><span class="lbl">اتركه فارغاً إن لم تنجزها بعد. نقاطها تُحسب في هذا اليوم.</span></div>'+
     '<p class="lbl" style="margin:0">أُضيفت '+esc(ago(t.created))+(t.doneAt?' · أُنجزت '+esc(fShort(t.doneAt)):"")+'</p>'+
     '<p class="err" id="td-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button>'+(t.doneAt?'<button class="btn" type="button" data-act="tundo" data-id="'+t.id+'">إلغاء الإنجاز</button>':"")+'<button class="btn danger" type="button" data-act="tdel2" data-id="'+t.id+'">حذف المهمة</button></div></form>',fd=>{
     const n=String(fd.get("n")||"").trim(),p=parseInt(fd.get("p")||"0",10),err=$("#td-err");
     if(!n){err.textContent="اكتب اسم المهمة.";err.hidden=false;return}if(!(p>=0&&p<=1000)){err.textContent="النقاط من 0 إلى 1000.";err.hidden=false;return}
-    const c=S.todos[t.id];if(c){c.name=n;c.pts=p;saveTodo(c.id)}closeSheet();render();
+    const dr=String(fd.get("d")||"");if(dr&&!(/^\d{4}-\d{2}-\d{2}$/.test(dr)&&dr<=todayK())){err.textContent="تاريخ الإنجاز لا يكون بعد اليوم.";err.hidden=false;return}
+    const c=S.todos[t.id];if(c){c.name=n;c.pts=p;c.doneAt=dr||null;saveTodo(c.id)}closeSheet();render();
   });
 }
 function todoPanel(k){
@@ -2781,23 +2783,29 @@ S.cmp=[];S.fr={};S.cmpS=null;
 let CMP_ON=false;try{CMP_ON=localStorage.getItem("dt-cmp")==="1"}catch(e){}
 let SH_LAST="",SH_T=null,FR_UNS={},SH_ERR="";
 const FR_CLS=["w","c3","c4","c5"];
-// for the comparison only the day's scheduled fixed tasks count: no pending tasks, no extra unscheduled or weekly tasks, no excused days
+// for the comparison the day's scheduled fixed tasks count, plus pending tasks finished that day (their points are added to what you got and to
+// what was possible, up to half of the day's fixed points so a pile of pending tasks cannot outweigh the day). Extra unscheduled or weekly tasks
+// and excused days stay out.
+const TODO_CAP=0.5;
 function fairDay(k){
-  if(isOff(k))return null;let got=0,max=0,n=0;
+  if(isOff(k))return null;let got=0,max=0,n=0,tp=0;
   S.habits.forEach(h=>{if(!activeOn(h,k)||!isSched(h,k))return;max+=hPts(h);got+=earned(h,k);n++});
-  return max>0?{p:Math.min(100,Math.round(got/max*1000)/10),n:n,m:Math.round(max*10)/10}:null;
+  if(!(max>0))return null;
+  Object.values(S.todos).forEach(t=>{if(t.doneAt===k)tp+=+t.pts||0});
+  const tc=Math.min(tp,max*TODO_CAP);got+=tc;max+=tc;
+  return {p:Math.min(100,Math.round(got/max*1000)/10),n:n,m:Math.round(max*10)/10,t:Math.round(tc*10)/10};
 }
 function dayPct(k){const f=fairDay(k);return f?f.p:null}
 function shareData(){
-  const fk=firstLogKey(),t=todayK(),o={pct:{},pn:{},pm:{}};if(!fk)return o;
-  let k=fk>addD(t,-400)?fk:addD(t,-400);for(;k<=t;k=addD(k,1)){const f=fairDay(k);if(f){o.pct[k]=f.p;o.pn[k]=f.n;o.pm[k]=f.m}}
+  const fk=firstLogKey(),t=todayK(),o={pct:{},pn:{},pm:{},pt:{}};if(!fk)return o;
+  let k=fk>addD(t,-400)?fk:addD(t,-400);for(;k<=t;k=addD(k,1)){const f=fairDay(k);if(f){o.pct[k]=f.p;o.pn[k]=f.n;o.pm[k]=f.m;if(f.t)o.pt[k]=f.t}}
   if(S.chal&&S.chal.length)o.ch=chalShare();
   return o;
 }
 function queueShare(){
   if(!DB||!DB.shareSet||S.mode!=="db")return;
   clearTimeout(SH_T);SH_T=setTimeout(()=>{
-    const readers=S.cmp.map(c=>c.uid),d=Object.assign({readers:readers},readers.length?shareData():{pct:{},pn:{},pm:{}},{updated:new Date().toISOString()}),j=JSON.stringify([d.readers,d.pct,d.pn,d.pm,d.ch||null]);
+    const readers=S.cmp.map(c=>c.uid),d=Object.assign({readers:readers},readers.length?shareData():{pct:{},pn:{},pm:{},pt:{}},{updated:new Date().toISOString()}),j=JSON.stringify([d.readers,d.pct,d.pn,d.pm,d.pt,d.ch||null]);
     if(j===SH_LAST)return;SH_LAST=j;
     DB.shareSet(d).then(()=>{if(SH_ERR){SH_ERR="";refreshSettings()}}).catch(e=>{SH_LAST="";SH_ERR=(e&&e.code)||"err";refreshSettings()});
   },2500);
@@ -2809,7 +2817,7 @@ function watchFriends(){
   const want=new Set(S.cmp.map(c=>c.uid));
   Object.keys(FR_UNS).forEach(u=>{if(!want.has(u)){try{FR_UNS[u]&&FR_UNS[u]()}catch(e){}delete FR_UNS[u];delete S.fr[u]}});
   want.forEach(u=>{if(FR_UNS[u])return;
-    FR_UNS[u]=DB.shareWatch(u,d=>{S.fr[u]=d?{pct:objOr(d.pct)||{},pn:objOr(d.pn),pm:objOr(d.pm),ch:objOr(d.ch),updated:d.updated||""}:{none:true};if((S.tab==="habits"&&CMP_ON)||S.tab==="today"||S.tab==="goals")render();refreshSettings()},
+    FR_UNS[u]=DB.shareWatch(u,d=>{S.fr[u]=d?{pct:objOr(d.pct)||{},pn:objOr(d.pn),pm:objOr(d.pm),pt:objOr(d.pt),ch:objOr(d.ch),updated:d.updated||""}:{none:true};if((S.tab==="habits"&&CMP_ON)||S.tab==="today"||S.tab==="goals")render();refreshSettings()},
       e=>{S.fr[u]={err:(e&&e.code)||"err"};FR_UNS[u]=null;if(S.tab==="habits"&&CMP_ON)render();refreshSettings();setTimeout(()=>{if(FR_UNS[u]===null){delete FR_UNS[u];watchFriends()}},60000)})});
 }
 function frStatus(c){
@@ -2824,9 +2832,9 @@ function frStatus(c){
 S.cmpV={r:"7",adj:(()=>{try{return localStorage.getItem("dt-cmpadj")!=="0"}catch(e){return true}})()};
 const numOk=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(+v);
 function cmpPeople(){
-  const me={name:"أنت",cls:"a",me:true,hasN:true,hasM:true,pct:k=>dayPct(k),n:k=>{const f=fairDay(k);return f?f.n:null},m:k=>{const f=fairDay(k);return f?f.m:null}};
+  const me={name:"أنت",cls:"a",me:true,hasN:true,hasM:true,pct:k=>dayPct(k),n:k=>{const f=fairDay(k);return f?f.n:null},m:k=>{const f=fairDay(k);return f?f.m:null},tp:k=>{const f=fairDay(k);return f?f.t:0},hasT:true};
   return [me].concat(S.cmp.map((c,i)=>{const f=S.fr[c.uid]||{};return {name:c.name,cls:FR_CLS[i%FR_CLS.length],c:c,hasN:!!f.pn,hasM:!!f.pm,
-    pct:k=>f.pct&&numOk(f.pct[k])?+f.pct[k]:null,n:k=>f.pn&&numOk(f.pn[k])?+f.pn[k]:null,m:k=>f.pm&&numOk(f.pm[k])?+f.pm[k]:null}}));
+    pct:k=>f.pct&&numOk(f.pct[k])?+f.pct[k]:null,n:k=>f.pn&&numOk(f.pn[k])?+f.pn[k]:null,m:k=>f.pm&&numOk(f.pm[k])?+f.pm[k]:null,tp:k=>f.pt&&numOk(f.pt[k])?+f.pt[k]:0,hasT:!!f.pt}}));
 }
 function cmpDays(){const t=todayK(),n=+S.cmpV.r||7,ks=[];for(let i=n-1;i>=0;i--)ks.push(addD(t,-i));return ks}
 function cmpTable(people,rows){
@@ -2918,6 +2926,7 @@ function cmpHTML(){
     ["أيام 80% فأكثر",p=>{const c=p.raw.filter(v=>numOk(v)&&v>=80).length;return {v:c,t:String(c)}}],
     ["أفضل يوم",p=>p.ok.length?{v:Math.max.apply(null,p.ok),t:fmt(Math.max.apply(null,p.ok))}:null],
     ["أضعف يوم",p=>p.ok.length?{v:Math.min.apply(null,p.ok),t:fmt(Math.min.apply(null,p.ok))}:null],
+    ["نقاط المهام المعلّقة",p=>{if(!p.hasT)return null;const v=ks.reduce((a,k)=>a+(+p.tp(k)||0),0);return {v:v,t:L(num(v,0))}},null],
     ["متوسط نقاط اليوم",p=>{const ms=p.mm.filter(numOk);return ms.length?{v:avg(ms),t:L(num(avg(ms),0))}:null},null],
     ["متوسط المهام في اليوم",p=>{const ns=p.nn.filter(numOk);return ns.length?{v:avg(ns),t:L(num(avg(ns),1))}:null},null],
     ["أيام بلا نقاط",p=>{const c=n-p.ok.length;return {v:c,t:String(c)}},false]
@@ -2931,7 +2940,7 @@ function cmpHTML(){
     s+='<div class="lbl2" style="margin-top:4px">أسبوعاً بأسبوع</div>'+cmpTable(people,weeks.slice().reverse().map(g=>['من '+esc(fNum(g.w)),p=>{const vs=g.idx.map(i=>p.v[i]).filter(numOk);return vs.length?{v:avg(vs),t:fmt(avg(vs))}:null}]));
   }
   s+='<p class="lbl" style="margin:0">'+(sc.basis?'النتيجة المعدّلة = نسبة الإنجاز × الجذر التربيعي لـ ('+(sc.basis==="m"?"نقاط مهام يومك المجدولة ÷ نقاط صاحب اليوم الأثقل":"عدد مهامك ÷ عدد مهام صاحب المهام الأكثر")+'). فالمهمة الكبيرة تزيد حجم يومك أكثر من الصغيرة. مثال: يوم بـ100 نقطة كله منجز مقابل يوم بـ200 نقطة: 100 × 0.71 = 71، ويوم الـ200 المنجز منه 75% = 75. أيام الفوز تُحسب دائماً بهذه النتيجة. ':'')+
-    'تُحسب فقط المهام الثابتة المجدولة لذلك اليوم. المهام المعلقة، والمهام غير المجدولة والأسبوعية التي تنجزها زيادة، والأيام المعذورة لا تدخل في المقارنة. يوم الفوز لمن كانت نتيجته الأعلى، والتعادل لا يُحسب.</p>';
+    'تُحسب المهام الثابتة المجدولة لذلك اليوم، والمهام المعلّقة التي أنجزتها في ذلك اليوم: نقاطها تُضاف لما جمعته ولما كان ممكناً معاً، بحد أقصى نصف نقاط مهامك الثابتة في اليوم. المهام غير المجدولة والأسبوعية التي تنجزها زيادة، والأيام المعذورة لا تدخل. يوم الفوز لمن كانت نتيجته الأعلى، والتعادل لا يُحسب.</p>';
   s+='<div class="cmpst">'+people.filter(p=>p.c).map(p=>'<span class="lbl"><i class="cmpdot '+p.cls+'"></i> <bdi>'+esc(p.name)+'</bdi>: '+esc(frStatus(p.c))+'</span>').join("")+'</div>';
   return s+'</div>';
 }
