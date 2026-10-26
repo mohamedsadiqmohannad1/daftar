@@ -724,6 +724,28 @@ nav.tabs .in{grid-template-columns:repeat(8,1fr)}
 .cmpst .cmpdot{width:8px;height:8px;display:inline-block}
 #sheet{bottom:auto;height:100%;height:100dvh}
 .sheet-card{max-height:88%;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.match{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:color-mix(in srgb,var(--accent) 6%,var(--surface))}
+.mh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.mscore{display:flex;align-items:center;justify-content:center;gap:14px;font-size:15px}
+.ms{display:flex;align-items:center;gap:8px}
+.ms b{font-size:30px;font-weight:700}
+.mdash{font-size:24px;color:var(--muted)}
+.mlive{text-align:center}
+.mrec{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:14px;border-top:1px solid var(--line);padding-top:8px}
+.mrec>span:first-child{color:var(--muted)}
+.mstk{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--line)}
+.mstk.w{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.mstk.l{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.mhist{display:flex;flex-direction:column;gap:4px}
+.mhist>div{display:grid;grid-template-columns:minmax(0,1fr) auto 64px;gap:10px;align-items:center;font-size:14px}
+.mres{font-size:12px;text-align:center;padding:2px 6px;border-radius:999px}
+.mres.w{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.mres.l{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.mres.d,.mres.n{background:var(--line);color:var(--muted)}
+.mstrip{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;width:100%;text-align:start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;color:var(--ink)}
+.mstrip .mst{font-weight:600;font-size:14px}
+.mstrip .msc{display:flex;align-items:center;gap:6px;font-size:18px;font-weight:700;grid-row:1/span 2;grid-column:2}
+.mstrip .lbl{grid-column:1}
 </style>
 </head>
 <body>
@@ -1287,8 +1309,8 @@ function vToday(){
   const summary='<section class="panel summary">'+ring(p)+'<div style="min-width:0"><div class="big"><span class="num">'+num(sc.got,1)+'</span> <span class="small muted" style="font-family:var(--f-body)">نقطة من</span> <span class="num">'+num(sc.max,1)+'</span></div><div class="muted small">'+
     (off?"يوم معذور: المهام الثابتة لا تُحسب فائتة، وما تنجزه يُضاف لنقاطك.":sc.max?(sc.got>=sc.max?"جمعت كل نقاط هذا اليوم":"مجموع نقاط المهام المنجزة لهذا اليوم"):"لا مهام لهذا اليوم بعد")+'</div></div>'+
     '</section>';
-  let main;
-  if(!live.length)main=summary+vEmpty();
+  let main;const ms=matchStrip();
+  if(!live.length)main=summary+ms+vEmpty();
   else{
     const hidden=x=>HIDE_DONE&&(isDone(x,k)||(isWk(x)&&weekCount(x,weekStartK(k))>=+x.wk));
     let nHidden=0;
@@ -1303,7 +1325,7 @@ function vToday(){
         '<div class="gbar"><i style="width:'+(gs.max?Math.round(Math.min(1,gs.got/gs.max)*100):0)+'%"></i></div>'+
         (closed?"":vis.length?'<div class="hlist">'+vis.map(x=>taskRow(x,k)).join("")+'</div>':'<p class="muted small" style="margin:0">'+(items.length?"كل مهام هذه المجموعة منجزة.":"لا مهام في هذه المجموعة بعد.")+'</p>')+'</div>'}).join("");
     const anyOff=live.some(x=>!isSched(x,k)&&!isWk(x));
-    main=summary+'<section class="sec"><div class="sec-h" style="flex-wrap:wrap"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="hideDone" aria-pressed="'+HIDE_DONE+'">'+(HIDE_DONE?"إظهار المنجز"+(nHidden?" ("+nHidden+")":""):"إخفاء المنجز")+'</button><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div><div class="tl">'+blocks+'</div>'+
+    main=summary+ms+'<section class="sec"><div class="sec-h" style="flex-wrap:wrap"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="hideDone" aria-pressed="'+HIDE_DONE+'">'+(HIDE_DONE?"إظهار المنجز"+(nHidden?" ("+nHidden+")":""):"إخفاء المنجز")+'</button><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div><div class="tl">'+blocks+'</div>'+
       (anyOff&&!off?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'<p class="lbl mob-only" style="margin:0">لتعديل مهمة أو حذفها اضغط عليها ضغطة مطوّلة. المجموعة المكتملة تنطوي، واضغط اسمها لفتحها.</p></section>';
   }
   const side=todoPanel(k)+actHTML(k);
@@ -2736,7 +2758,7 @@ function vNutAn(){
 }
 
 /* ---------- comparison with friends ---------- */
-// Each account publishes shares/{uid} = {readers:[uids it accepted], pct:{date: % of the day's scheduled points}, pn:{date: number of scheduled tasks}}.
+// Each account publishes shares/{uid} = {readers:[uids it accepted], pct:{date: % of the day's scheduled points}, pn:{date: scheduled tasks}, pm:{date: scheduled points}}.
 // Task names and everything else stay private. A friend's sheet is readable once he has added your code, and you see his once you add his.
 S.cmp=[];S.fr={};S.cmpS=null;
 let CMP_ON=false;try{CMP_ON=localStorage.getItem("dt-cmp")==="1"}catch(e){}
@@ -2746,18 +2768,18 @@ const FR_CLS=["w","c3","c4","c5"];
 function fairDay(k){
   if(isOff(k))return null;let got=0,max=0,n=0;
   S.habits.forEach(h=>{if(!activeOn(h,k)||!isSched(h,k))return;max+=hPts(h);got+=earned(h,k);n++});
-  return max>0?{p:Math.min(100,Math.round(got/max*1000)/10),n:n}:null;
+  return max>0?{p:Math.min(100,Math.round(got/max*1000)/10),n:n,m:Math.round(max*10)/10}:null;
 }
 function dayPct(k){const f=fairDay(k);return f?f.p:null}
 function shareData(){
-  const fk=firstLogKey(),t=todayK(),o={pct:{},pn:{}};if(!fk)return o;
-  let k=fk>addD(t,-400)?fk:addD(t,-400);for(;k<=t;k=addD(k,1)){const f=fairDay(k);if(f){o.pct[k]=f.p;o.pn[k]=f.n}}
+  const fk=firstLogKey(),t=todayK(),o={pct:{},pn:{},pm:{}};if(!fk)return o;
+  let k=fk>addD(t,-400)?fk:addD(t,-400);for(;k<=t;k=addD(k,1)){const f=fairDay(k);if(f){o.pct[k]=f.p;o.pn[k]=f.n;o.pm[k]=f.m}}
   return o;
 }
 function queueShare(){
   if(!DB||!DB.shareSet||S.mode!=="db")return;
   clearTimeout(SH_T);SH_T=setTimeout(()=>{
-    const readers=S.cmp.map(c=>c.uid),d=Object.assign({readers:readers},readers.length?shareData():{pct:{},pn:{}},{updated:new Date().toISOString()}),j=JSON.stringify([d.readers,d.pct,d.pn]);
+    const readers=S.cmp.map(c=>c.uid),d=Object.assign({readers:readers},readers.length?shareData():{pct:{},pn:{},pm:{}},{updated:new Date().toISOString()}),j=JSON.stringify([d.readers,d.pct,d.pn,d.pm]);
     if(j===SH_LAST)return;SH_LAST=j;
     DB.shareSet(d).then(()=>{if(SH_ERR){SH_ERR="";refreshSettings()}}).catch(e=>{SH_LAST="";SH_ERR=(e&&e.code)||"err";refreshSettings()});
   },2500);
@@ -2769,7 +2791,7 @@ function watchFriends(){
   const want=new Set(S.cmp.map(c=>c.uid));
   Object.keys(FR_UNS).forEach(u=>{if(!want.has(u)){try{FR_UNS[u]&&FR_UNS[u]()}catch(e){}delete FR_UNS[u];delete S.fr[u]}});
   want.forEach(u=>{if(FR_UNS[u])return;
-    FR_UNS[u]=DB.shareWatch(u,d=>{S.fr[u]=d?{pct:objOr(d.pct)||{},pn:objOr(d.pn),updated:d.updated||""}:{none:true};if(S.tab==="habits"&&CMP_ON)render();refreshSettings()},
+    FR_UNS[u]=DB.shareWatch(u,d=>{S.fr[u]=d?{pct:objOr(d.pct)||{},pn:objOr(d.pn),pm:objOr(d.pm),updated:d.updated||""}:{none:true};if((S.tab==="habits"&&CMP_ON)||S.tab==="today")render();refreshSettings()},
       e=>{S.fr[u]={err:(e&&e.code)||"err"};FR_UNS[u]=null;if(S.tab==="habits"&&CMP_ON)render();refreshSettings();setTimeout(()=>{if(FR_UNS[u]===null){delete FR_UNS[u];watchFriends()}},60000)})});
 }
 function frStatus(c){
@@ -2784,9 +2806,9 @@ function frStatus(c){
 S.cmpV={r:"7",adj:(()=>{try{return localStorage.getItem("dt-cmpadj")!=="0"}catch(e){return true}})()};
 const numOk=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(+v);
 function cmpPeople(){
-  const me={name:"أنت",cls:"a",me:true,hasN:true,pct:k=>dayPct(k),n:k=>{const f=fairDay(k);return f?f.n:null}};
-  return [me].concat(S.cmp.map((c,i)=>{const f=S.fr[c.uid]||{};return {name:c.name,cls:FR_CLS[i%FR_CLS.length],c:c,hasN:!!f.pn,
-    pct:k=>f.pct&&numOk(f.pct[k])?+f.pct[k]:null,n:k=>f.pn&&numOk(f.pn[k])?+f.pn[k]:null}}));
+  const me={name:"أنت",cls:"a",me:true,hasN:true,hasM:true,pct:k=>dayPct(k),n:k=>{const f=fairDay(k);return f?f.n:null},m:k=>{const f=fairDay(k);return f?f.m:null}};
+  return [me].concat(S.cmp.map((c,i)=>{const f=S.fr[c.uid]||{};return {name:c.name,cls:FR_CLS[i%FR_CLS.length],c:c,hasN:!!f.pn,hasM:!!f.pm,
+    pct:k=>f.pct&&numOk(f.pct[k])?+f.pct[k]:null,n:k=>f.pn&&numOk(f.pn[k])?+f.pn[k]:null,m:k=>f.pm&&numOk(f.pm[k])?+f.pm[k]:null}}));
 }
 function cmpDays(){const t=todayK(),n=+S.cmpV.r||7,ks=[];for(let i=n-1;i>=0;i--)ks.push(addD(t,-i));return ks}
 function cmpTable(people,rows){
@@ -2796,31 +2818,88 @@ function cmpTable(people,rows){
       const best=vs.length>1&&hb!==null?(hb===false?Math.min.apply(null,vs):Math.max.apply(null,vs)):null,tie=vs.filter(v=>v===best).length>1;
       return '<div class="ctr"><span class="ctl">'+r[0]+'</span>'+cells.map(c=>'<span class="num'+(best!==null&&!tie&&c&&+c.v===best?" best":"")+'">'+(c&&c.t!=null?c.t:"–")+'</span>').join("")+'</div>'}).join("")+'</div>';
 }
-// adjusted score: the % scaled by the square root of the day's load relative to the busiest of you,
-// halfway between the plain % (unfair to the one with more tasks) and the count of tasks done (unfair to the one with fewer)
+// adjusted score: the % scaled by the square root of the day's load (sum of the scheduled tasks' points) relative to the heaviest day among you,
+// halfway between the plain % (unfair to the one with the heavier day) and the points earned (unfair to the one with the lighter day).
+// Wins always use the adjusted score, whatever view is chosen; the task count is the fallback until a friend's app publishes points.
 function cmpScores(people,ks){
-  const adj=S.cmpV.adj&&people.every(p=>p.hasN);
-  people.forEach(p=>{p.raw=ks.map(k=>p.pct(k));p.nn=ks.map(k=>p.n(k));p.v=[]});
-  ks.forEach((k,i)=>{const ns=people.map(p=>p.nn[i]).filter(numOk),mx=ns.length?Math.max.apply(null,ns):0;
-    people.forEach(p=>{const v=p.raw[i];p.v[i]=!numOk(v)?null:adj&&numOk(p.nn[i])&&mx>0?Math.round(v*Math.sqrt(p.nn[i]/mx)*10)/10:v})});
-  people.forEach(p=>{p.ok=p.v.filter(numOk)});
-  return adj;
+  const basis=people.every(p=>p.hasM)?"m":people.every(p=>p.hasN)?"n":"";
+  people.forEach(p=>{p.raw=ks.map(k=>p.pct(k));p.nn=ks.map(k=>p.n(k));p.mm=ks.map(k=>p.m(k));p.a=[]});
+  ks.forEach((k,i)=>{const L2=p=>basis==="m"?p.mm[i]:basis==="n"?p.nn[i]:null,ls=people.map(L2).filter(numOk),mx=ls.length?Math.max.apply(null,ls):0;
+    people.forEach(p=>{const v=p.raw[i],l=L2(p);p.a[i]=!numOk(v)?null:basis&&numOk(l)&&mx>0?Math.round(v*Math.sqrt(l/mx)*10)/10:v})});
+  const adj=S.cmpV.adj&&!!basis;
+  people.forEach(p=>{p.v=adj?p.a:p.raw;p.ok=p.v.filter(numOk)});
+  return {adj:adj,basis:basis};
+}
+/* weekly match: Saturday to Friday, decided by the average adjusted score of the week */
+function pairDay(me,fr,k){
+  const basis=fr.hasM?"m":fr.hasN?"n":"",a=me.pct(k),b=fr.pct(k);
+  const la=basis==="m"?me.m(k):basis==="n"?me.n(k):null,lb=basis==="m"?fr.m(k):basis==="n"?fr.n(k):null,mx=Math.max(numOk(la)?la:0,numOk(lb)?lb:0);
+  const adj=(v,l)=>!numOk(v)?null:basis&&numOk(l)&&mx>0?v*Math.sqrt(l/mx):v;
+  return [adj(a,la),adj(b,lb)];
+}
+const MIN_DAYS=3;
+function matchWeeks(me,fr){
+  const t=todayK(),cw=weekStartK(t),f=S.fr[fr.c.uid]||{},fks=Object.keys(f.pct||{}).sort(),mk=firstLogKey();
+  if(!fks.length||!mk)return null;
+  let w=weekStartK(fks[0]>mk?fks[0]:mk);if(w<addD(cw,-7*52))w=addD(cw,-7*52);
+  const out=[];
+  for(;w<=cw;w=addD(w,7)){const sa=[],sb=[];let days=0;
+    for(let i=0;i<7;i++){const k=addD(w,i);if(k>t)break;days++;const x=pairDay(me,fr,k);if(numOk(x[0]))sa.push(x[0]);if(numOk(x[1]))sb.push(x[1])}
+    const A=sa.length?avg(sa):null,B=sb.length?avg(sb):null,live=w===cw,ok=sa.length>=MIN_DAYS&&sb.length>=MIN_DAYS;
+    out.push({w:w,A:A,B:B,na:sa.length,nb:sb.length,live:live,left:live?6-diffD(w,t):0,res:ok?(Math.abs(A-B)<0.5?"d":A>B?"w":"l"):null});
+  }
+  return out;
+}
+function matchRecord(ws){
+  const done=ws.filter(x=>!x.live&&x.res),r={w:0,l:0,d:0,streak:0,sres:null};
+  done.forEach(x=>{r[x.res]++});
+  for(let i=done.length-1;i>=0;i--){const x=done[i];if(x.res==="d")break;if(r.sres===null)r.sres=x.res;if(x.res!==r.sres)break;r.streak++}
+  return r;
+}
+const rnd=v=>numOk(v)?Math.round(v):"–";
+function liveLine(cur,fname){
+  if(!cur||!numOk(cur.A)||!numOk(cur.B))return "المباراة تبدأ حين يسجّل كل منكما نقاطاً هذا الأسبوع.";
+  const d=Math.round(cur.A)-Math.round(cur.B),left=cur.left===0?"آخر يوم في الأسبوع":"باقي "+cur.left+" "+(cur.left===1?"يوم":cur.left===2?"يومان":"أيام");
+  return (d>0?"متقدّم بـ"+d:d<0?"متأخر بـ"+(-d):"متعادلان")+" · "+left+(cur.na<MIN_DAYS||cur.nb<MIN_DAYS?" · تحتاج المباراة "+MIN_DAYS+" أيام مسجلة لكل منكما":"");
+}
+function matchHTML(people){
+  const me=people[0];
+  return people.slice(1).map(fr=>{
+    const ws=matchWeeks(me,fr);if(!ws||!ws.length)return "";
+    const cur=ws[ws.length-1],rec=matchRecord(ws),hist=ws.filter(x=>!x.live).slice(-8).reverse();
+    const badge=x=>x.res==="w"?'<span class="mres w">فوز</span>':x.res==="l"?'<span class="mres l">خسارة</span>':x.res==="d"?'<span class="mres d">تعادل</span>':'<span class="mres n">لا مباراة</span>';
+    return '<div class="match"><div class="mh"><b>مباراة الأسبوع مع <bdi>'+esc(fr.name)+'</bdi></b><span class="lbl">من '+esc(fNum(cur.w))+' إلى '+esc(fNum(addD(cur.w,6)))+'</span></div>'+
+      '<div class="mscore"><span class="ms a"><i class="cmpdot a"></i>أنت <b class="num">'+rnd(cur.A)+'</b></span><span class="mdash">–</span><span class="ms"><b class="num">'+rnd(cur.B)+'</b> <bdi>'+esc(fr.name)+'</bdi><i class="cmpdot '+fr.cls+'"></i></span></div>'+
+      '<div class="lbl mlive">'+esc(liveLine(cur,fr.name))+'</div>'+
+      '<div class="mrec"><span>السجل</span><b class="num">أنت '+rec.w+'</b><b class="num">'+esc(fr.name)+' '+rec.l+'</b>'+(rec.d?'<span class="num">تعادل '+rec.d+'</span>':"")+
+        (rec.streak>=2?'<span class="mstk '+rec.sres+'">'+(rec.sres==="w"?"فزت آخر "+rec.streak+" أسابيع":"خسرت آخر "+rec.streak+" أسابيع")+'</span>':"")+'</div>'+
+      (hist.length?'<div class="mhist">'+hist.map(x=>'<div><span class="lbl">من '+esc(fNum(x.w))+'</span><span class="num">'+rnd(x.A)+' – '+rnd(x.B)+'</span>'+badge(x)+'</div>').join("")+'</div>':"")+
+      '</div>'}).join("");
+}
+function matchStrip(){
+  if(!S.cmp.length||S.mode!=="db")return "";
+  const people=cmpPeople(),me=people[0];
+  const rows=people.slice(1).map(fr=>{const ws=matchWeeks(me,fr);if(!ws||!ws.length)return "";const cur=ws[ws.length-1];
+    return '<button class="mstrip" data-act="goCmp"><span class="mst">مباراة الأسبوع مع <bdi>'+esc(fr.name)+'</bdi></span><span class="msc num"><i class="cmpdot a"></i>'+rnd(cur.A)+' – '+rnd(cur.B)+'<i class="cmpdot '+fr.cls+'"></i></span><span class="lbl">'+esc(liveLine(cur,fr.name))+'</span></button>'}).join("");
+  return rows;
 }
 function cmpHTML(){
   if(!S.cmp.length)return '<div class="cmpbox"><p class="small" style="margin:0">لم تضف أحداً للمقارنة بعد. من الإعدادات (زر الترس) انسخ رمزك وأرسله لصديقك، وأضف رمزه عندك.</p><div class="row"><button class="btn sm" data-act="settings">فتح الإعدادات</button></div></div>';
-  const people=cmpPeople(),ks=cmpDays(),n=ks.length,adj=cmpScores(people,ks),unit=adj?"":"%",fmt=v=>L(Math.round(v)+unit);
-  const wins=people.map(()=>0);ks.forEach((k,i)=>{const vs=people.map(p=>p.v[i]);if(vs.filter(numOk).length<2)return;const mx=Math.max.apply(null,vs.filter(numOk)),w=vs.map((v,j)=>numOk(v)&&v===mx?j:-1).filter(j=>j>=0);if(w.length===1)wins[w[0]]++});
+  const people=cmpPeople(),ks=cmpDays(),n=ks.length,sc=cmpScores(people,ks),adj=sc.adj,unit=adj?"":"%",fmt=v=>L(Math.round(v)+unit);
+  const wins=people.map(()=>0);ks.forEach((k,i)=>{const vs=people.map(p=>p.a[i]);if(vs.filter(numOk).length<2)return;const mx=Math.max.apply(null,vs.filter(numOk)),w=vs.map((v,j)=>numOk(v)&&v===mx?j:-1).filter(j=>j>=0);if(w.length===1)wins[w[0]]++});
   let s='<div class="cmpbox"><div class="sec-h" style="flex-wrap:wrap"><h3 style="font-size:16px;font-weight:600">المقارنة</h3><div class="rng" role="group" aria-label="الفترة">'+[["7","أسبوع"],["14","أسبوعان"],["30","شهر"],["90","3 أشهر"]].map(r=>'<button data-act="cmpR" data-r="'+r[0]+'" class="'+(S.cmpV.r===r[0]?"on":"")+'" aria-pressed="'+(S.cmpV.r===r[0])+'">'+r[1]+'</button>').join("")+'</div></div>';
+  s+=matchHTML(people);
   s+='<div class="seg2 cmpb" role="radiogroup" aria-label="طريقة الحساب"><label><input type="radio" name="cmpadj" value="1"'+(S.cmpV.adj?" checked":"")+'><span>النسبة مع عدد المهام</span></label><label><input type="radio" name="cmpadj" value="0"'+(S.cmpV.adj?"":" checked")+'><span>النسبة فقط</span></label></div>';
-  if(S.cmpV.adj&&!adj)s+='<p class="small" style="margin:0">عدد مهام صديقك يصل بعد أن يفتح النسخة الجديدة من البرنامج، وإلى ذلك الحين تُعرض النسبة فقط.</p>';
-  s+='<div class="ctoday">'+people.map(p=>{const v=p.v[n-1];return '<div><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi><b class="num">'+(numOk(v)?fmt(v):"–")+'</b>'+(numOk(p.nn[n-1])?'<span class="lbl">'+p.nn[n-1]+' مهمة</span>':"")+'</div>'}).join("")+'<span class="lbl">اليوم حتى الآن</span></div>';
+  if(sc.basis!=="m")s+='<p class="small" style="margin:0">'+(sc.basis==="n"?"نقاط يوم صديقك تصل بعد أن يفتح النسخة الجديدة من البرنامج، وإلى ذلك الحين يُحسب حجم اليوم بعدد المهام.":"حجم يوم صديقك يصل بعد أن يفتح النسخة الجديدة من البرنامج، وإلى ذلك الحين تُحسب النسبة فقط.")+'</p>';
+  s+='<div class="ctoday">'+people.map(p=>{const v=p.v[n-1];return '<div><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi><b class="num">'+(numOk(v)?fmt(v):"–")+'</b>'+(numOk(p.mm[n-1])?'<span class="lbl">'+num(p.mm[n-1],0)+' نقطة</span>':numOk(p.nn[n-1])?'<span class="lbl">'+p.nn[n-1]+' مهمة</span>':"")+'</div>'}).join("")+'<span class="lbl">اليوم حتى الآن</span></div>';
   s+=cmpTable(people,[
     [adj?"متوسط النتيجة":"متوسط النسبة",p=>p.ok.length?{v:avg(p.ok),t:fmt(avg(p.ok))}:null],
-    ["أيام الفوز",p=>{const i=people.indexOf(p);return {v:wins[i],t:wins[i]+" من "+n}}],
+    ["أيام الفوز (بالنتيجة المعدّلة)",p=>{const i=people.indexOf(p);return {v:wins[i],t:wins[i]+" من "+n}}],
     ["أيام 100%",p=>{const c=p.raw.filter(v=>numOk(v)&&v>=99.95).length;return {v:c,t:String(c)}}],
     ["أيام 80% فأكثر",p=>{const c=p.raw.filter(v=>numOk(v)&&v>=80).length;return {v:c,t:String(c)}}],
     ["أفضل يوم",p=>p.ok.length?{v:Math.max.apply(null,p.ok),t:fmt(Math.max.apply(null,p.ok))}:null],
     ["أضعف يوم",p=>p.ok.length?{v:Math.min.apply(null,p.ok),t:fmt(Math.min.apply(null,p.ok))}:null],
+    ["متوسط نقاط اليوم",p=>{const ms=p.mm.filter(numOk);return ms.length?{v:avg(ms),t:L(num(avg(ms),0))}:null},null],
     ["متوسط المهام في اليوم",p=>{const ns=p.nn.filter(numOk);return ns.length?{v:avg(ns),t:L(num(avg(ns),1))}:null},null],
     ["أيام بلا نقاط",p=>{const c=n-p.ok.length;return {v:c,t:String(c)}},false]
   ]);
@@ -2832,7 +2911,7 @@ function cmpHTML(){
     const weeks=[];ks.forEach((k,i)=>{const w=weekStartK(k);let g=weeks[weeks.length-1];if(!g||g.w!==w){g={w:w,idx:[]};weeks.push(g)}g.idx.push(i)});
     s+='<div class="lbl2" style="margin-top:4px">أسبوعاً بأسبوع</div>'+cmpTable(people,weeks.slice().reverse().map(g=>['من '+esc(fNum(g.w)),p=>{const vs=g.idx.map(i=>p.v[i]).filter(numOk);return vs.length?{v:avg(vs),t:fmt(avg(vs))}:null}]));
   }
-  s+='<p class="lbl" style="margin:0">'+(adj?'النتيجة = نسبة الإنجاز × الجذر التربيعي لـ (عدد مهامك ÷ عدد مهام صاحب المهام الأكثر في ذلك اليوم). مثال: 20 مهمة كلها منجزة مقابل 40 مهمة: 100 × 0.71 = 71، و40 مهمة منجز منها 30 = 75. ':'')+
+  s+='<p class="lbl" style="margin:0">'+(sc.basis?'النتيجة المعدّلة = نسبة الإنجاز × الجذر التربيعي لـ ('+(sc.basis==="m"?"نقاط مهام يومك المجدولة ÷ نقاط صاحب اليوم الأثقل":"عدد مهامك ÷ عدد مهام صاحب المهام الأكثر")+'). فالمهمة الكبيرة تزيد حجم يومك أكثر من الصغيرة. مثال: يوم بـ100 نقطة كله منجز مقابل يوم بـ200 نقطة: 100 × 0.71 = 71، ويوم الـ200 المنجز منه 75% = 75. أيام الفوز تُحسب دائماً بهذه النتيجة. ':'')+
     'تُحسب فقط المهام الثابتة المجدولة لذلك اليوم. المهام المعلقة، والمهام غير المجدولة والأسبوعية التي تنجزها زيادة، والأيام المعذورة لا تدخل في المقارنة. يوم الفوز لمن كانت نتيجته الأعلى، والتعادل لا يُحسب.</p>';
   s+='<div class="cmpst">'+people.filter(p=>p.c).map(p=>'<span class="lbl"><i class="cmpdot '+p.cls+'"></i> <bdi>'+esc(p.name)+'</bdi>: '+esc(frStatus(p.c))+'</span>').join("")+'</div>';
   return s+'</div>';
@@ -3384,6 +3463,7 @@ document.addEventListener("click",e=>{
     case "memClearVal":setHappy(S.mem.sel,null);render(true);break;
     case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
+    case "goCmp":S.tab="habits";CMP_ON=true;try{localStorage.setItem("dt-tab","habits");localStorage.setItem("dt-cmp","1")}catch(er){}render(true);setTimeout(()=>{const x=$(".cmpbox");if(x)x.scrollIntoView({block:"start"})},50);break;
     case "cmpR":S.cmpV.r=b.dataset.r||"7";render();break;
     case "cmpTog":CMP_ON=!CMP_ON;try{localStorage.setItem("dt-cmp",CMP_ON?"1":"0")}catch(er){}render();break;
     case "cmpCopy":{const u=DB&&DB.uid;if(!u)break;const done=()=>{b.textContent="نُسخ ✓";setTimeout(()=>{if(b.isConnected)b.textContent="نسخ"},2000)};
