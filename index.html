@@ -1283,14 +1283,14 @@ function migrateX(){ // older "today only" tasks become pending tasks
 function todoRow(t,k){
   const on=!!t.doneAt;
   return '<div class="xrow"><button class="hrow'+(on?" on":"")+'" data-act="tdo" data-id="'+t.id+'" aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+esc(t.name)+'</span>'+
-    '<span class="st">'+(on?"أُنجزت "+esc(ago(parse(t.doneAt).toISOString()))+" · ":"")+'أُضيفت '+esc(ago(t.created))+'</span></span>'+(+t.pts?ptsTag(+t.pts):"")+'</button>'+
+    '<span class="st">أُضيفت '+esc(fShort(keyOf(new Date(t.created))))+(on?" · أُنجزت "+esc(fShort(t.doneAt)):"")+'</span></span>'+(+t.pts?ptsTag(+t.pts):"")+'</button>'+
     '<button class="iconbtn xdel" data-act="tedit" data-id="'+t.id+'" aria-label="تعديل المهمة">'+ICON.edit+'</button></div>';
 }
 function openTodo(t){
   openSheet('<h2>تعديل المهمة</h2><form class="f" id="td-form" autocomplete="off"><div class="fld"><label for="td-n">المهمة</label><input id="td-n" name="n" maxlength="80" required value="'+esc(t.name)+'"></div>'+
     '<div class="fld"><label for="td-p">النقاط</label><input id="td-p" name="p" class="ltr" type="number" inputmode="numeric" min="0" max="1000" step="1" value="'+(+t.pts||0)+'" style="max-width:140px"></div>'+
     '<div class="fld"><label for="td-d">تاريخ الإنجاز</label><input id="td-d" name="d" class="ltr datein" type="date" max="'+todayK()+'" value="'+(t.doneAt||"")+'" style="max-width:200px"><span class="lbl">اتركه فارغاً إن لم تنجزها بعد. نقاطها تُحسب في هذا اليوم.</span></div>'+
-    '<p class="lbl" style="margin:0">أُضيفت '+esc(ago(t.created))+(t.doneAt?' · أُنجزت '+esc(fShort(t.doneAt)):"")+'</p>'+
+    '<p class="lbl" style="margin:0">أُضيفت '+esc(fShort(keyOf(new Date(t.created))))+(t.doneAt?' · أُنجزت '+esc(fShort(t.doneAt)):"")+'</p>'+
     '<p class="err" id="td-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button>'+(t.doneAt?'<button class="btn" type="button" data-act="tundo" data-id="'+t.id+'">إلغاء الإنجاز</button>':"")+'<button class="btn danger" type="button" data-act="tdel2" data-id="'+t.id+'">حذف المهمة</button></div></form>',fd=>{
     const n=String(fd.get("n")||"").trim(),p=parseInt(fd.get("p")||"0",10),err=$("#td-err");
     if(!n){err.textContent="اكتب اسم المهمة.";err.hidden=false;return}if(!(p>=0&&p<=1000)){err.textContent="النقاط من 0 إلى 1000.";err.hidden=false;return}
