@@ -1065,7 +1065,7 @@ async function doAuth(kind){
 // frequency: fixed weekdays (h.days) or N times per week (h.wk)
 const liveHabits=()=>S.habits.filter(h=>!h.archived);
 const hStart=h=>h.created||todayK();
-const isQ=h=>!!(h.q&&+h.q.t>0);
+const isQ=h=>!!(h.q&&(+h.q.t>0||h.q.m==="none"));
 const isWk=h=>+h.wk>0;
 const isFl=(h,k)=>!!h.fl&&(!k||k>=h.fl);
 const isOff=k=>!!(S.days[k]&&S.days[k].off);
@@ -1075,6 +1075,7 @@ function frac(h,k){
   if(!entered(h,k))return 0;
   if(!isQ(h))return 1;
   const n=+rawV(h,k),t=+h.q.t;
+  if(h.q.m==="none")return n>0?1:0;
   if(h.q.m==="max")return n<=t?1:Math.max(0,1-(n-t)/t); // full credit under the limit, falls to zero at twice the limit
   return Math.max(0,Math.min(1,n/t));
 }
@@ -1147,7 +1148,7 @@ function schedText(h){
   if(!h.days||!h.days.length||h.days.length===7)return "كل يوم";
   return DAYS_ORDER.filter(d=>h.days.includes(d)).map(d=>DAY_NAME[d]).join("، ");
 }
-const qText=h=>(h.q.m==="max"?"حد أقصى ":"الهدف ")+num(+h.q.t,2)+(h.q.u?" "+h.q.u:"");
+const qText=h=>h.q.m==="none"?"بلا حد"+(h.q.u?" · "+h.q.u:""):(h.q.m==="max"?"حد أقصى ":"الهدف ")+num(+h.q.t,2)+(h.q.u?" "+h.q.u:"");
 
 /* ---------- goal math ---------- */
 function gStats(g){
@@ -1313,7 +1314,7 @@ function taskRow(x,k){
       '<input id="q-'+x.id+'" class="keep ltr qin" type="number" inputmode="decimal" min="0" step="any" value="'+(has?+v:"")+'" placeholder="0" aria-label="الكمية">'+
       '<button class="iconbtn qb" data-act="qstep" data-id="'+x.id+'" data-n="1" aria-label="زيادة">+</button>'+
       '<span class="qt">'+esc(qText(x))+'</span></div>'+
-      '<div class="qbar'+(x.q.m==="max"?" mx":"")+'"><i id="qb-'+x.id+'" style="width:'+Math.round(f*100)+'%"></i></div></div>'+edit+'</div>';
+      (x.q.m==="none"?"":'<div class="qbar'+(x.q.m==="max"?" mx":"")+'"><i id="qb-'+x.id+'" style="width:'+Math.round(f*100)+'%"></i></div>')+'</div>'+edit+'</div>';
   }
   return '<div class="xrow"><button class="hrow'+(on?" on":"")+(dim?" dim":"")+(JUST===x.id?" just":"")+'" data-act="toggle" data-id="'+x.id+'" aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+esc(x.name)+'</span>'+badges.join("")+'</span>'+
     dots7(x,k)+ptsTag(hPts(x))+'</button>'+edit+'</div>';
@@ -1394,13 +1395,14 @@ function vToday(){
   let main;const ms=matchStrip();
   if(!live.length)main=summary+ms+vEmpty();
   else{
-    const hidden=x=>HIDE_DONE&&(isDone(x,k)||(isWk(x)&&weekCount(x,weekStartK(k))>=+x.wk));
+    const qOpen=x=>isQ(x)&&x.q.m==="none";
+    const hidden=x=>HIDE_DONE&&((isDone(x,k)&&!qOpen(x))||(isWk(x)&&weekCount(x,weekStartK(k))>=+x.wk));
     let nHidden=0;
     const blocks=groupedLive().map(bk=>{
       const items=bk.items.slice().sort((p,q)=>((isSched(q,k)||isWk(q)||isFl(q,k))?1:0)-((isSched(p,k)||isWk(p)||isFl(p,k))?1:0));
       const vis=items.filter(h=>!hidden(h));nHidden+=items.length-vis.length;
       const gs=scoreOf(bk.items,k),gid=bk.g?bk.g.id:"",ck=gKey(bk.g),dn=bk.items.filter(h=>isDone(h,k)).length;
-      const full=gs.max>0&&gs.got>=gs.max,autoC=full&&MOB()&&!COLL.has(ck)&&!FOPEN.has(ck+"|"+k),closed=COLL.has(ck)||autoC;
+      const full=gs.max>0&&gs.got>=gs.max,autoC=full&&MOB()&&!bk.items.some(qOpen)&&!COLL.has(ck)&&!FOPEN.has(ck+"|"+k),closed=COLL.has(ck)||autoC;
       return '<div class="grp tli'+(closed?" closed":"")+(full?" full":"")+'" style="--gc:'+gColor(bk.g)+'"><div class="grp-h">'+gToggle(bk.g,closed,autoC)+'<span class="gsc">'+(closed?(full?'<span class="gok">✓</span> ':"")+L(dn+"/"+bk.items.length)+' مهام · ':"")+L(num(gs.got,1)+" / "+num(gs.max,1))+'</span>'+
         (bk.g?'<button class="iconbtn sm2" data-act="editGroup" data-id="'+gid+'" aria-label="تعديل المجموعة">'+ICON.edit+'</button>':"")+
         '<button class="iconbtn sm2" data-act="newHabitIn" data-g="'+gid+'" aria-label="إضافة مهمة إلى هذه المجموعة">+</button></div>'+
@@ -3445,8 +3447,8 @@ function habitForm(h,pg){
   '<div class="fld"><span class="lbl2">نوع المهمة</span><div class="seg2" role="radiogroup"><label><input type="radio" name="kind" value="bin" id="hf-k-bin"'+(q?"":" checked")+'><span>إنجاز</span></label><label><input type="radio" name="kind" value="q" id="hf-k-q"'+(q?" checked":"")+'><span>كمية</span></label></div></div>'+
   '<div id="hf-qbox" class="qbox"'+(q?"":" hidden")+'>'+
     '<div class="fld"><span class="lbl2">طريقة الحساب</span><div class="seg2" role="radiogroup"><label><input type="radio" name="qm" value="min" id="hf-qm-min"'+(!q||q.m!=="max"?" checked":"")+'><span>هدف أدنى</span></label><label><input type="radio" name="qm" value="max" id="hf-qm-max"'+(q&&q.m==="max"?" checked":"")+'><span>حد أقصى</span></label></div>'+
-    '<span class="lbl" id="hf-qhelp">'+(q&&q.m==="max"?"نقاط كاملة إذا بقيت تحت الحد، وتنقص بالنسبة كلما تجاوزته حتى تصبح صفراً عند ضعف الحد.":"النقاط بنسبة ما أنجزته من الهدف: نصف الهدف يعطي نصف النقاط.")+'</span></div>'+
-    '<div class="three"><div class="fld"><label for="hf-qt">الهدف أو الحد</label><input class="ltr" id="hf-qt" name="qt" type="number" step="any" min="0" value="'+(q?q.t:"")+'" placeholder="5"></div>'+
+    '<span class="lbl">اترك خانة الهدف فارغة لتسجيل الكمية فقط: أي كمية أكبر من صفر تعطي النقاط كاملة، بلا هدف أدنى ولا حد أقصى.</span><span class="lbl" id="hf-qhelp">'+(q&&q.m==="max"?"نقاط كاملة إذا بقيت تحت الحد، وتنقص بالنسبة كلما تجاوزته حتى تصبح صفراً عند ضعف الحد.":"النقاط بنسبة ما أنجزته من الهدف: نصف الهدف يعطي نصف النقاط.")+'</span></div>'+
+    '<div class="three"><div class="fld"><label for="hf-qt">الهدف أو الحد (اختياري)</label><input class="ltr" id="hf-qt" name="qt" type="number" step="any" min="0" value="'+(q&&+q.t>0?q.t:"")+'" placeholder="بلا حد"></div>'+
     '<div class="fld"><label for="hf-qu">الوحدة</label><input id="hf-qu" name="qu" maxlength="16" value="'+esc(q?q.u||"":"")+'" placeholder="بطل"></div>'+
     '<div class="fld"><label for="hf-qs">مقدار الزيادة</label><input class="ltr" id="hf-qs" name="qs" type="number" step="any" min="0" value="'+(q?q.s||1:1)+'"></div></div></div>'+
   '<div class="fld"><span class="lbl2">التكرار</span><div class="seg2" role="radiogroup"><label><input type="radio" name="fr" value="days" id="hf-fr-days"'+(wk||(h&&isFl(h))?"":" checked")+'><span>أيام محددة</span></label><label><input type="radio" name="fr" value="wk" id="hf-fr-wk"'+(wk?" checked":"")+'><span>عدد مرات في الأسبوع</span></label><label><input type="radio" name="fr" value="fl" id="hf-fr-fl"'+(h&&isFl(h)?" checked":"")+'><span>بلا يوم محدد</span></label></div></div>'+
@@ -3468,9 +3470,9 @@ function openHabit(h,pg){
     if(!name)return bad("اكتب اسماً للمهمة.");
     if(!Number.isFinite(pts)||pts<1||pts>1000)return bad("النقاط رقم صحيح من 1 إلى 1000.");
     const kind=fd.get("kind"),fr=fd.get("fr");let q=null,wk=0;
-    if(kind==="q"){const qt=parseFloat(fd.get("qt")),qs=parseFloat(fd.get("qs"));
-      if(!Number.isFinite(qt)||qt<=0)return bad("أدخل الهدف أو الحد رقماً أكبر من صفر.");
-      q={t:qt,u:String(fd.get("qu")||"").trim(),m:fd.get("qm")==="max"?"max":"min",s:Number.isFinite(qs)&&qs>0?qs:1}}
+    if(kind==="q"){const raw=String(fd.get("qt")||"").trim(),qt=parseFloat(raw),qs=parseFloat(fd.get("qs"));
+      if(raw&&(!Number.isFinite(qt)||qt<=0))return bad("الهدف أو الحد رقم أكبر من صفر، أو اتركه فارغاً.");
+      q={t:raw?qt:0,u:String(fd.get("qu")||"").trim(),m:raw?(fd.get("qm")==="max"?"max":"min"):"none",s:Number.isFinite(qs)&&qs>0?qs:1}}
     if(fr==="wk"){wk=parseInt(fd.get("wk"),10);if(!Number.isFinite(wk)||wk<1||wk>7)return bad("عدد المرات في الأسبوع من 1 إلى 7.")}
     else if(fr!=="fl"&&!days.length)return bad("اختر يوماً واحداً على الأقل.");
     let gid=String(fd.get("g")||"");
