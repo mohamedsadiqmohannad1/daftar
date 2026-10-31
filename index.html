@@ -797,6 +797,9 @@ body.resting #tbar{top:calc(env(safe-area-inset-top,0px) + var(--resth,72px))}
 .sw-r.done .sw-tbtn svg{fill:none;stroke:currentColor}
 .sw-r.run .sw-tbtn{background:var(--accent);color:#fff}
 .sw-bw{text-align:center;color:var(--muted)}
+.cmpper{margin-top:6px;align-items:center}
+.cmpper .lbl2{margin:0}
+.st.fl{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -1064,6 +1067,7 @@ const liveHabits=()=>S.habits.filter(h=>!h.archived);
 const hStart=h=>h.created||todayK();
 const isQ=h=>!!(h.q&&+h.q.t>0);
 const isWk=h=>+h.wk>0;
+const isFl=(h,k)=>!!h.fl&&(!k||k>=h.fl);
 const isOff=k=>!!(S.days[k]&&S.days[k].off);
 const rawV=(h,k)=>{const d=S.days[k];return d&&d.h?d.h[h.id]:undefined};
 const entered=(h,k)=>{const v=rawV(h,k);if(v===undefined||v===null||v===false)return false;return isQ(h)?Number.isFinite(+v):!!v};
@@ -1078,7 +1082,7 @@ const isDone=(h,k)=>frac(h,k)>=1;
 const hPts=h=>{const p=+h.pts;return Number.isFinite(p)&&p>0?p:10};
 const earned=(h,k)=>Math.round(hPts(h)*frac(h,k)*10)/10;
 function daysOn(h,k){if(Array.isArray(h.dh))for(const e of h.dh)if(e&&k<e.to)return Array.isArray(e.days)?e.days:[];return h.days}
-const isSched=(h,k)=>{if(isWk(h)||isOff(k))return false;const d=daysOn(h,k);return !d||!d.length||d.length===7||d.includes(dow(k))};
+const isSched=(h,k)=>{if(isWk(h)||isFl(h,k)||isOff(k))return false;const d=daysOn(h,k);return !d||!d.length||d.length===7||d.includes(dow(k))};
 function setDays(h,nd,from){
   nd=nd.length===7?[]:nd.slice().sort((a,b)=>a-b);const od=(h.days||[]).slice().sort((a,b)=>a-b);if(JSON.stringify(nd)===JSON.stringify(od))return;
   from=from||todayK();const dh=Array.isArray(h.dh)?h.dh.filter(e=>e&&e.to):[];
@@ -1138,6 +1142,7 @@ function firstLogKey(){
   Object.keys(S.days).forEach(k=>{if(!f||k<f)f=k});return f;
 }
 function schedText(h){
+  if(isFl(h))return "بلا يوم محدد";
   if(isWk(h))return +h.wk+" "+(+h.wk===1?"مرة":+h.wk===2?"مرتان":"مرات")+" في الأسبوع";
   if(!h.days||!h.days.length||h.days.length===7)return "كل يوم";
   return DAYS_ORDER.filter(d=>h.days.includes(d)).map(d=>DAY_NAME[d]).join("، ");
@@ -1295,10 +1300,11 @@ function taskRow(x,k){
   const t=todayK(),on=isDone(x,k),st=curStreak(x),wk=isWk(x),ws=weekStartK(k),wc=wk?weekCount(x,ws):0,wkMet=wk&&wc>=+x.wk&&!on;
   const badges=[];
   if(missedYesterday(x,k))badges.push('<span class="miss">فاتتك أمس</span>');
-  if(wk)badges.push('<span class="st">'+(wkMet?"اكتملت هذا الأسبوع":"هذا الأسبوع")+' <span class="num">'+L(wc+"/"+x.wk)+'</span></span>');
+  if(isFl(x,k))badges.push('<span class="st fl">مرنة'+(()=>{let c=0;for(let i=0;i<30;i++)if(isDone(x,addD(k,-i)))c++;return c?' · <span class="num">'+c+'</span> في 30 يوماً':""})()+'</span>');
+  else if(wk)badges.push('<span class="st">'+(wkMet?"اكتملت هذا الأسبوع":"هذا الأسبوع")+' <span class="num">'+L(wc+"/"+x.wk)+'</span></span>');
   else if(k===t&&st)badges.push('<span class="st">سلسلة <span class="num">'+st+'</span> '+(st===1?"يوم":"أيام")+'</span>');
   const edit='<button class="iconbtn xdel" data-act="editHabit" data-id="'+x.id+'" aria-label="تعديل أو حذف '+esc(x.name)+'">'+ICON.edit+'</button>';
-  const dim=!isSched(x,k)&&!(wk&&!wkMet);
+  const dim=!isSched(x,k)&&!(wk&&!wkMet)&&!isFl(x,k);
   if(isQ(x)){
     const v=rawV(x,k),has=entered(x,k),f=frac(x,k),e=earned(x,k);
     return '<div class="xrow"><div class="hrow qrow'+(on?" on":"")+(dim?" dim":"")+'" id="qr-'+x.id+'"><div class="qtop"><span class="nmw"><span class="nm">'+esc(x.name)+'</span>'+badges.join("")+'</span>'+
@@ -1391,7 +1397,7 @@ function vToday(){
     const hidden=x=>HIDE_DONE&&(isDone(x,k)||(isWk(x)&&weekCount(x,weekStartK(k))>=+x.wk));
     let nHidden=0;
     const blocks=groupedLive().map(bk=>{
-      const items=bk.items.slice().sort((p,q)=>((isSched(q,k)||isWk(q))?1:0)-((isSched(p,k)||isWk(p))?1:0));
+      const items=bk.items.slice().sort((p,q)=>((isSched(q,k)||isWk(q)||isFl(q,k))?1:0)-((isSched(p,k)||isWk(p)||isFl(p,k))?1:0));
       const vis=items.filter(h=>!hidden(h));nHidden+=items.length-vis.length;
       const gs=scoreOf(bk.items,k),gid=bk.g?bk.g.id:"",ck=gKey(bk.g),dn=bk.items.filter(h=>isDone(h,k)).length;
       const full=gs.max>0&&gs.got>=gs.max,autoC=full&&MOB()&&!COLL.has(ck)&&!FOPEN.has(ck+"|"+k),closed=COLL.has(ck)||autoC;
@@ -1400,7 +1406,7 @@ function vToday(){
         '<button class="iconbtn sm2" data-act="newHabitIn" data-g="'+gid+'" aria-label="إضافة مهمة إلى هذه المجموعة">+</button></div>'+
         '<div class="gbar"><i style="width:'+(gs.max?Math.round(Math.min(1,gs.got/gs.max)*100):0)+'%"></i></div>'+
         (closed?"":vis.length?'<div class="hlist">'+vis.map(x=>taskRow(x,k)).join("")+'</div>':'<p class="muted small" style="margin:0">'+(items.length?"كل مهام هذه المجموعة منجزة.":"لا مهام في هذه المجموعة بعد.")+'</p>')+'</div>'}).join("");
-    const anyOff=live.some(x=>!isSched(x,k)&&!isWk(x));
+    const anyOff=live.some(x=>!isSched(x,k)&&!isWk(x)&&!isFl(x,k));
     main=summary+ms+'<section class="sec"><div class="sec-h" style="flex-wrap:wrap"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="hideDone" aria-pressed="'+HIDE_DONE+'">'+(HIDE_DONE?"إظهار المنجز"+(nHidden?" ("+nHidden+")":""):"إخفاء المنجز")+'</button><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div><div class="tl">'+blocks+'</div>'+
       (anyOff&&!off?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'<p class="lbl mob-only" style="margin:0">لتعديل مهمة أو حذفها اضغط عليها ضغطة مطوّلة. المجموعة المكتملة تنطوي، واضغط اسمها لفتحها.</p></section>';
   }
@@ -1417,7 +1423,7 @@ function heat(h){
     return '<div class="heat" aria-label="آخر '+WEEKS+' أسبوعاً">'+s+'</div>';
   });
 }
-S.ga={range:"14"};
+S.ga={range:"30"};
 function groupAnalysis(){
   const t=todayK(),y=addD(t,-1),n=+S.ga.range,a=addD(y,-(n-1)),pa=addD(a,-n),pb=addD(a,-1);
   const sum=(items,from,to)=>{let g=0,m=0;for(let k=from;k<=to;k=addD(k,1)){const s=scoreOf(items,k);g+=s.got;m+=s.max}return m?g/m:NaN};
@@ -1453,8 +1459,9 @@ function vHabits(){
   if(live.length)s+='<div class="heat-legend"><span><i style="background:var(--accent)"></i>منجزة</span><span><i style="background:color-mix(in srgb,var(--accent) 45%,var(--miss))"></i>جزئياً</span><span><i style="background:var(--miss)"></i>فائتة</span><span><i style="background:var(--off);box-shadow:inset 0 0 0 1px var(--line)"></i>غير مجدولة</span><span>كل عمود أسبوع يبدأ بالسبت، والأحدث يميناً</span></div>';
   const card=h=>{const r=hRate(h,30),st=strength(h);
     return '<article class="panel hcard"><div class="hhead"><div><h3>'+esc(h.name)+' '+ptsTag(hPts(h))+'</h3><div class="lbl">'+esc(schedText(h))+(isQ(h)?" · "+esc(qText(h)):"")+' · منذ '+esc(fShort(hStart(h)))+'</div></div><button class="btn sm" data-act="editHabit" data-id="'+h.id+'">تعديل</button></div>'+
+    (isFl(h)?(()=>{const t=todayK(),cnt=n=>{let c=0;for(let i=0;i<n;i++){const d=addD(t,-i);if(d<hStart(h))break;if(isDone(h,d))c++}return c};return '<div class="stats"><div class="stat"><b>'+cnt(7)+'</b><span>مرات في 7 أيام</span></div><div class="stat"><b>'+cnt(30)+'</b><span>مرات في 30 يوماً</span></div><div class="stat"><b>'+cnt(365)+'</b><span>مرات في سنة</span></div></div>'})():
     '<div class="stats"><div class="stat"><b>'+st+'</b><span>القوة</span></div><div class="stat"><b>'+curStreak(h)+'</b><span>السلسلة الحالية'+(isWk(h)?" بالأسابيع":"")+'</span></div><div class="stat"><b>'+(Number.isFinite(r)?L(Math.round(r*100)+"%"):"–")+'</b><span>التزام 30 يوماً</span></div></div>'+
-    '<span class="sbar wide"><i style="width:'+st+'%"></i></span>'+heat(h)+'</article>'};
+    '<span class="sbar wide"><i style="width:'+st+'%"></i></span>')+heat(h)+'</article>'};
   s+=groupedLive().map(bk=>{const closed=COLL.has(gKey(bk.g));return '<section class="sec grp'+(closed?" closed":"")+'"><div class="grp-h">'+gToggle(bk.g,closed)+'<span class="lbl">'+bk.items.length+' '+(bk.items.length===1?"مهمة":"مهام")+'</span>'+
     (bk.g?'<button class="btn sm" data-act="editGroup" data-id="'+bk.g.id+'">تعديل المجموعة</button>':"")+'<button class="btn sm" data-act="newHabitIn" data-g="'+(bk.g?bk.g.id:"")+'">إضافة مهمة</button></div>'+
     (closed?"":bk.items.length?'<div class="cols">'+bk.items.map(card).join("")+'</div>':'<p class="muted small" style="margin:0">لا مهام في هذه المجموعة بعد.</p>')+'</section>'}).join("");
@@ -1519,7 +1526,7 @@ function rangeStartFor(r,has){
   if(r==="all"){let f=null;Object.keys(S.days).forEach(k=>{if(k<=t&&has(S.days[k])&&(!f||k<f))f=k});if(!f||diffD(f,t)<29)f=addD(t,-29);return f}
   return addD(t,-(+r-1));
 }
-const defRange=()=>window.innerWidth<600?"30":"90";
+const defRange=()=>"30";
 
 /* generic interactive daily curve: o={st,n,pts:[{i,k,v,mark}],yMin,yMax,yTicks,zero,area,faint:[[i,v]],avg:[[i,v]],sel,tip(p),onPick(k),empty,thin} */
 function curve(box,o){
@@ -2884,7 +2891,7 @@ const FR_CLS=["w","c3","c4","c5"];
 const TODO_CAP=0.5;
 function fairDay(k){
   if(isOff(k))return null;let got=0,max=0,n=0,tp=0;
-  S.habits.forEach(h=>{if(!activeOn(h,k)||!isSched(h,k))return;max+=hPts(h);got+=earned(h,k);n++});
+  S.habits.forEach(h=>{if(!activeOn(h,k))return;if(typeof isFl==="function"&&isFl(h,k)){tp+=earned(h,k);return}if(!isSched(h,k))return;max+=hPts(h);got+=earned(h,k);n++});
   if(!(max>0))return null;
   Object.values(S.todos).forEach(t=>{if(t.doneAt===k)tp+=+t.pts||0});
   const tc=Math.min(tp,max*TODO_CAP);got+=tc;max+=tc;
@@ -2931,6 +2938,8 @@ function cmpPeople(){
   return [me].concat(S.cmp.map((c,i)=>{const f=S.fr[c.uid]||{};return {name:c.name,cls:FR_CLS[i%FR_CLS.length],c:c,hasN:!!f.pn,hasM:!!f.pm,
     pct:k=>f.pct&&numOk(f.pct[k])?+f.pct[k]:null,n:k=>f.pn&&numOk(f.pn[k])?+f.pn[k]:null,m:k=>f.pm&&numOk(f.pm[k])?+f.pm[k]:null,tp:k=>f.pt&&numOk(f.pt[k])?+f.pt[k]:0,hasT:!!f.pt}}));
 }
+const AR_MON=["كانون الثاني","شباط","آذار","نيسان","أيار","حزيران","تموز","آب","أيلول","تشرين الأول","تشرين الثاني","كانون الأول"];
+const fMon=k=>AR_MON[+k.slice(5,7)-1]+" "+k.slice(0,4);
 function cmpDays(){const t=todayK(),n=+S.cmpV.r||7,ks=[];for(let i=n-1;i>=0;i--)ks.push(addD(t,-i));return ks}
 function cmpTable(people,rows){
   // rows: [label, fn(person) -> {v, t}, true = higher is better, false = lower is better, null = no winner]
@@ -3007,22 +3016,24 @@ function matchStrip(){
 }
 function cmpHTML(){
   if(!S.cmp.length)return '<div class="cmpbox"><p class="small" style="margin:0">لم تضف أحداً للمقارنة بعد. من الإعدادات (زر الترس) انسخ رمزك وأرسله لصديقك، وأضف رمزه عندك.</p><div class="row"><button class="btn sm" data-act="settings">فتح الإعدادات</button></div></div>';
-  const people=cmpPeople(),ks=cmpDays(),n=ks.length,sc=cmpScores(people,ks),adj=sc.adj,unit=adj?"":"%",fmt=v=>L(Math.round(v)+unit);
-  const wins=people.map(()=>0);ks.forEach((k,i)=>{const vs=people.map(p=>p.a[i]);if(vs.filter(numOk).length<2)return;const mx=Math.max.apply(null,vs.filter(numOk)),w=vs.map((v,j)=>numOk(v)&&v===mx?j:-1).filter(j=>j>=0);if(w.length===1)wins[w[0]]++});
-  let s='<div class="cmpbox"><div class="sec-h" style="flex-wrap:wrap"><h3 style="font-size:16px;font-weight:600">المقارنة</h3><div class="rng" role="group" aria-label="الفترة">'+[["7","أسبوع"],["14","أسبوعان"],["30","شهر"],["90","3 أشهر"]].map(r=>'<button data-act="cmpR" data-r="'+r[0]+'" class="'+(S.cmpV.r===r[0]?"on":"")+'" aria-pressed="'+(S.cmpV.r===r[0])+'">'+r[1]+'</button>').join("")+'</div></div>';
+  const people=cmpPeople(),ks0=cmpDays(),i0=Math.min(ks0.length-1,Math.max(0,ks0.findIndex(k=>people.some(p=>numOk(p.pct(k)))))),ks=ks0.slice(i0),n=ks.length,sc=cmpScores(people,ks),adj=sc.adj,unit=adj?"":"%",fmt=v=>L(Math.round(v)+unit);
+  const wins=people.map(()=>0);let played=0;ks.forEach((k,i)=>{const vs=people.map(p=>p.a[i]);if(vs.filter(numOk).length<2)return;played++;const mx=Math.max.apply(null,vs.filter(numOk)),w=vs.map((v,j)=>numOk(v)&&v===mx?j:-1).filter(j=>j>=0);if(w.length===1)wins[w[0]]++});
+  let s='<div class="cmpbox"><div class="sec-h" style="flex-wrap:wrap"><h3 style="font-size:16px;font-weight:600">المقارنة</h3></div>';
   s+=matchHTML(people);
   s+='<div class="seg2 cmpb" role="radiogroup" aria-label="طريقة الحساب"><label><input type="radio" name="cmpadj" value="1"'+(S.cmpV.adj?" checked":"")+'><span>النسبة مع عدد المهام</span></label><label><input type="radio" name="cmpadj" value="0"'+(S.cmpV.adj?"":" checked")+'><span>النسبة فقط</span></label></div>';
   if(sc.basis!=="m")s+='<p class="small" style="margin:0">'+(sc.basis==="n"?"نقاط يوم صديقك تصل بعد أن يفتح النسخة الجديدة من البرنامج، وإلى ذلك الحين يُحسب حجم اليوم بعدد المهام.":"حجم يوم صديقك يصل بعد أن يفتح النسخة الجديدة من البرنامج، وإلى ذلك الحين تُحسب النسبة فقط.")+'</p>';
   s+='<div class="ctoday">'+people.map(p=>{const v=p.v[n-1];return '<div><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi><b class="num">'+(numOk(v)?fmt(v):"–")+'</b>'+(numOk(p.mm[n-1])?'<span class="lbl">'+num(p.mm[n-1],0)+' نقطة</span>':numOk(p.nn[n-1])?'<span class="lbl">'+p.nn[n-1]+' مهمة</span>':"")+'</div>'}).join("")+'<span class="lbl">اليوم حتى الآن</span></div>';
+  s+='<div class="sec-h cmpper" style="flex-wrap:wrap"><span class="lbl2">مقارنة '+({"7":"آخر أسبوع","30":"آخر شهر","90":"آخر 3 أشهر","365":"آخر سنة"}[S.cmpV.r]||"")+(i0>0?' <span class="lbl">(من أول يوم مسجّل '+esc(fNum(ks[0]))+')</span>':"")+'</span><div class="rng" role="group" aria-label="الفترة">'+[["7","أسبوع"],["30","شهر"],["90","3 أشهر"],["365","سنة"]].map(r=>'<button data-act="cmpR" data-r="'+r[0]+'" class="'+(S.cmpV.r===r[0]?"on":"")+'" aria-pressed="'+(S.cmpV.r===r[0])+'">'+r[1]+'</button>').join("")+'</div></div>';
   s+=cmpTable(people,[
     [adj?"متوسط النتيجة":"متوسط النسبة",p=>p.ok.length?{v:avg(p.ok),t:fmt(avg(p.ok))}:null],
-    ["أيام الفوز (بالنتيجة المعدّلة)",p=>{const i=people.indexOf(p);return {v:wins[i],t:wins[i]+" من "+n}}],
+    ["أيام الفوز (بالنتيجة المعدّلة)",p=>{const i=people.indexOf(p);return {v:wins[i],t:wins[i]+" من "+played}}],
     ["أيام 100%",p=>{const c=p.raw.filter(v=>numOk(v)&&v>=99.95).length;return {v:c,t:String(c)}}],
     ["أيام 80% فأكثر",p=>{const c=p.raw.filter(v=>numOk(v)&&v>=80).length;return {v:c,t:String(c)}}],
     ["أفضل يوم",p=>p.ok.length?{v:Math.max.apply(null,p.ok),t:fmt(Math.max.apply(null,p.ok))}:null],
     ["أضعف يوم",p=>p.ok.length?{v:Math.min.apply(null,p.ok),t:fmt(Math.min.apply(null,p.ok))}:null],
-    ["نقاط المهام المعلّقة",p=>{if(!p.hasT)return null;const v=ks.reduce((a,k)=>a+(+p.tp(k)||0),0);return {v:v,t:L(num(v,0))}},null],
-    ["متوسط نقاط اليوم",p=>{const ms=p.mm.filter(numOk);return ms.length?{v:avg(ms),t:L(num(avg(ms),0))}:null},null],
+    ["نقاط المعلّقة والمرنة",p=>{if(!p.hasT)return null;const v=ks.reduce((a,k)=>a+(+p.tp(k)||0),0);return {v:v,t:L(num(v,0))}},null],
+    ["متوسط النقاط المتاحة في اليوم",p=>{const ms=p.mm.filter(numOk);return ms.length?{v:avg(ms),t:L(num(avg(ms),0))}:null},null],
+    ["متوسط النقاط المحقّقة في اليوم",p=>{const es=p.mm.map((m,i)=>numOk(m)&&numOk(p.raw[i])?m*p.raw[i]/100:null).filter(numOk);return es.length?{v:avg(es),t:L(num(avg(es),0))}:null}],
     ["متوسط المهام في اليوم",p=>{const ns=p.nn.filter(numOk);return ns.length?{v:avg(ns),t:L(num(avg(ns),1))}:null},null],
     ["أيام بلا نقاط",p=>{const c=n-p.ok.length;return {v:c,t:String(c)}},false]
   ]);
@@ -3030,12 +3041,12 @@ function cmpHTML(){
   if(any)s+=chart(W=>lineChart({w:W,h:200,xMin:0,xMax:n-1,yMin:0,yMax:top,gap:1.5,series:people.map(p=>({pts:p.v.map((v,i)=>numOk(v)?[i,v]:null).filter(Boolean),cls:p.cls})),
       yTicks:[[0,"0"+unit],[50,"50"+unit],[100,"100"+unit]],xTicks:[[0,fNum(ks[0])],[Math.round((n-1)/2),fNum(ks[Math.round((n-1)/2)])],[n-1,fNum(ks[n-1])]],label:"مقارنة الإنجاز اليومي"}));
   else s+='<p class="muted small" style="margin:0">لا نقاط في هذه الفترة بعد.</p>';
-  if(n>=30&&any){
-    const weeks=[];ks.forEach((k,i)=>{const w=weekStartK(k);let g=weeks[weeks.length-1];if(!g||g.w!==w){g={w:w,idx:[]};weeks.push(g)}g.idx.push(i)});
-    s+='<div class="lbl2" style="margin-top:4px">أسبوعاً بأسبوع</div>'+cmpTable(people,weeks.slice().reverse().map(g=>['من '+esc(fNum(g.w)),p=>{const vs=g.idx.map(i=>p.v[i]).filter(numOk);return vs.length?{v:avg(vs),t:fmt(avg(vs))}:null}]));
+  if(n>=21&&any){
+    const mon=n>120,weeks=[];ks.forEach((k,i)=>{const w=mon?k.slice(0,7)+"-01":weekStartK(k);let g=weeks[weeks.length-1];if(!g||g.w!==w){g={w:w,idx:[]};weeks.push(g)}g.idx.push(i)});
+    s+='<div class="lbl2" style="margin-top:4px">'+(mon?"شهراً بشهر":"أسبوعاً بأسبوع")+'</div>'+cmpTable(people,weeks.slice().reverse().map(g=>[(mon?esc(fMon(g.w)):'من '+esc(fNum(g.w))),p=>{const vs=g.idx.map(i=>p.v[i]).filter(numOk);return vs.length?{v:avg(vs),t:fmt(avg(vs))}:null}]));
   }
   s+='<p class="lbl" style="margin:0">'+(sc.basis?'النتيجة المعدّلة = نسبة الإنجاز × الجذر التربيعي لـ ('+(sc.basis==="m"?"نقاط مهام يومك المجدولة ÷ نقاط صاحب اليوم الأثقل":"عدد مهامك ÷ عدد مهام صاحب المهام الأكثر")+'). فالمهمة الكبيرة تزيد حجم يومك أكثر من الصغيرة. مثال: يوم بـ100 نقطة كله منجز مقابل يوم بـ200 نقطة: 100 × 0.71 = 71، ويوم الـ200 المنجز منه 75% = 75. أيام الفوز تُحسب دائماً بهذه النتيجة. ':'')+
-    'تُحسب المهام الثابتة المجدولة لذلك اليوم، والمهام المعلّقة التي أنجزتها في ذلك اليوم: نقاطها تُضاف لما جمعته ولما كان ممكناً معاً، بحد أقصى نصف نقاط مهامك الثابتة في اليوم. المهام غير المجدولة والأسبوعية التي تنجزها زيادة، والأيام المعذورة لا تدخل. يوم الفوز لمن كانت نتيجته الأعلى، والتعادل لا يُحسب.</p>';
+    'تُحسب المهام الثابتة المجدولة لذلك اليوم، والمهام المعلّقة والمهام الثابتة المرنة (بلا يوم محدد) التي أنجزتها في ذلك اليوم: نقاطها تُضاف لما جمعته ولما كان ممكناً معاً، بحد أقصى نصف نقاط مهامك الثابتة في اليوم. المهام غير المجدولة والأسبوعية التي تنجزها زيادة، والأيام المعذورة لا تدخل. يوم الفوز لمن كانت نتيجته الأعلى، والتعادل لا يُحسب.</p>';
   s+='<div class="cmpst">'+people.filter(p=>p.c).map(p=>'<span class="lbl"><i class="cmpdot '+p.cls+'"></i> <bdi>'+esc(p.name)+'</bdi>: '+esc(frStatus(p.c))+'</span>').join("")+'</div>';
   return s+'</div>';
 }
@@ -3438,8 +3449,9 @@ function habitForm(h,pg){
     '<div class="three"><div class="fld"><label for="hf-qt">الهدف أو الحد</label><input class="ltr" id="hf-qt" name="qt" type="number" step="any" min="0" value="'+(q?q.t:"")+'" placeholder="5"></div>'+
     '<div class="fld"><label for="hf-qu">الوحدة</label><input id="hf-qu" name="qu" maxlength="16" value="'+esc(q?q.u||"":"")+'" placeholder="بطل"></div>'+
     '<div class="fld"><label for="hf-qs">مقدار الزيادة</label><input class="ltr" id="hf-qs" name="qs" type="number" step="any" min="0" value="'+(q?q.s||1:1)+'"></div></div></div>'+
-  '<div class="fld"><span class="lbl2">التكرار</span><div class="seg2" role="radiogroup"><label><input type="radio" name="fr" value="days" id="hf-fr-days"'+(wk?"":" checked")+'><span>أيام محددة</span></label><label><input type="radio" name="fr" value="wk" id="hf-fr-wk"'+(wk?" checked":"")+'><span>عدد مرات في الأسبوع</span></label></div></div>'+
-  '<div class="fld" id="hf-daysbox"'+(wk?" hidden":"")+'><div class="daypick">'+DAYS_ORDER.map(d=>'<label title="'+DAY_NAME[d]+'"><input type="checkbox" id="hf-d'+d+'" name="d" value="'+d+'"'+(days.includes(d)?" checked":"")+'><span>'+DAY_LETTER[d]+'</span></label>').join("")+'</div><span class="lbl">الأيام غير المجدولة لا تكسر السلسلة.</span></div>'+
+  '<div class="fld"><span class="lbl2">التكرار</span><div class="seg2" role="radiogroup"><label><input type="radio" name="fr" value="days" id="hf-fr-days"'+(wk||(h&&isFl(h))?"":" checked")+'><span>أيام محددة</span></label><label><input type="radio" name="fr" value="wk" id="hf-fr-wk"'+(wk?" checked":"")+'><span>عدد مرات في الأسبوع</span></label><label><input type="radio" name="fr" value="fl" id="hf-fr-fl"'+(h&&isFl(h)?" checked":"")+'><span>بلا يوم محدد</span></label></div></div>'+
+  '<p class="lbl" id="hf-flbox"'+(h&&isFl(h)?"":" hidden")+' style="margin:0">تبقى في قائمة المهام الثابتة كل يوم ولا تُحسب فائتة إن لم تنجزها. حين تنجزها تُعامل مثل المهمة المعلّقة: نقاطها تُضاف لما جمعته ولما كان ممكناً في ذلك اليوم، وفي المقارنة تدخل مع المعلّقة بالحد نفسه.</p>'+
+  '<div class="fld" id="hf-daysbox"'+(wk||(h&&isFl(h))?" hidden":"")+'><div class="daypick">'+DAYS_ORDER.map(d=>'<label title="'+DAY_NAME[d]+'"><input type="checkbox" id="hf-d'+d+'" name="d" value="'+d+'"'+(days.includes(d)?" checked":"")+'><span>'+DAY_LETTER[d]+'</span></label>').join("")+'</div><span class="lbl">الأيام غير المجدولة لا تكسر السلسلة.</span></div>'+
   '<div class="fld" id="hf-wkbox"'+(wk?"":" hidden")+'><label for="hf-wk">كم مرة في الأسبوع</label><input class="ltr" id="hf-wk" name="wk" type="number" min="1" max="7" step="1" value="'+(wk||1)+'" style="max-width:120px">'+
     '<span class="lbl">تظهر كل أيام الأسبوع حتى تكمل العدد، وتُحسب نقاطها في اليوم الذي تنجزها فيه، ولا تدخل في الحد الأقصى اليومي. الأسبوع يبدأ بالسبت.</span></div>'+
   '<label class="chk"><input type="checkbox" name="wl" id="hf-wl"'+(h?(wlink(h)?" checked":""):"")+'><span>اطلب تسجيل الوزن عند إنجازها</span></label>'+
@@ -3460,12 +3472,14 @@ function openHabit(h,pg){
       if(!Number.isFinite(qt)||qt<=0)return bad("أدخل الهدف أو الحد رقماً أكبر من صفر.");
       q={t:qt,u:String(fd.get("qu")||"").trim(),m:fd.get("qm")==="max"?"max":"min",s:Number.isFinite(qs)&&qs>0?qs:1}}
     if(fr==="wk"){wk=parseInt(fd.get("wk"),10);if(!Number.isFinite(wk)||wk<1||wk>7)return bad("عدد المرات في الأسبوع من 1 إلى 7.")}
-    else if(!days.length)return bad("اختر يوماً واحداً على الأقل.");
+    else if(fr!=="fl"&&!days.length)return bad("اختر يوماً واحداً على الأقل.");
     let gid=String(fd.get("g")||"");
     if(gid==="__new"){const gn=String(fd.get("gnew")||"").trim();if(!gn)return bad("اكتب اسم المجموعة الجديدة.");const ng={id:uid(),name:gn};S.groups.push(ng);gid=ng.id}
     const cur=h&&S.habits.find(x=>x.id===h.id);if(h&&!cur){closeSheet();render();return}
     const tgt=cur||addHabit(name,days,pts);if(!tgt)return;
-    tgt.name=name;tgt.pts=pts;if(cur&&fr!=="wk")setDays(tgt,days);else tgt.days=fr==="wk"?[]:(days.length===7?[]:days);
+    tgt.name=name;tgt.pts=pts;
+    if(fr==="fl"){if(!tgt.fl)tgt.fl=cur?todayK():hStart(tgt)}
+    else{delete tgt.fl;if(cur&&fr!=="wk")setDays(tgt,days);else tgt.days=fr==="wk"?[]:(days.length===7?[]:days)}
     if(wk)tgt.wk=wk;else delete tgt.wk;
     if(q)tgt.q=q;else delete tgt.q;
     tgt.wl=!!fd.get("wl");
@@ -3828,7 +3842,7 @@ document.addEventListener("change",e=>{
       if(!o||typeof o!=="object"||!(o.days||o.habits||o.habitPatch||o.notes||o.gym||o.wos||o.todos||o.goals||o.nutri||o.nut)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
       IMP=o;card.innerHTML=importSummary(o)};r.readAsText(f);return}
   if(e.target.name==="kind"&&e.target.closest("#habit-form")){const bx=$("#hf-qbox");if(bx)bx.hidden=e.target.value!=="q";return}
-  if(e.target.name==="fr"&&e.target.closest("#habit-form")){const w=e.target.value==="wk";$("#hf-daysbox").hidden=w;$("#hf-wkbox").hidden=!w;return}
+  if(e.target.name==="fr"&&e.target.closest("#habit-form")){const v=e.target.value;$("#hf-daysbox").hidden=v!=="days";$("#hf-wkbox").hidden=v!=="wk";$("#hf-flbox").hidden=v!=="fl";return}
   if(e.target.name==="qm"&&e.target.closest("#habit-form")){const hp=$("#hf-qhelp");if(hp)hp.textContent=e.target.value==="max"?"نقاط كاملة إذا بقيت تحت الحد، وتنقص بالنسبة كلما تجاوزته حتى تصبح صفراً عند ضعف الحد.":"النقاط بنسبة ما أنجزته من الهدف: نصف الهدف يعطي نصف النقاط.";return}
   if(e.target.id==="nt-g"){const n=S.notes[S.nt.sel];if(n){if(e.target.value)n.g=e.target.value;else delete n.g;n.saved=true;n.updated=new Date().toISOString();saveNote(n.id);drawNotesList()}return}
   if(e.target.id==="hf-g"){const ni=$("#hf-gnew");if(ni){ni.hidden=e.target.value!=="__new";if(!ni.hidden)ni.focus()}return}
