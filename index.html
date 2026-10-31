@@ -3167,7 +3167,7 @@ function hkSel(el){if(!el)return;const r=document.createRange();r.selectNodeCont
 // A finished challenge removed from the list stays in the data (hidden) so the result stays the same for both.
 // Result: the first to reach the target (if there is one) wins. At the end day, or when either side ends it, the larger total wins. Equal = draw.
 S.chal=[];S.chalNo=[];
-function chalShare(){const o={};S.chal.forEach(c=>{const x={n:c.n,u:c.u||"",t:c.t,from:c.from,by:c.by,to:c.to,log:c.log||{}};if(c.end)x.end=c.end;if(c.e)x.e=c.e;o[c.id]=x});return o}
+function chalShare(){const o={};S.chal.forEach(c=>{const x={n:c.n,u:c.u||"",t:c.t,from:c.from,by:c.by,to:c.to,log:c.log||{}};if(c.end)x.end=c.end;if(+c.tq>0)x.tq=+c.tq;if(c.e)x.e=c.e;o[c.id]=x});return o}
 const chOther=c=>DB&&c.by===DB.uid?c.to:c.by;
 const chName=u=>{const f=S.cmp.find(x=>x.uid===u);return f?f.name:"صديقك"};
 function chFriendSide(c){const f=S.fr[chOther(c)];return f&&f.ch&&f.ch[c.id]?f.ch[c.id]:null}
@@ -3191,14 +3191,27 @@ function chalInvites(){
     if(c&&c.to===DB.uid&&c.by===f.uid&&!c.e&&!S.chal.some(x=>x.id===id)&&!S.chalNo.includes(id))out.push(Object.assign({id:id},c))})});
   return out;
 }
+// timer challenges (c.tq = minutes per step): progress is in minutes, taken from the challenge's work timer.
+// Each day's timer total (plus minutes added by hand) is counted in whole steps: with steps of 10, 37 minutes count as 30.
+const isTq=c=>+c.tq>0;
+const chMin=(c,k)=>{let sec=+((c.tm&&c.tm.d&&c.tm.d[k])||0);if(k===todayK()&&c.tm&&c.tm.run)sec=gtToday(c);return sec/60};
+const chStep=(c,k)=>Math.floor(chMin(c,k)/c.tq+1e-9)*c.tq;
+function chSync(c){if(!isTq(c))return false;const d=(c.tm&&c.tm.d)||{},ks=new Set(Object.keys(d));if(c.tm&&c.tm.run)ks.add(todayK());const nl={};
+  ks.forEach(k=>{if(k<c.from)return;const v=chStep(c,k);if(v>0)nl[k]=v});const ch=JSON.stringify(nl)!==JSON.stringify(c.log||{});c.log=nl;return ch}
+function chTqLine(c){const m=chMin(c,todayK()),got=chStep(c,todayK());
+  return 'مسجّل اليوم '+amt(got)+' دقيقة · الدفعة التالية بعد '+Math.max(1,Math.round(got+c.tq-m))+' د'}
+setInterval(()=>{let ch=false;S.chal.forEach(c=>{if(isTq(c)&&c.tm&&c.tm.run&&!chalState(c).done){const k=todayK();if(chStep(c,k)!==(+(c.log||{})[k]||0)){chSync(c);ch=true}
+  const el=document.querySelector('[data-gq="'+c.id+'"]');if(el)el.textContent=chTqLine(c)}});
+  if(ch){saveConfig();SH_LAST="";queueShare();render()}},1000);
+document.addEventListener("change",e=>{if(e.target.name!=="chm")return;const m=e.target.value==="tq",a=$("#ch-ubox"),b=$("#ch-qbox");if(a)a.hidden=m;if(b)b.hidden=!m;const tl=$("#ch-tl");if(tl)tl.textContent=m?"الدقائق المطلوبة (اختياري)":"الكمية المطلوبة (اختياري)"});
 const amt=v=>{const r=Math.round((+v||0)*100)/100;return Number.isInteger(r)?String(r):String(r)};
-const unitTxt=c=>c.u?" "+c.u:"";
+const unitTxt=c=>isTq(c)?" دقيقة":c.u?" "+c.u:"";
 function chalHTML(){
   if(S.mode!=="db")return "";
   let s='<section class="panel sec chal"><div class="sec-h"><h2>تحديات مع الأصدقاء</h2>'+(S.cmp.length?'<button class="btn sm" data-act="chNew">تحدٍّ جديد</button>':"")+'</div>';
   if(!S.cmp.length)return s+'<p class="small" style="margin:0">أضف صديقاً من الإعدادات ← المقارنة مع صديق، ثم ضعا هدفاً واحداً تتسابقان عليه: مثلاً قراءة 300 صفحة، أو 50 كم مشي.</p></section>';
   const inv=chalInvites();
-  s+=inv.map(c=>'<div class="chinv"><b><bdi>'+esc(chName(c.by))+'</bdi> يدعوك لتحدٍّ: <bdi>'+esc(c.n)+'</bdi></b><span class="lbl">'+(+c.t>0?'الهدف '+L(amt(c.t))+esc(unitTxt(c))+' · ':'بلا كمية محددة · ')+'من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):' · بلا موعد نهاية')+'</span>'+
+  s+=inv.map(c=>'<div class="chinv"><b><bdi>'+esc(chName(c.by))+'</bdi> يدعوك لتحدٍّ: <bdi>'+esc(c.n)+'</bdi></b><span class="lbl">'+(+c.t>0?'الهدف '+L(amt(c.t))+esc(unitTxt(c))+' · ':'بلا كمية محددة · ')+(isTq(c)?'بالمؤقت كل '+c.tq+' دقائق · ':'')+'من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):' · بلا موعد نهاية')+'</span>'+
     '<div class="row"><button class="btn pri sm" data-act="chAcc" data-id="'+c.id+'">انضمام</button><button class="btn sm" data-act="chNo" data-id="'+c.id+'">رفض</button></div></div>').join("");
   if(!S.chal.filter(c=>!c.hide).length&&!inv.length)s+='<p class="small" style="margin:0">لا تحديات بعد. التحدي هدف واحد بينكما، وكل واحد يسجّل تقدّمه. أول من يصل للهدف يفوز، وإن حددتما موعد نهاية ولم يصل أحد فالأكثر تقدماً يفوز.</p>';
   return s+'</section>';
@@ -3209,7 +3222,7 @@ function chalCard(c){
   const st=chalState(c),nm=chName(chOther(c)),mine=DB&&c.by===DB.uid,t=+c.t||0,scale=t>0?t:Math.max(st.a,st.b,1e-9),pc=v=>Math.min(100,Math.round(v/scale*100));
   const vt=v=>L(amt(v)+(t>0?" / "+amt(t):""))+(t>0?"":esc(unitTxt(c)));
   const bar=(v,cls)=>'<span class="chbar"><i class="'+cls+'" style="width:'+pc(v)+'%"></i></span>';
-  let head='<div class="chh"><b><bdi>'+esc(c.n)+'</bdi></b><span class="lbl">'+(ggName(c.g)&&!S.gl.g?esc(ggName(c.g))+' · ':'')+'تحدٍّ مع <bdi>'+esc(nm)+'</bdi> · '+(t>0?'الهدف '+L(amt(t))+esc(unitTxt(c)):'بلا كمية محددة')+' · من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):"")+'</span></div>';
+  let head='<div class="chh"><b><bdi>'+esc(c.n)+'</bdi></b><span class="lbl">'+(ggName(c.g)&&!S.gl.g?esc(ggName(c.g))+' · ':'')+'تحدٍّ مع <bdi>'+esc(nm)+'</bdi> · '+(t>0?'الهدف '+L(amt(t))+esc(unitTxt(c)):'بلا كمية محددة')+(isTq(c)?' · بالمؤقت كل '+c.tq+' دقائق':'')+' · من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):"")+'</span></div>';
   let status="";
   if(st.done){const w=st.winner==="me"?"فزت أنت":st.winner==="fr"?"فاز "+nm:"تعادل";
     status='<div class="chend '+(st.winner==="me"?"w":st.winner==="fr"?"l":"d")+'"><b>'+esc(w)+'</b><span>انتهى في '+esc(fShort(st.endK))+(st.how==="reach"?" بالوصول للهدف":st.how==="date"?" في موعد النهاية":" بإنهاء التحدي")+'</span></div>'}
@@ -3219,15 +3232,18 @@ function chalCard(c){
     (st.fs?'<div class="chr"><span><i class="cmpdot w"></i><bdi>'+esc(nm)+'</bdi></span>'+bar(st.b,"w")+'<b class="num">'+vt(st.b)+'</b>'+(st.rb&&(!st.endK||st.rb<=st.endK)?'<span class="chok">✓</span>':'<span></span>')+'</div>':"")+'</div>';
   const ks=Object.keys(c.log||{}).filter(k=>+c.log[k]).sort().reverse();
   const log=ks.length?'<div class="chlog">'+ks.slice(0,6).map(k=>'<span><span class="lbl">'+esc(fShort(k))+'</span> <b class="num">'+L("+"+amt(c.log[k]))+'</b></span>').join("")+(ks.length>6?'<span class="lbl">و'+(ks.length-6)+' أيام أخرى</span>':"")+'</div>':"";
-  const btns='<div class="row">'+(st.done?'<button class="chip-link" data-act="chDel" data-id="'+c.id+'">حذف من القائمة</button>':'<button class="btn pri sm" data-act="chLog" data-id="'+c.id+'">تسجيل تقدّم</button><button class="btn sm" data-act="chEdit" data-id="'+c.id+'">تعديل</button><button class="chip-link" data-act="chEnd" data-id="'+c.id+'">إنهاء التحدي</button>')+'</div>';
-  return '<article class="panel hcard chc'+(st.done?" done":"")+'">'+head+status+rows+log+(st.done?"":gTimerHTML(c,"c"))+btns+'</article>';
+  const btns='<div class="row">'+(st.done?'<button class="chip-link" data-act="chDel" data-id="'+c.id+'">حذف من القائمة</button>':'<button class="btn pri sm" data-act="chLog" data-id="'+c.id+'">'+(isTq(c)?"إضافة دقائق":"تسجيل تقدّم")+'</button><button class="btn sm" data-act="chEdit" data-id="'+c.id+'">تعديل</button><button class="chip-link" data-act="chEnd" data-id="'+c.id+'">إنهاء التحدي</button>')+'</div>';
+  return '<article class="panel hcard chc'+(st.done?" done":"")+'">'+head+status+rows+log+(st.done?"":gTimerHTML(c,"c")+(isTq(c)?'<span class="lbl" data-gq="'+c.id+'">'+esc(chTqLine(c))+'</span>':""))+btns+'</article>';
 }
 function openChalNew(){
   openSheet('<h2>تحدٍّ جديد</h2><form class="f" id="ch-form" autocomplete="off">'+
     '<div class="fld"><label for="ch-f">مع</label><select id="ch-f" name="f" class="sel">'+S.cmp.map(f=>'<option value="'+esc(f.uid)+'">'+esc(f.name)+'</option>').join("")+'</select></div>'+
     '<div class="fld"><label for="ch-n">الهدف</label><input id="ch-n" name="n" maxlength="50" required placeholder="مثال: قراءة كتب"></div>'+
-    '<div class="two"><div class="fld"><label for="ch-t">الكمية المطلوبة (اختياري)</label><input id="ch-t" name="t" class="ltr" type="number" inputmode="decimal" min="0" step="any" placeholder="بلا حد"></div>'+
-    '<div class="fld"><label for="ch-u">الوحدة (اختياري)</label><input id="ch-u" name="u" maxlength="16" placeholder="صفحة"></div></div>'+
+    '<div class="fld"><span class="lbl2">وحدة التقدّم</span><div class="seg2" role="radiogroup"><label><input type="radio" name="chm" value="u" id="ch-m-u" checked><span>وحدة أكتبها</span></label><label><input type="radio" name="chm" value="tq" id="ch-m-tq"><span>دقائق من المؤقت</span></label></div></div>'+
+    '<div class="two"><div class="fld"><label for="ch-t" id="ch-tl">الكمية المطلوبة (اختياري)</label><input id="ch-t" name="t" class="ltr" type="number" inputmode="decimal" min="0" step="any" placeholder="بلا حد"></div>'+
+    '<div class="fld" id="ch-ubox"><label for="ch-u">الوحدة (اختياري)</label><input id="ch-u" name="u" maxlength="16" placeholder="صفحة"></div>'+
+    '<div class="fld" id="ch-qbox" hidden><label for="ch-q">يُسجَّل كل (دقيقة)</label><input id="ch-q" name="q" class="ltr" type="number" inputmode="numeric" min="1" max="600" step="1" value="10"></div></div>'+
+    '<span class="lbl">دقائق من المؤقت: شغّل مؤقت التحدي وأنت تعمل، وكل ما يكتمل من دفعات الدقائق يُسجَّل تقدّماً تلقائياً. إن نسيت المؤقت أضف الدقائق بنفسك من «إضافة دقائق».</span>'+
     '<div class="two"><div class="fld"><label for="ch-s">يبدأ</label><input id="ch-s" name="s" class="ltr datein" type="date" value="'+todayK()+'"></div>'+
     '<div class="fld"><label for="ch-e">موعد النهاية (اختياري)</label><input id="ch-e" name="e" class="ltr datein" type="date" min="'+todayK()+'"></div></div>'+
     (S.ggroups.length?'<div class="fld"><label for="ch-g">المجموعة</label><select id="ch-g" name="gg" class="sel"><option value="">بدون مجموعة</option>'+S.ggroups.map(x=>'<option value="'+x.id+'"'+(S.gl.g&&S.gl.g!=="_none"&&S.gl.g===x.id?" selected":"")+'>'+esc(x.name)+'</option>').join("")+'</select></div>':"")+
@@ -3238,6 +3254,7 @@ function openChalNew(){
     if(!(t>=0&&t<1e7))return bad("الكمية رقم موجب، أو اتركها فارغة.");
     const from=/^\d{4}-\d{2}-\d{2}$/.test(sd)?sd:todayK();if(ed&&!(/^\d{4}-\d{2}-\d{2}$/.test(ed)&&ed>=from))return bad("موعد النهاية بعد يوم البداية.");
     const c={id:uid(),n:n.slice(0,50),u:u.slice(0,16),t:t,from:from,by:DB.uid,to:f,log:{}};if(ed)c.end=ed;
+    if(fd.get("chm")==="tq"){const q=parseInt(fd.get("q"),10);if(!(q>=1&&q<=600))return bad("الدفعة من 1 إلى 600 دقيقة.");c.tq=q;c.u="دقيقة"}
     const gg=String(fd.get("gg")||"");if(gg&&S.ggroups.some(x=>x.id===gg))c.g=gg;
     S.chal.push(c);saveConfig();SH_LAST="";queueShare();closeSheet();render();
   });
@@ -3245,18 +3262,20 @@ function openChalNew(){
 let CHL=null;
 function openChalLog(id){
   const c=S.chal.find(x=>x.id===id);if(!c)return;CHL=id;const k=todayK();
-  const ks=Object.keys(c.log||{}).filter(x=>+c.log[x]).sort().reverse();
+  const tq=isTq(c),src=tq?((c.tm&&c.tm.d)||{}):(c.log||{}),val=x=>tq?Math.round((+src[x]||0)/60):+src[x];
+  const ks=Object.keys(src).filter(x=>x>=c.from&&val(x)>0).sort().reverse();
   openSheet('<h2>تسجيل تقدّم: <bdi>'+esc(c.n)+'</bdi></h2><form class="f" id="chl-form" autocomplete="off">'+
     '<div class="two"><div class="fld"><label for="chl-d">اليوم</label><input id="chl-d" name="d" class="ltr datein" type="date" min="'+c.from+'" max="'+k+'" value="'+k+'"></div>'+
-    '<div class="fld"><label for="chl-v">الكمية'+(c.u?" ("+esc(c.u)+")":"")+'</label><input id="chl-v" name="v" class="ltr" type="number" inputmode="decimal" step="any" min="0" required></div></div>'+
-    '<span class="lbl">تُضاف لما سجّلته في ذلك اليوم. لتصحيح يوم اضغط عليه في القائمة تحت.</span>'+
+    '<div class="fld"><label for="chl-v">'+(tq?"الدقائق":"الكمية"+(c.u?" ("+esc(c.u)+")":""))+'</label><input id="chl-v" name="v" class="ltr" type="number" inputmode="decimal" step="any" min="0" required></div></div>'+
+    '<span class="lbl">'+(tq?"تُضاف لوقت المؤقت في ذلك اليوم، ثم يُحسب التقدّم بدفعات "+c.tq+" دقائق من المجموع. القائمة تحت تعرض وقت كل يوم.":"تُضاف لما سجّلته في ذلك اليوم. لتصحيح يوم اضغط عليه في القائمة تحت.")+'</span>'+
     '<p class="err" id="chl-err" hidden></p><div class="row"><button class="btn pri" type="submit">إضافة</button><button class="btn" type="button" data-act="closeSheet">إغلاق</button></div>'+
-    (ks.length?'<div class="entries" style="max-height:none">'+ks.map(x=>'<div><span>'+esc(fShort(x))+' <b class="num">'+L(amt(c.log[x]))+esc(unitTxt(c))+'</b></span><button class="chip-link" type="button" data-act="chLogDel" data-id="'+c.id+'" data-k="'+x+'">حذف</button></div>').join("")+'</div>':"")+
+    (ks.length?'<div class="entries" style="max-height:none">'+ks.map(x=>'<div><span>'+esc(fShort(x))+' <b class="num">'+L(amt(val(x)))+esc(unitTxt(c))+'</b>'+(tq?' <span class="lbl">يُحسب منها '+amt(+(c.log||{})[x]||0)+'</span>':'')+'</span><button class="chip-link" type="button" data-act="chLogDel" data-id="'+c.id+'" data-k="'+x+'">حذف</button></div>').join("")+'</div>':"")+
     '</form>',(fd)=>{
     const cc=S.chal.find(x=>x.id===CHL);if(!cc)return;const d=String(fd.get("d")||""),v=parseFloat(fd.get("v")),err=$("#chl-err");
     if(!(/^\d{4}-\d{2}-\d{2}$/.test(d)&&d>=cc.from&&d<=todayK())){err.textContent="اختر يوماً بين بداية التحدي واليوم.";err.hidden=false;return}
     if(!(v>0)){err.textContent="اكتب كمية أكبر من صفر.";err.hidden=false;return}
-    cc.log=cc.log||{};cc.log[d]=Math.round(((+cc.log[d]||0)+v)*100)/100;saveConfig();SH_LAST="";queueShare();closeSheet();render();
+    if(isTq(cc)){cc.tm=cc.tm||{};cc.tm.d=cc.tm.d||{};cc.tm.d[d]=Math.round((+cc.tm.d[d]||0)+v*60);chSync(cc)}
+    else{cc.log=cc.log||{};cc.log[d]=Math.round(((+cc.log[d]||0)+v)*100)/100}saveConfig();SH_LAST="";queueShare();closeSheet();render();
   });
 }
 // my own settings for a challenge: its goal group (not shared)
@@ -3268,12 +3287,12 @@ function chalAct(a,b){
   if(a==="chEdit"){openChalEdit(id);return true}
   if(a==="chNew"){openChalNew();return true}
   if(a==="chLog"){openChalLog(id);return true}
-  if(a==="chLogDel"){const c=S.chal.find(x=>x.id===id);if(c&&c.log){delete c.log[b.dataset.k];saveConfig();SH_LAST="";queueShare();openChalLog(id);render()}return true}
+  if(a==="chLogDel"){const c=S.chal.find(x=>x.id===id);if(c&&c.log){delete c.log[b.dataset.k];if(isTq(c)&&c.tm&&c.tm.d){delete c.tm.d[b.dataset.k];chSync(c)}saveConfig();SH_LAST="";queueShare();openChalLog(id);render()}return true}
   if(a==="chAcc"){const inv=chalInvites().find(x=>x.id===id);if(!inv)return true;
-    const c={id:id,n:String(inv.n||"تحدي").slice(0,50),u:String(inv.u||"").slice(0,16),t:+inv.t>0?+inv.t:0,from:inv.from||todayK(),by:inv.by,to:inv.to,log:{}};if(inv.end)c.end=inv.end;
+    const c={id:id,n:String(inv.n||"تحدي").slice(0,50),u:String(inv.u||"").slice(0,16),t:+inv.t>0?+inv.t:0,from:inv.from||todayK(),by:inv.by,to:inv.to,log:{}};if(inv.end)c.end=inv.end;if(+inv.tq>0){c.tq=Math.min(600,Math.round(+inv.tq));c.u="دقيقة"}
     S.chal.push(c);saveConfig();SH_LAST="";queueShare();render();return true}
   if(a==="chNo"){S.chalNo.push(id);saveConfig();render();return true}
-  if(a==="chEnd"){if(confirmArm[a+id]){delete confirmArm[a+id];const c=S.chal.find(x=>x.id===id);if(c&&!c.e){c.e=todayK();saveConfig();SH_LAST="";queueShare()}render()}
+  if(a==="chEnd"){if(confirmArm[a+id]){delete confirmArm[a+id];const c=S.chal.find(x=>x.id===id);if(c&&!c.e){if(c.tm&&c.tm.run){gtAdd(c,+new Date(c.tm.run),Date.now());delete c.tm.run;chSync(c)}c.e=todayK();saveConfig();SH_LAST="";queueShare()}render()}
     else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لإنهائه";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="إنهاء التحدي"},4000)}return true}
   if(a==="chDel"){if(confirmArm[a+id]){delete confirmArm[a+id];const c=S.chal.find(x=>x.id===id);if(c){c.hide=true;saveConfig()}render()}
     else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف من القائمة"},4000)}return true}
@@ -3731,7 +3750,7 @@ document.addEventListener("click",e=>{
     case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
     case "chNew":case "chAcc":case "chNo":case "chEnd":case "chLog":case "chLogDel":case "chDel":case "chEdit":chalAct(a,b);break;
-    case "gtTog":{const ch=b.dataset.k==="c",g=ch?S.chal.find(x=>x.id===id):S.goals[id];if(!g)break;g.tm=g.tm||{};if(g.tm.run){gtAdd(g,+new Date(g.tm.run),Date.now());delete g.tm.run}else g.tm.run=new Date().toISOString();if(ch)saveConfig();else saveGoal(id);render();break}
+    case "gtTog":{const ch=b.dataset.k==="c",g=ch?S.chal.find(x=>x.id===id):S.goals[id];if(!g)break;g.tm=g.tm||{};if(g.tm.run){gtAdd(g,+new Date(g.tm.run),Date.now());delete g.tm.run}else g.tm.run=new Date().toISOString();if(ch){if(chSync(g)){SH_LAST="";queueShare()}saveConfig()}else saveGoal(id);render();break}
     case "goCmp":S.tab="habits";CMP_ON=true;try{localStorage.setItem("dt-tab","habits");localStorage.setItem("dt-cmp","1")}catch(er){}render(true);setTimeout(()=>{const x=$(".cmpbox");if(x)x.scrollIntoView({block:"start"})},50);break;
     case "cmpR":S.cmpV.r=b.dataset.r||"7";render();break;
     case "cmpTog":CMP_ON=!CMP_ON;try{localStorage.setItem("dt-cmp",CMP_ON?"1":"0")}catch(er){}render();break;
