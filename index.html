@@ -791,6 +791,12 @@ body.resting #tbar{top:calc(env(safe-area-inset-top,0px) + var(--resth,72px))}
 .gtm button{grid-column:2;grid-row:1/span 3}
 .gtm.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
 .gtm.on b{color:var(--accent)}
+.sw-tm{font-size:20px;font-weight:600;text-align:center}
+.sw-r.run .sw-tm{color:var(--accent)}
+.sw-tbtn svg{width:18px;height:18px;fill:currentColor;stroke:none}
+.sw-r.done .sw-tbtn svg{fill:none;stroke:currentColor}
+.sw-r.run .sw-tbtn{background:var(--accent);color:#fff}
+.sw-bw{text-align:center;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1470,14 +1476,21 @@ function goalChart(g,st){
 }
 S.gl={g:""};
 const ggName=id=>{const g=S.ggroups.find(x=>x.id===id);return g?g.name:""};
+// challenges sit in the goals grid and follow the same group filter
 // g.tm = {run: start time while running, d: {date: seconds}}; a run that crosses midnight is split between the two days
 function gtAdd(g,a,b){g.tm=g.tm||{};const d=g.tm.d=g.tm.d||{};let x=a;while(x<b){const k=keyOf(new Date(x)),nx=Math.min(b,parse(addD(k,1)).setHours(0,0,0,0));d[k]=Math.round(((+d[k]||0)+(nx-x)/1000));x=nx}}
 function gtToday(g){const k=todayK(),tm=g.tm||{};let v=+(tm.d&&tm.d[k])||0;if(tm.run){const st=Math.max(+new Date(tm.run),new Date(parse(k)).setHours(0,0,0,0));v+=Math.max(0,(Date.now()-st)/1000)}return v}
 function gtWeek(g){const t=todayK(),ws=weekStartK(t),d=(g.tm&&g.tm.d)||{};let v=0;Object.keys(d).forEach(k=>{if(k>=ws&&k<t)v+=+d[k]||0});return v+gtToday(g)}
-function gTimerHTML(g){const on=!!(g.tm&&g.tm.run);
-  return '<div class="gtm'+(on?" on":"")+'"><span class="gtl">وقت العمل اليوم</span><b class="num" data-gt="'+g.id+'">'+fmtDur(gtToday(g))+'</b><span class="lbl" data-gw="'+g.id+'">هذا الأسبوع '+fmtDur(gtWeek(g))+'</span><button class="btn sm'+(on?" danger":" pri")+'" data-act="gtTog" data-id="'+g.id+'">'+(on?"إيقاف":"ابدأ العمل")+'</button></div>'}
-setInterval(()=>{document.querySelectorAll("[data-gt]").forEach(el=>{const g=S.goals[el.dataset.gt];if(g)el.textContent=fmtDur(gtToday(g))});document.querySelectorAll("[data-gw]").forEach(el=>{const g=S.goals[el.dataset.gw];if(g)el.textContent="هذا الأسبوع "+fmtDur(gtWeek(g))})},1000);
-function vGoals(){let s=vGoals0();const i=s.indexOf('</section>');return i<0?s:s.slice(0,i+10)+chalHTML()+s.slice(i+10)}
+// kind "g" = goal (saved in goals/), "c" = challenge (saved with the settings)
+const gtObj=key=>{const k=key.slice(0,1),id=key.slice(2);return k==="c"?S.chal.find(x=>x.id===id):S.goals[id]};
+function gTimerHTML(g,kind){kind=kind||"g";const on=!!(g.tm&&g.tm.run),key=kind+":"+g.id;
+  return '<div class="gtm'+(on?" on":"")+'"><span class="gtl">وقت العمل اليوم</span><b class="num" data-gt="'+key+'">'+fmtDur(gtToday(g))+'</b><span class="lbl" data-gw="'+key+'">هذا الأسبوع '+fmtDur(gtWeek(g))+'</span><button class="btn sm'+(on?" danger":" pri")+'" data-act="gtTog" data-id="'+g.id+'" data-k="'+kind+'">'+(on?"إيقاف":"ابدأ العمل")+'</button></div>'}
+setInterval(()=>{document.querySelectorAll("[data-gt]").forEach(el=>{const g=gtObj(el.dataset.gt);if(g)el.textContent=fmtDur(gtToday(g))});document.querySelectorAll("[data-gw]").forEach(el=>{const g=gtObj(el.dataset.gw);if(g)el.textContent="هذا الأسبوع "+fmtDur(gtWeek(g))})},1000);
+function vGoals(){let s=vGoals0();const i=s.indexOf('</section>');if(i>=0)s=s.slice(0,i+10)+chalHTML()+s.slice(i+10);
+  const cc=chalCards(S.gl.g);if(!cc)return s;const j=s.indexOf('<div class="cols">');
+  if(j>=0)return s.slice(0,j+18)+cc+s.slice(j+18);
+  s=s.replace(/<section class="panel empty">[\s\S]*?<\/section>/,"").replace(/<p class="muted small">لا أهداف في هذه المجموعة.<\/p>/,"");
+  return s+'<div class="cols">'+cc+'</div>'}
 function vGoals0(){
   const fg=S.gl.g,all=Object.values(S.goals).sort((a,b)=>(a.created||"")<(b.created||"")?-1:1);
   const gs=all.filter(x=>!fg||(fg==="_none"?!ggName(x.g):x.g===fg));
@@ -1806,6 +1819,12 @@ function woActive(w){
   sec=Math.max(0,sec-lastTx);
   return Math.min(sec,clock);
 }
+const exKind=e=>e&&(e.k||((exDef(e.eid)||{}).k))||"";
+const KIND_TXT={"":"أوزان وعدات","bw":"وزن الجسم: عدات فقط","time":"بالوقت: مؤقت لكل جولة"};
+function setVal(e,q){if(!q)return "—";const k=exKind(e);return k==="time"?fmtS(+q.r||0):k==="bw"?"× "+(+q.r||0):num(+q.w||0,2)+" × "+(+q.r||0)}
+function afterSet(w,ex,ei){unlockAudio();sndSet();const allD=ex.sets.every(q=>q.done),tx=allD?exTx(ex):0;
+  if(tx>0){const nx=nextEx(w,ei);if(nx)startRest(tx,nx.name);else stopRest()}else startRest(+ex.rest||S.gym.rest)}
+setInterval(()=>{const w=activeWo();if(!w)return;document.querySelectorAll("[data-tr]").forEach(el=>{const p=el.dataset.tr.split("-"),q=w.ex[+p[0]]&&w.ex[+p[0]].sets[+p[1]];if(q&&q.run)el.textContent=fmtS((Date.now()-q.run)/1000)})},250);
 function nextEx(w,ei){const n=w.ex.length;for(let k=1;k<n;k++){const x=w.ex[(ei+k)%n];if(x.sets.some(q=>!q.done))return x}return null}
 const saveWo=id=>queueWrite("workouts/"+id,S.wos[id]||null);
 setInterval(()=>{tickRest();const x=$("#wk-el"),w=activeWo();if(x&&w)x.textContent=fmtDur((Date.now()-new Date(w.start))/1000);wakeSync()},500);
@@ -1828,7 +1847,7 @@ function startWo(gid){
   if(!g.ex.length){openExForm(g,null);return}
   const id=uid();
   S.wos[id]={id:id,gid:g.id,gname:g.name,date:todayK(),start:new Date().toISOString(),end:null,
-    ex:g.ex.map(e=>({eid:e.id,name:e.name,rest:+e.rest||null,sets:Array.from({length:Math.max(1,+e.sets||3)},()=>({w:"",r:"",done:false}))}))};
+    ex:g.ex.map(e=>({eid:e.id,name:e.name,rest:+e.rest||null,k:e.k||"",sets:Array.from({length:Math.max(1,+e.sets||3)},()=>({w:"",r:"",done:false}))}))};
   saveWo(id);unlockAudio();render(true);window.scrollTo(0,0);
 }
 function markTraining(k){
@@ -1927,6 +1946,7 @@ function fatigue(eid,name){ // average loss of reps-to-failure between consecuti
 const fresh=(s,i,d)=>e1x(s.w,eff(s)+i*d); // what set i says about strength before fatigue
 function sessStrength(sets,d){const v=sets.map((s,i)=>+s.w>0&&+s.r>0?fresh(s,i,d):0).filter(x=>x>0);return v.length?avg(v):0}
 function suggestEx(w,e){
+  if(exKind(e))return null;
   const h=exHistory(e.eid,e.name).filter(x=>x.w.start<w.start);if(!h.length)return null;
   const d=fatigue(e.eid,e.name),R=rng(e.eid),t=TR(),prevE=sessStrength(h[0].e.sets,d);if(!(prevE>0))return null;
   const doneE=sessStrength(e.sets.map(s=>s.done?s:{w:0,r:0}),d),E=doneE>0?doneE:prevE,last=h[0].e.sets;
@@ -2046,11 +2066,15 @@ function woView(w){
     s+='<section class="sw-ex"><div class="sw-exh"><button class="sw-exn" data-act="exHist" data-eid="'+e.eid+'" data-n="'+esc(e.name)+'">'+esc(e.name)+'</button><button class="sw-dots sm" data-act="exMenu" data-e="'+ei+'" aria-label="خيارات التمرين">'+IC_DOTS+'</button></div>'+
       (showN?'<label class="sw-note"><input id="xn-'+e.eid+'" class="keep" maxlength="160" value="'+esc(nt)+'" placeholder="ملاحظة ثابتة لهذا التمرين"><span class="sw-pin">'+IC_PIN+'</span></label>':"")+
       (sg&&e.sets.some(x=>!x.done)?'<div class="sw-sug"><b>اقتراح اليوم</b> '+sugText(sg)+sugNums(sg,prev,e)+'</div>':"")+
-      '<div class="sw-tbl"><div class="sw-r sw-hd"><span>الجولة</span><span>السابق</span><span>العدات</span><span>كغم</span><span>'+ICON.check+'</span></div>'+
+      '<div class="sw-tbl"><div class="sw-r sw-hd"><span>الجولة</span><span>السابق</span><span>'+(exKind(e)==="time"?"الوقت":"العدات")+'</span><span>'+(exKind(e)?"":"كغم")+'</span><span>'+(exKind(e)==="time"?"":ICON.check)+'</span></div>'+
       e.sets.map((st,si)=>{const p=prev&&prev[si],ids="ws-"+ei+"-"+si,q=sg&&sg.sets[si],pl=lastSet(prev,si),ph=pl?{w:pl.w,r:pl.r}:(q||null);
-        return '<div class="sw-r'+(st.done?" done":"")+'"><span class="sw-n num">'+(si+1)+'</span><span class="sw-p num">'+(p?L(num(+p.w,2)+" × "+p.r):"—")+'</span>'+
+        const kd=exKind(e);
+        if(kd==="time")return '<div class="sw-r'+(st.done?" done":"")+(st.run?" run":"")+'"><span class="sw-n num">'+(si+1)+'</span><span class="sw-p num">'+(p?L(setVal(e,p)):"—")+'</span>'+
+          '<span class="sw-tm num" data-tr="'+ei+'-'+si+'">'+(st.run?fmtS((Date.now()-st.run)/1000):st.done?fmtS(+st.r||0):(pl?'<span class="muted">'+fmtS(+pl.r||0)+'</span>':"0:00"))+'</span><span></span>'+
+          '<button class="sw-ck sw-tbtn" data-act="setTime" data-e="'+ei+'" data-s="'+si+'" aria-label="'+(st.done?"إلغاء الجولة":st.run?"إيقاف المؤقت":"بدء المؤقت")+'">'+(st.done?ICON.check:st.run?'<svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>':'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>')+'</button></div>';
+        return '<div class="sw-r'+(st.done?" done":"")+'"><span class="sw-n num">'+(si+1)+'</span><span class="sw-p num">'+(p?L(setVal(e,p)):"—")+'</span>'+
           '<input id="'+ids+'-r" class="keep ltr sw-in" type="number" inputmode="numeric" step="1" min="0" value="'+esc(st.r)+'" placeholder="'+(ph?esc(ph.r):"")+'" aria-label="العدات">'+
-          '<input id="'+ids+'-w" class="keep ltr sw-in" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'" placeholder="'+(ph?esc(ph.w):"")+'" aria-label="الوزن">'+
+          (kd==="bw"?'<span class="sw-bw">—</span>':'<input id="'+ids+'-w" class="keep ltr sw-in" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'" placeholder="'+(ph?esc(ph.w):"")+'" aria-label="الوزن">')+
           '<button class="sw-ck" data-act="setDone" data-e="'+ei+'" data-s="'+si+'" aria-pressed="'+!!st.done+'" aria-label="إنهاء الجولة">'+ICON.check+'</button></div>'+
           (st.done?'<div class="sw-rir"><span>عدات باقية</span>'+[0,1,2,3,4].map(v=>'<button class="'+(rirOf(st)===v&&hasRir(st)?"on":"")+'" data-act="rir" data-e="'+ei+'" data-s="'+si+'" data-v="'+v+'">'+(v===0?"0 فشل":v===4?"4+":v)+'</button>').join("")+'</div>':"")}).join("")+
       '</div><button class="sw-add" data-act="setAdd" data-e="'+ei+'">+ إضافة جولة</button></section>';
@@ -2108,6 +2132,7 @@ function openExForm(g,e){
     '<div class="two"><div class="fld"><label for="ex-sets">عدد الجولات</label><input class="ltr" id="ex-sets" name="sets" type="number" inputmode="numeric" min="1" max="20" step="1" required value="'+(e?+e.sets||3:3)+'"></div>'+
     '<div class="fld"><label for="ex-rest">الراحة بالثواني</label><input class="ltr" id="ex-rest" name="rest" type="number" inputmode="numeric" min="0" max="900" step="5" value="'+(e&&+e.rest?+e.rest:"")+'" placeholder="'+S.gym.rest+'"></div></div>'+
     '<span class="lbl">اترك الراحة فارغة لاستخدام المدة الافتراضية ('+S.gym.rest+' ثانية).</span>'+
+    '<div class="fld"><label for="ex-k">نوع التمرين</label><select id="ex-k" name="k" class="sel">'+Object.keys(KIND_TXT).map(k=>'<option value="'+k+'"'+(((e&&e.k)||"")===k?" selected":"")+'>'+KIND_TXT[k]+'</option>').join("")+'</select><span class="lbl">بالوقت: بجانب كل جولة زر تشغيل بدل علامة الصح، تضغطه للبدء ومرة ثانية للإيقاف فيُكتب الوقت. وزن الجسم: بلا خانة كيلوغرام.</span></div>'+
     '<div class="fld"><label for="ex-tx">الانتقال بعد آخر جولة بالثواني</label><input class="ltr" id="ex-tx" name="tx" type="number" inputmode="numeric" min="0" max="900" step="5" value="'+(e&&+e.tx?+e.tx:"")+'" placeholder="'+(+S.gym.tx>0?S.gym.tx:"غير مفعّل")+'" style="max-width:160px"><span class="lbl">'+(+S.gym.tx>0?"فارغ يعني المدة العامة ("+S.gym.tx+" ثانية).":"فارغ يعني راحة عادية بعد آخر جولة. المدة العامة لكل التمارين في إعدادات الجم.")+'</span></div>'+
     '<div class="three"><div class="fld"><label for="ex-lo">أقل عدات</label><input class="ltr" id="ex-lo" name="lo" type="number" inputmode="numeric" min="1" max="50" value="'+(e&&+e.lo?+e.lo:8)+'"></div>'+
     '<div class="fld"><label for="ex-hi">أعلى عدات</label><input class="ltr" id="ex-hi" name="hi" type="number" inputmode="numeric" min="1" max="50" value="'+(e&&+e.hi?+e.hi:12)+'"></div>'+
@@ -2128,7 +2153,7 @@ function openExForm(g,e){
     if(!(step>0&&step<=50)){err.textContent="خطوة الوزن رقم أكبر من صفر.";err.hidden=false;return}
     let eid;
     if(cur){cur.name=name;cur.sets=sets;if(rest)cur.rest=rest;else delete cur.rest;eid=cur.id}else{const ne={id:uid(),name:name,sets:sets};if(rest)ne.rest=rest;gg.ex.push(ne);eid=ne.id}
-    const tgt=gg.ex.find(x=>x.id===eid);if(tgt){tgt.lo=lo;tgt.hi=hi;tgt.step=step;if(tx>0)tgt.tx=tx;else delete tgt.tx}
+    const tgt=gg.ex.find(x=>x.id===eid);if(tgt){const kk=String(fd.get("k")||"");if(KIND_TXT[kk]!==undefined&&kk)tgt.k=kk;else delete tgt.k;tgt.lo=lo;tgt.hi=hi;tgt.step=step;if(tx>0)tgt.tx=tx;else delete tgt.tx}
     setExNote(eid,note);closeSheet();render();
   });
 }
@@ -2160,10 +2185,10 @@ function openAddEx(){
     '<p class="err" id="ax-err" hidden></p><div class="row"><button class="btn pri" type="submit">إضافة</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{
     const w=activeWo();if(!w){closeSheet();render();return}
     const sel=String(fd.get("sel")||""),nw=String(fd.get("nw")||"").trim();let ex=null;
-    if(sel){const f=all.find(x=>x.e.id===sel);if(f)ex={eid:f.e.id,name:f.e.name,rest:+f.e.rest||null,n:+f.e.sets||3}}
+    if(sel){const f=all.find(x=>x.e.id===sel);if(f)ex={eid:f.e.id,name:f.e.name,rest:+f.e.rest||null,n:+f.e.sets||3,k:f.e.k||""}}
     else if(nw)ex={eid:uid(),name:nw,rest:null,n:3};
     if(!ex){const er=$("#ax-err");er.textContent="اختر تمريناً أو اكتب اسماً.";er.hidden=false;return}
-    w.ex.push({eid:ex.eid,name:ex.name,rest:ex.rest,sets:Array.from({length:ex.n},()=>({w:"",r:"",done:false}))});saveWo(w.id);closeSheet();render();
+    w.ex.push({eid:ex.eid,name:ex.name,rest:ex.rest,k:ex.k||"",sets:Array.from({length:ex.n},()=>({w:"",r:"",done:false}))});saveWo(w.id);closeSheet();render();
   });
 }
 let WE=null; // draft of a finished session being edited
@@ -2174,7 +2199,7 @@ function woEditHTML(){
   return '<h2>تعديل الجلسة</h2><form class="f" id="we-form" autocomplete="off"><div class="fld"><label for="we-n">الاسم</label><input id="we-n" maxlength="60" value="'+esc(WE.gname)+'"></div>'+
     '<div class="two"><div class="fld"><label for="we-d">اليوم</label><input id="we-d" class="ltr" type="date" max="'+todayK()+'" value="'+WE.date+'"></div><div class="fld"><label for="we-m">المدة (دقيقة)</label><input id="we-m" class="ltr" type="number" inputmode="numeric" min="1" max="300" value="'+WE._min+'"></div></div>'+
     WE.ex.map((e,ei)=>'<div class="fld"><span class="lbl2" style="color:var(--ink);font-weight:600"><bdi>'+esc(e.name)+'</bdi></span>'+
-      '<div class="wer wer-h"><span>#</span><span>عدات</span><span>كغم</span><span>باقية</span><span></span></div>'+
+      '<div class="wer wer-h"><span>#</span><span>'+(exKind(e)==="time"?"ثوانٍ":"عدات")+'</span><span>'+(exKind(e)?"—":"كغم")+'</span><span>باقية</span><span></span></div>'+
       e.sets.map((st,si)=>'<div class="wer"><span class="num">'+(si+1)+'</span><input id="we-'+ei+'-'+si+'-r" class="ltr qin" type="number" inputmode="numeric" step="1" min="0" value="'+esc(st.r)+'"><input id="we-'+ei+'-'+si+'-w" class="ltr qin" type="number" inputmode="decimal" step="any" min="0" value="'+esc(st.w)+'">'+
         '<select id="we-'+ei+'-'+si+'-q" class="sel" style="padding:6px">'+['',0,1,2,3,4].map(v=>'<option value="'+v+'"'+((v===''&&!hasRir(st))||(v!==''&&hasRir(st)&&+st.rir===v)?" selected":"")+'>'+(v===''?"–":v===4?"4+":v)+'</option>').join("")+'</select>'+
         '<button class="chip-link" type="button" data-act="weSetDel" data-e="'+ei+'" data-s="'+si+'" aria-label="حذف الجولة">×</button></div>').join("")+
@@ -2194,7 +2219,7 @@ function woEditSubmit(){
 }
 function woDetailHTML(w){
   return '<h2>'+esc(w.gname)+'</h2><div class="f"><div class="lbl">'+esc(fLong(w.date))+' · المدة '+fmtDur((new Date(w.end)-new Date(w.start))/1000)+' · وقت العمل المحسوب '+fmtDur(woActive(w))+(woRest(w)!=null?' · متوسط راحتك الفعلية '+fmtS(woRest(w)):"")+' · الحجم '+L(num(woVol(w),0))+' كغم</div>'+
-    (w.ex||[]).map(e=>'<div class="fld"><span class="lbl2" style="color:var(--ink);font-weight:600">'+esc(e.name)+'</span><div class="setl">'+e.sets.map((s,i)=>'<span class="num">'+L((i+1)+". "+num(+s.w||0,2)+" × "+(+s.r||0))+'</span>').join("")+'</div></div>').join("")+
+    (w.ex||[]).map(e=>'<div class="fld"><span class="lbl2" style="color:var(--ink);font-weight:600">'+esc(e.name)+'</span><div class="setl">'+e.sets.map((s,i)=>'<span class="num">'+L((i+1)+". "+setVal(e,s))+'</span>').join("")+'</div></div>').join("")+
     '<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn" data-act="closeSheet">إغلاق</button><button class="btn sm" data-act="woEdit" data-id="'+w.id+'">تعديل الجلسة</button><button class="btn sm danger" data-act="woDel" data-id="'+w.id+'">حذف الجلسة</button></div></div>';
 }
 function exHistHTML(eid,name){
@@ -3163,15 +3188,15 @@ function chalHTML(){
   s+=inv.map(c=>'<div class="chinv"><b><bdi>'+esc(chName(c.by))+'</bdi> يدعوك لتحدٍّ: <bdi>'+esc(c.n)+'</bdi></b><span class="lbl">'+(+c.t>0?'الهدف '+L(amt(c.t))+esc(unitTxt(c))+' · ':'بلا كمية محددة · ')+'من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):' · بلا موعد نهاية')+'</span>'+
     '<div class="row"><button class="btn pri sm" data-act="chAcc" data-id="'+c.id+'">انضمام</button><button class="btn sm" data-act="chNo" data-id="'+c.id+'">رفض</button></div></div>').join("");
   if(!S.chal.filter(c=>!c.hide).length&&!inv.length)s+='<p class="small" style="margin:0">لا تحديات بعد. التحدي هدف واحد بينكما، وكل واحد يسجّل تقدّمه. أول من يصل للهدف يفوز، وإن حددتما موعد نهاية ولم يصل أحد فالأكثر تقدماً يفوز.</p>';
-  const vis=S.chal.filter(c=>!c.hide),act=vis.filter(c=>!chalState(c).done),old=vis.filter(c=>chalState(c).done);
-  s+=act.concat(old).map(chalCard).join("");
   return s+'</section>';
 }
+const chInGroup=(c,fg)=>!fg||(fg==="_none"?!ggName(c.g):c.g===fg);
+function chalCards(fg){if(S.mode!=="db")return "";const vis=S.chal.filter(c=>!c.hide&&chInGroup(c,fg)),act=vis.filter(c=>!chalState(c).done),old=vis.filter(c=>chalState(c).done);return act.concat(old).map(chalCard).join("")}
 function chalCard(c){
   const st=chalState(c),nm=chName(chOther(c)),mine=DB&&c.by===DB.uid,t=+c.t||0,scale=t>0?t:Math.max(st.a,st.b,1e-9),pc=v=>Math.min(100,Math.round(v/scale*100));
   const vt=v=>L(amt(v)+(t>0?" / "+amt(t):""))+(t>0?"":esc(unitTxt(c)));
   const bar=(v,cls)=>'<span class="chbar"><i class="'+cls+'" style="width:'+pc(v)+'%"></i></span>';
-  let head='<div class="chh"><b><bdi>'+esc(c.n)+'</bdi></b><span class="lbl">مع <bdi>'+esc(nm)+'</bdi> · '+(t>0?'الهدف '+L(amt(t))+esc(unitTxt(c)):'بلا كمية محددة')+' · من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):"")+'</span></div>';
+  let head='<div class="chh"><b><bdi>'+esc(c.n)+'</bdi></b><span class="lbl">'+(ggName(c.g)&&!S.gl.g?esc(ggName(c.g))+' · ':'')+'تحدٍّ مع <bdi>'+esc(nm)+'</bdi> · '+(t>0?'الهدف '+L(amt(t))+esc(unitTxt(c)):'بلا كمية محددة')+' · من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):"")+'</span></div>';
   let status="";
   if(st.done){const w=st.winner==="me"?"فزت أنت":st.winner==="fr"?"فاز "+nm:"تعادل";
     status='<div class="chend '+(st.winner==="me"?"w":st.winner==="fr"?"l":"d")+'"><b>'+esc(w)+'</b><span>انتهى في '+esc(fShort(st.endK))+(st.how==="reach"?" بالوصول للهدف":st.how==="date"?" في موعد النهاية":" بإنهاء التحدي")+'</span></div>'}
@@ -3181,8 +3206,8 @@ function chalCard(c){
     (st.fs?'<div class="chr"><span><i class="cmpdot w"></i><bdi>'+esc(nm)+'</bdi></span>'+bar(st.b,"w")+'<b class="num">'+vt(st.b)+'</b>'+(st.rb&&(!st.endK||st.rb<=st.endK)?'<span class="chok">✓</span>':'<span></span>')+'</div>':"")+'</div>';
   const ks=Object.keys(c.log||{}).filter(k=>+c.log[k]).sort().reverse();
   const log=ks.length?'<div class="chlog">'+ks.slice(0,6).map(k=>'<span><span class="lbl">'+esc(fShort(k))+'</span> <b class="num">'+L("+"+amt(c.log[k]))+'</b></span>').join("")+(ks.length>6?'<span class="lbl">و'+(ks.length-6)+' أيام أخرى</span>':"")+'</div>':"";
-  const btns='<div class="row">'+(st.done?'<button class="chip-link" data-act="chDel" data-id="'+c.id+'">حذف من القائمة</button>':'<button class="btn pri sm" data-act="chLog" data-id="'+c.id+'">تسجيل تقدّم</button><button class="chip-link" data-act="chEnd" data-id="'+c.id+'">إنهاء التحدي</button>')+'</div>';
-  return '<div class="chc'+(st.done?" done":"")+'">'+head+status+rows+log+btns+'</div>';
+  const btns='<div class="row">'+(st.done?'<button class="chip-link" data-act="chDel" data-id="'+c.id+'">حذف من القائمة</button>':'<button class="btn pri sm" data-act="chLog" data-id="'+c.id+'">تسجيل تقدّم</button><button class="btn sm" data-act="chEdit" data-id="'+c.id+'">تعديل</button><button class="chip-link" data-act="chEnd" data-id="'+c.id+'">إنهاء التحدي</button>')+'</div>';
+  return '<article class="panel hcard chc'+(st.done?" done":"")+'">'+head+status+rows+log+(st.done?"":gTimerHTML(c,"c"))+btns+'</article>';
 }
 function openChalNew(){
   openSheet('<h2>تحدٍّ جديد</h2><form class="f" id="ch-form" autocomplete="off">'+
@@ -3192,6 +3217,7 @@ function openChalNew(){
     '<div class="fld"><label for="ch-u">الوحدة (اختياري)</label><input id="ch-u" name="u" maxlength="16" placeholder="صفحة"></div></div>'+
     '<div class="two"><div class="fld"><label for="ch-s">يبدأ</label><input id="ch-s" name="s" class="ltr datein" type="date" value="'+todayK()+'"></div>'+
     '<div class="fld"><label for="ch-e">موعد النهاية (اختياري)</label><input id="ch-e" name="e" class="ltr datein" type="date" min="'+todayK()+'"></div></div>'+
+    (S.ggroups.length?'<div class="fld"><label for="ch-g">المجموعة</label><select id="ch-g" name="gg" class="sel"><option value="">بدون مجموعة</option>'+S.ggroups.map(x=>'<option value="'+x.id+'"'+(S.gl.g&&S.gl.g!=="_none"&&S.gl.g===x.id?" selected":"")+'>'+esc(x.name)+'</option>').join("")+'</select></div>':"")+
     '<p class="lbl" style="margin:0">كل واحد يسجّل تقدّمه بنفسه. إن حددت كمية: أول من يصل لها يفوز. بلا كمية: يفوز صاحب المجموع الأكبر عند موعد النهاية أو حين يُنهي أحدكما التحدي. بلا موعد نهاية: يستمر حتى يصل أحدكما للكمية أو يُنهيه أحدكما، ويُكتب تاريخ انتهائه.</p>'+
     '<p class="err" id="ch-err" hidden></p><div class="row"><button class="btn pri" type="submit">إرسال الدعوة</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',(fd)=>{
     const f=String(fd.get("f")||""),n=String(fd.get("n")||"").trim(),tr=String(fd.get("t")||"").trim(),t=tr===""?0:parseFloat(tr),u=String(fd.get("u")||"").trim(),sd=String(fd.get("s")||""),ed=String(fd.get("e")||""),err=$("#ch-err"),bad=m=>{err.textContent=m;err.hidden=false};
@@ -3199,6 +3225,7 @@ function openChalNew(){
     if(!(t>=0&&t<1e7))return bad("الكمية رقم موجب، أو اتركها فارغة.");
     const from=/^\d{4}-\d{2}-\d{2}$/.test(sd)?sd:todayK();if(ed&&!(/^\d{4}-\d{2}-\d{2}$/.test(ed)&&ed>=from))return bad("موعد النهاية بعد يوم البداية.");
     const c={id:uid(),n:n.slice(0,50),u:u.slice(0,16),t:t,from:from,by:DB.uid,to:f,log:{}};if(ed)c.end=ed;
+    const gg=String(fd.get("gg")||"");if(gg&&S.ggroups.some(x=>x.id===gg))c.g=gg;
     S.chal.push(c);saveConfig();SH_LAST="";queueShare();closeSheet();render();
   });
 }
@@ -3219,8 +3246,13 @@ function openChalLog(id){
     cc.log=cc.log||{};cc.log[d]=Math.round(((+cc.log[d]||0)+v)*100)/100;saveConfig();SH_LAST="";queueShare();closeSheet();render();
   });
 }
+// my own settings for a challenge: its goal group (not shared)
+function openChalEdit(id){const c=S.chal.find(x=>x.id===id);if(!c)return;
+  openSheet('<h2>تعديل: <bdi>'+esc(c.n)+'</bdi></h2><form class="f" id="che-form" autocomplete="off"><div class="fld"><label for="che-g">المجموعة</label><select id="che-g" name="g" class="sel"><option value="">بدون مجموعة</option>'+S.ggroups.map(x=>'<option value="'+x.id+'"'+(c.g===x.id?" selected":"")+'>'+esc(x.name)+'</option>').join("")+'</select><span class="lbl">مجموعات الأهداف نفسها. هذا الإعداد لك فقط ولا يظهر لصديقك.</span></div>'+
+    '<div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{const g=String(fd.get("g")||"");const cc=S.chal.find(x=>x.id===id);if(cc){if(g&&S.ggroups.some(x=>x.id===g))cc.g=g;else delete cc.g;saveConfig()}closeSheet();render()})}
 function chalAct(a,b){
   const id=b.dataset.id;
+  if(a==="chEdit"){openChalEdit(id);return true}
   if(a==="chNew"){openChalNew();return true}
   if(a==="chLog"){openChalLog(id);return true}
   if(a==="chLogDel"){const c=S.chal.find(x=>x.id===id);if(c&&c.log){delete c.log[b.dataset.k];saveConfig();SH_LAST="";queueShare();openChalLog(id);render()}return true}
@@ -3283,7 +3315,7 @@ function openNgroup(g,kind){
   });
 }
 function groupChips(kind){
-  const list=kind==="g"?S.ggroups:S.ngroups,cur=kind==="g"?S.gl.g:S.nt.g,items=kind==="g"?Object.values(S.goals):Object.values(S.notes).filter(x=>(x.title||"").trim()||(x.body||"").trim());
+  const list=kind==="g"?S.ggroups:S.ngroups,cur=kind==="g"?S.gl.g:S.nt.g,items=kind==="g"?Object.values(S.goals).concat(S.chal.filter(c=>!c.hide)):Object.values(S.notes).filter(x=>(x.title||"").trim()||(x.body||"").trim());
   const has=id=>list.some(g=>g.id===id),cnt=f=>items.filter(x=>!f||(f==="_none"?!has(x.g):x.g===f)).length;
   const chip=(f,lbl)=>'<button class="nchip'+(cur===f?" on":"")+'" data-act="ngPick" data-k="'+kind+'" data-g="'+f+'">'+esc(lbl)+' <span class="num">'+cnt(f)+'</span></button>';
   return '<div class="nchips">'+chip("","الكل")+list.map(g=>chip(g.id,g.name)).join("")+(list.length&&cnt("_none")?chip("_none","بدون مجموعة"):"")+'<button class="nchip add" data-act="ngNew" data-k="'+kind+'">+ مجموعة</button>'+
@@ -3572,12 +3604,17 @@ document.addEventListener("click",e=>{
     case "exMove":{const g=findG(b.dataset.g);if(!g)break;const i=g.ex.findIndex(x=>x.id===id),j=i+(+b.dataset.n);if(i>=0&&j>=0&&j<g.ex.length){const t2=g.ex[i];g.ex[i]=g.ex[j];g.ex[j]=t2;saveConfig();render();openExForm(g,t2)}break}
     case "exDel":{if(confirmArm[a+id]){const g=findG(b.dataset.g);if(g){g.ex=g.ex.filter(x=>x.id!==id);saveConfig()}closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف التمرين"},4000)}break}
     case "gymSet":openGymSet();break;
+    case "setTime":{const w=activeWo();if(!w)break;const ei=+b.dataset.e,si=+b.dataset.s,ex=w.ex[ei],st=ex&&ex.sets[si];if(!st)break;
+      if(st.done){st.done=false;delete st.t}
+      else if(st.run){const sec=Math.max(1,Math.round((Date.now()-st.run)/1000));st.r=String(sec);st.w="0";delete st.run;st.done=true;st.t=Date.now();afterSet(w,ex,ei)}
+      else{w.ex.forEach(x=>x.sets.forEach(q=>{if(q.run)delete q.run}));st.run=Date.now();unlockAudio();stopRest()}
+      saveWo(w.id);render();break}
     case "setDone":{const w=activeWo();if(!w)break;const ei=+b.dataset.e,si=+b.dataset.s,ex=w.ex[ei],st=ex&&ex.sets[si];if(!st)break;
       if(!st.done){const prev=prevSets(ex.eid,ex.name,w.start),sg=suggestEx(w,ex),p=lastSet(prev,si)||(sg&&sg.sets[si]),wi=$("#ws-"+ei+"-"+si+"-w"),ri=$("#ws-"+ei+"-"+si+"-r");
         if(wi&&wi.value!=="")st.w=wi.value;if(ri&&ri.value!=="")st.r=ri.value;
         if(st.w===""&&p)st.w=String(p.w);if(st.r===""&&p)st.r=String(p.r);
         if(st.r===""||!(+st.r>0)){if(ri){ri.classList.add("need");ri.focus()}clickForce=false;break}
-        if(st.w==="")st.w="0";
+        if(st.w===""||exKind(ex)==="bw")st.w="0";
         st.done=true;st.t=Date.now();if(!hasRir(st))st.rir=TR();unlockAudio();sndSet();
         const allD=ex.sets.every(q=>q.done),tx=allD?exTx(ex):0;
         if(tx>0){const nx=nextEx(w,ei);if(nx)startRest(tx,nx.name);else stopRest()}else startRest(+ex.rest||S.gym.rest)}else{st.done=false;delete st.t}
@@ -3677,8 +3714,8 @@ document.addEventListener("click",e=>{
     case "memClearVal":setHappy(S.mem.sel,null);render(true);break;
     case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
-    case "chNew":case "chAcc":case "chNo":case "chEnd":case "chLog":case "chLogDel":case "chDel":chalAct(a,b);break;
-    case "gtTog":{const g=S.goals[id];if(!g)break;g.tm=g.tm||{};if(g.tm.run){gtAdd(g,+new Date(g.tm.run),Date.now());delete g.tm.run}else g.tm.run=new Date().toISOString();saveGoal(id);render();break}
+    case "chNew":case "chAcc":case "chNo":case "chEnd":case "chLog":case "chLogDel":case "chDel":case "chEdit":chalAct(a,b);break;
+    case "gtTog":{const ch=b.dataset.k==="c",g=ch?S.chal.find(x=>x.id===id):S.goals[id];if(!g)break;g.tm=g.tm||{};if(g.tm.run){gtAdd(g,+new Date(g.tm.run),Date.now());delete g.tm.run}else g.tm.run=new Date().toISOString();if(ch)saveConfig();else saveGoal(id);render();break}
     case "goCmp":S.tab="habits";CMP_ON=true;try{localStorage.setItem("dt-tab","habits");localStorage.setItem("dt-cmp","1")}catch(er){}render(true);setTimeout(()=>{const x=$(".cmpbox");if(x)x.scrollIntoView({block:"start"})},50);break;
     case "cmpR":S.cmpV.r=b.dataset.r||"7";render();break;
     case "cmpTog":CMP_ON=!CMP_ON;try{localStorage.setItem("dt-cmp",CMP_ON?"1":"0")}catch(er){}render();break;
