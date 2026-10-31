@@ -951,7 +951,7 @@ function startDB(db){
   const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&got.w&&got.u&&S.mode==="loading"){S.mode="db";setSync();migrateX()}render()};
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
-    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&+c.t>0&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
+    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
     got.c=true;ready();
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -2547,11 +2547,12 @@ function fsResults(){
   const box=$("#fs-res");if(!box||!FS)return;
   const q=FS.q.trim();let h="";
   if(!q){
-    if(FS.mode==="log"){const ml=Object.values(NUT().meals);if(ml.length)h+='<div class="fsh">وجباتك الجاهزة</div>'+ml.map(x=>{const t=vSum(x.it);return '<div class="fsrow"><button class="fsi" data-act="fsMeal" data-id="'+x.id+'"><span class="t"><b>'+esc(x.n)+'</b><span>'+x.it.length+' أصناف · تُضاف كلها</span></span><span class="k">'+L(kc0(t[0]))+' سعرة</span></button><button class="iconbtn sm2" data-act="smEdit" data-id="'+x.id+'" aria-label="تعديل '+esc(x.n)+'">'+ICON.edit+'</button></div>'}).join("")}
-    const own=Object.values(NUT().recipes).map(r=>"r:"+r.id).concat(Object.values(NUT().foods).map(c=>"c:"+c.id));
-    const rec=recentFoods(25).filter(e=>food(e.f)||e.f.indexOf("u:")===0);
+    const ml=FS.mode==="log"?Object.values(NUT().meals):[],own=Object.values(NUT().recipes).map(r=>"r:"+r.id).concat(Object.values(NUT().foods).map(c=>"c:"+c.id));
+    if(ml.length||own.length)h+='<div class="fsh">وجباتك وأطعمتك</div>';
+    if(ml.length)h+=ml.map(x=>{const t=vSum(x.it);return '<div class="fsrow"><button class="fsi" data-act="fsMeal" data-id="'+x.id+'"><span class="t"><b>'+esc(x.n)+'</b><span>'+x.it.length+' أصناف · تُضاف كلها</span></span><span class="k">'+L(kc0(t[0]))+' سعرة</span></button><button class="iconbtn sm2" data-act="smEdit" data-id="'+x.id+'" aria-label="تعديل '+esc(x.n)+'">'+ICON.edit+'</button></div>'}).join("")
+    if(own.length)h+=own.map(f=>fsItem(f)).join("");
+    const rec=recentFoods(25).filter(e=>(food(e.f)||e.f.indexOf("u:")===0)&&!/^[cr]:/.test(e.f));
     if(rec.length)h+='<div class="fsh">الأخيرة</div>'+rec.map(e=>fsItem(e.f,{g:+e.g})||'<button class="fsi" data-act="fsPick" data-f="'+esc(e.f)+'"><span class="t"><b dir="auto">'+esc(e.n)+'</b><span>USDA</span></span><span class="k">'+L(kc0(+e.v[0]))+' / 100 غ</span></button>').join("");
-    if(own.length)h+='<div class="fsh">أطعمتك ووصفاتك</div>'+own.map(f=>fsItem(f)).join("");
     h+='<p class="lbl" style="margin:6px 0 0">النتائج تبدأ بـ '+FOOD_AR.length+' صنفاً شائعاً مطبوخاً أو جاهزاً، ثم بقية قاعدة USDA ('+(FDB_LIST?FDB_LIST.length.toLocaleString("en"):"8,400")+' صنف). اكتب بالإنكليزية، والكلمات العراقية الشائعة تعمل أيضاً للأصناف الشائعة.</p>';
     box.innerHTML=h;return;
   }
@@ -3126,16 +3127,16 @@ function hkSel(el){if(!el)return;const r=document.createRange();r.selectNodeCont
 // Each side logs his own amounts; only the challenge itself and those amounts are published (shares/{uid}.ch), nothing else.
 // Mine: S.chal = [{id, n title, u unit, t target, from, end (optional), by creator, to invited, log:{date: amount}, e: day I ended it}]
 // A finished challenge removed from the list stays in the data (hidden) so the result stays the same for both.
-// Result: the first to reach the target wins. At the end day, or when either side ends it, the larger total wins. Equal = draw.
+// Result: the first to reach the target (if there is one) wins. At the end day, or when either side ends it, the larger total wins. Equal = draw.
 S.chal=[];S.chalNo=[];
 function chalShare(){const o={};S.chal.forEach(c=>{const x={n:c.n,u:c.u||"",t:c.t,from:c.from,by:c.by,to:c.to,log:c.log||{}};if(c.end)x.end=c.end;if(c.e)x.e=c.e;o[c.id]=x});return o}
 const chOther=c=>DB&&c.by===DB.uid?c.to:c.by;
 const chName=u=>{const f=S.cmp.find(x=>x.uid===u);return f?f.name:"صديقك"};
 function chFriendSide(c){const f=S.fr[chOther(c)];return f&&f.ch&&f.ch[c.id]?f.ch[c.id]:null}
 const logSum=(log,upTo)=>Object.keys(log||{}).reduce((a,k)=>a+(!upTo||k<=upTo?(+log[k]||0):0),0);
-function reachDay(log,t,from){let s=0;for(const k of Object.keys(log||{}).filter(k=>k>=from).sort()){s+=+log[k]||0;if(s>=t)return k}return null}
+function reachDay(log,t,from){if(!(t>0))return null;let s=0;for(const k of Object.keys(log||{}).filter(k=>k>=from).sort()){s+=+log[k]||0;if(s>=t)return k}return null}
 function chalState(c){
-  const fs=chFriendSide(c),t=+c.t,today=todayK();
+  const fs=chFriendSide(c),t=+c.t||0,today=todayK();
   const ra=reachDay(c.log,t,c.from),rb=fs?reachDay(fs.log,t,c.from):null;
   const ends=[c.e,fs&&fs.e,c.end&&c.end<today?c.end:null].filter(Boolean).sort();
   let endK=ends[0]||null,winner=null,how="";
@@ -3159,7 +3160,7 @@ function chalHTML(){
   let s='<section class="panel sec chal"><div class="sec-h"><h2>تحديات مع الأصدقاء</h2>'+(S.cmp.length?'<button class="btn sm" data-act="chNew">تحدٍّ جديد</button>':"")+'</div>';
   if(!S.cmp.length)return s+'<p class="small" style="margin:0">أضف صديقاً من الإعدادات ← المقارنة مع صديق، ثم ضعا هدفاً واحداً تتسابقان عليه: مثلاً قراءة 300 صفحة، أو 50 كم مشي.</p></section>';
   const inv=chalInvites();
-  s+=inv.map(c=>'<div class="chinv"><b><bdi>'+esc(chName(c.by))+'</bdi> يدعوك لتحدٍّ: <bdi>'+esc(c.n)+'</bdi></b><span class="lbl">الهدف '+L(amt(c.t))+esc(unitTxt(c))+' · من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):' · بلا موعد نهاية')+'</span>'+
+  s+=inv.map(c=>'<div class="chinv"><b><bdi>'+esc(chName(c.by))+'</bdi> يدعوك لتحدٍّ: <bdi>'+esc(c.n)+'</bdi></b><span class="lbl">'+(+c.t>0?'الهدف '+L(amt(c.t))+esc(unitTxt(c))+' · ':'بلا كمية محددة · ')+'من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):' · بلا موعد نهاية')+'</span>'+
     '<div class="row"><button class="btn pri sm" data-act="chAcc" data-id="'+c.id+'">انضمام</button><button class="btn sm" data-act="chNo" data-id="'+c.id+'">رفض</button></div></div>').join("");
   if(!S.chal.filter(c=>!c.hide).length&&!inv.length)s+='<p class="small" style="margin:0">لا تحديات بعد. التحدي هدف واحد بينكما، وكل واحد يسجّل تقدّمه. أول من يصل للهدف يفوز، وإن حددتما موعد نهاية ولم يصل أحد فالأكثر تقدماً يفوز.</p>';
   const vis=S.chal.filter(c=>!c.hide),act=vis.filter(c=>!chalState(c).done),old=vis.filter(c=>chalState(c).done);
@@ -3167,16 +3168,17 @@ function chalHTML(){
   return s+'</section>';
 }
 function chalCard(c){
-  const st=chalState(c),nm=chName(chOther(c)),mine=DB&&c.by===DB.uid,t=+c.t,pc=v=>Math.min(100,Math.round(v/t*100));
+  const st=chalState(c),nm=chName(chOther(c)),mine=DB&&c.by===DB.uid,t=+c.t||0,scale=t>0?t:Math.max(st.a,st.b,1e-9),pc=v=>Math.min(100,Math.round(v/scale*100));
+  const vt=v=>L(amt(v)+(t>0?" / "+amt(t):""))+(t>0?"":esc(unitTxt(c)));
   const bar=(v,cls)=>'<span class="chbar"><i class="'+cls+'" style="width:'+pc(v)+'%"></i></span>';
-  let head='<div class="chh"><b><bdi>'+esc(c.n)+'</bdi></b><span class="lbl">مع <bdi>'+esc(nm)+'</bdi> · الهدف '+L(amt(t))+esc(unitTxt(c))+' · من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):"")+'</span></div>';
+  let head='<div class="chh"><b><bdi>'+esc(c.n)+'</bdi></b><span class="lbl">مع <bdi>'+esc(nm)+'</bdi> · '+(t>0?'الهدف '+L(amt(t))+esc(unitTxt(c)):'بلا كمية محددة')+' · من '+esc(fShort(c.from))+(c.end?' إلى '+esc(fShort(c.end)):"")+'</span></div>';
   let status="";
   if(st.done){const w=st.winner==="me"?"فزت أنت":st.winner==="fr"?"فاز "+nm:"تعادل";
     status='<div class="chend '+(st.winner==="me"?"w":st.winner==="fr"?"l":"d")+'"><b>'+esc(w)+'</b><span>انتهى في '+esc(fShort(st.endK))+(st.how==="reach"?" بالوصول للهدف":st.how==="date"?" في موعد النهاية":" بإنهاء التحدي")+'</span></div>'}
   else if(!st.fs)status='<span class="lbl">'+(mine?'بانتظار أن ينضم <bdi>'+esc(nm)+'</bdi>. تظهر له الدعوة في قسم الأهداف.':'<bdi>'+esc(nm)+'</bdi> خرج من هذا التحدي.')+'</span>';
   else if(c.end){const left=diffD(todayK(),c.end);status='<span class="lbl">'+(left>0?"باقي "+left+" "+(left===1?"يوم":left===2?"يومان":"أيام"):"اليوم آخر يوم")+'</span>'}
-  const rows='<div class="chrows"><div class="chr"><span><i class="cmpdot a"></i>أنت</span>'+bar(st.a,"a")+'<b class="num">'+L(amt(st.a)+" / "+amt(t))+'</b>'+(st.ra&&(!st.endK||st.ra<=st.endK)?'<span class="chok">✓</span>':'<span></span>')+'</div>'+
-    (st.fs?'<div class="chr"><span><i class="cmpdot w"></i><bdi>'+esc(nm)+'</bdi></span>'+bar(st.b,"w")+'<b class="num">'+L(amt(st.b)+" / "+amt(t))+'</b>'+(st.rb&&(!st.endK||st.rb<=st.endK)?'<span class="chok">✓</span>':'<span></span>')+'</div>':"")+'</div>';
+  const rows='<div class="chrows"><div class="chr"><span><i class="cmpdot a"></i>أنت</span>'+bar(st.a,"a")+'<b class="num">'+vt(st.a)+'</b>'+(st.ra&&(!st.endK||st.ra<=st.endK)?'<span class="chok">✓</span>':'<span></span>')+'</div>'+
+    (st.fs?'<div class="chr"><span><i class="cmpdot w"></i><bdi>'+esc(nm)+'</bdi></span>'+bar(st.b,"w")+'<b class="num">'+vt(st.b)+'</b>'+(st.rb&&(!st.endK||st.rb<=st.endK)?'<span class="chok">✓</span>':'<span></span>')+'</div>':"")+'</div>';
   const ks=Object.keys(c.log||{}).filter(k=>+c.log[k]).sort().reverse();
   const log=ks.length?'<div class="chlog">'+ks.slice(0,6).map(k=>'<span><span class="lbl">'+esc(fShort(k))+'</span> <b class="num">'+L("+"+amt(c.log[k]))+'</b></span>').join("")+(ks.length>6?'<span class="lbl">و'+(ks.length-6)+' أيام أخرى</span>':"")+'</div>':"";
   const btns='<div class="row">'+(st.done?'<button class="chip-link" data-act="chDel" data-id="'+c.id+'">حذف من القائمة</button>':'<button class="btn pri sm" data-act="chLog" data-id="'+c.id+'">تسجيل تقدّم</button><button class="chip-link" data-act="chEnd" data-id="'+c.id+'">إنهاء التحدي</button>')+'</div>';
@@ -3186,15 +3188,15 @@ function openChalNew(){
   openSheet('<h2>تحدٍّ جديد</h2><form class="f" id="ch-form" autocomplete="off">'+
     '<div class="fld"><label for="ch-f">مع</label><select id="ch-f" name="f" class="sel">'+S.cmp.map(f=>'<option value="'+esc(f.uid)+'">'+esc(f.name)+'</option>').join("")+'</select></div>'+
     '<div class="fld"><label for="ch-n">الهدف</label><input id="ch-n" name="n" maxlength="50" required placeholder="مثال: قراءة كتب"></div>'+
-    '<div class="two"><div class="fld"><label for="ch-t">الكمية المطلوبة</label><input id="ch-t" name="t" class="ltr" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="300"></div>'+
+    '<div class="two"><div class="fld"><label for="ch-t">الكمية المطلوبة (اختياري)</label><input id="ch-t" name="t" class="ltr" type="number" inputmode="decimal" min="0" step="any" placeholder="بلا حد"></div>'+
     '<div class="fld"><label for="ch-u">الوحدة (اختياري)</label><input id="ch-u" name="u" maxlength="16" placeholder="صفحة"></div></div>'+
     '<div class="two"><div class="fld"><label for="ch-s">يبدأ</label><input id="ch-s" name="s" class="ltr datein" type="date" value="'+todayK()+'"></div>'+
     '<div class="fld"><label for="ch-e">موعد النهاية (اختياري)</label><input id="ch-e" name="e" class="ltr datein" type="date" min="'+todayK()+'"></div></div>'+
-    '<p class="lbl" style="margin:0">كل واحد يسجّل تقدّمه بنفسه. أول من يصل للكمية يفوز. مع موعد نهاية: إن لم يصل أحد يفوز الأكثر تقدماً في ذلك اليوم. بلا موعد: يستمر حتى يصل أحدكما أو يُنهيه أحدكما، ويُكتب تاريخ انتهائه.</p>'+
+    '<p class="lbl" style="margin:0">كل واحد يسجّل تقدّمه بنفسه. إن حددت كمية: أول من يصل لها يفوز. بلا كمية: يفوز صاحب المجموع الأكبر عند موعد النهاية أو حين يُنهي أحدكما التحدي. بلا موعد نهاية: يستمر حتى يصل أحدكما للكمية أو يُنهيه أحدكما، ويُكتب تاريخ انتهائه.</p>'+
     '<p class="err" id="ch-err" hidden></p><div class="row"><button class="btn pri" type="submit">إرسال الدعوة</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',(fd)=>{
-    const f=String(fd.get("f")||""),n=String(fd.get("n")||"").trim(),t=parseFloat(fd.get("t")),u=String(fd.get("u")||"").trim(),sd=String(fd.get("s")||""),ed=String(fd.get("e")||""),err=$("#ch-err"),bad=m=>{err.textContent=m;err.hidden=false};
+    const f=String(fd.get("f")||""),n=String(fd.get("n")||"").trim(),tr=String(fd.get("t")||"").trim(),t=tr===""?0:parseFloat(tr),u=String(fd.get("u")||"").trim(),sd=String(fd.get("s")||""),ed=String(fd.get("e")||""),err=$("#ch-err"),bad=m=>{err.textContent=m;err.hidden=false};
     if(!S.cmp.some(x=>x.uid===f))return bad("اختر صديقاً.");if(!n)return bad("اكتب الهدف.");
-    if(!(t>0&&t<1e7))return bad("الكمية رقم أكبر من صفر.");
+    if(!(t>=0&&t<1e7))return bad("الكمية رقم موجب، أو اتركها فارغة.");
     const from=/^\d{4}-\d{2}-\d{2}$/.test(sd)?sd:todayK();if(ed&&!(/^\d{4}-\d{2}-\d{2}$/.test(ed)&&ed>=from))return bad("موعد النهاية بعد يوم البداية.");
     const c={id:uid(),n:n.slice(0,50),u:u.slice(0,16),t:t,from:from,by:DB.uid,to:f,log:{}};if(ed)c.end=ed;
     S.chal.push(c);saveConfig();SH_LAST="";queueShare();closeSheet();render();
@@ -3223,7 +3225,7 @@ function chalAct(a,b){
   if(a==="chLog"){openChalLog(id);return true}
   if(a==="chLogDel"){const c=S.chal.find(x=>x.id===id);if(c&&c.log){delete c.log[b.dataset.k];saveConfig();SH_LAST="";queueShare();openChalLog(id);render()}return true}
   if(a==="chAcc"){const inv=chalInvites().find(x=>x.id===id);if(!inv)return true;
-    const c={id:id,n:String(inv.n||"تحدي").slice(0,50),u:String(inv.u||"").slice(0,16),t:+inv.t>0?+inv.t:1,from:inv.from||todayK(),by:inv.by,to:inv.to,log:{}};if(inv.end)c.end=inv.end;
+    const c={id:id,n:String(inv.n||"تحدي").slice(0,50),u:String(inv.u||"").slice(0,16),t:+inv.t>0?+inv.t:0,from:inv.from||todayK(),by:inv.by,to:inv.to,log:{}};if(inv.end)c.end=inv.end;
     S.chal.push(c);saveConfig();SH_LAST="";queueShare();render();return true}
   if(a==="chNo"){S.chalNo.push(id);saveConfig();render();return true}
   if(a==="chEnd"){if(confirmArm[a+id]){delete confirmArm[a+id];const c=S.chal.find(x=>x.id===id);if(c&&!c.e){c.e=todayK();saveConfig();SH_LAST="";queueShare()}render()}
