@@ -3485,7 +3485,7 @@ function habitForm(h,pg){
     '<div class="fld"><label for="hf-qs">مقدار الزيادة</label><input class="ltr" id="hf-qs" name="qs" type="number" step="any" min="0" value="'+(q?q.s||1:1)+'"></div></div></div>'+
   '<div class="fld"><span class="lbl2">التكرار</span><div class="seg2" role="radiogroup"><label><input type="radio" name="fr" value="days" id="hf-fr-days"'+(wk||(h&&isFl(h))?"":" checked")+'><span>أيام محددة</span></label><label><input type="radio" name="fr" value="wk" id="hf-fr-wk"'+(wk?" checked":"")+'><span>عدد مرات في الأسبوع</span></label><label><input type="radio" name="fr" value="fl" id="hf-fr-fl"'+(h&&isFl(h)?" checked":"")+'><span>بلا يوم محدد</span></label></div></div>'+
   '<p class="lbl" id="hf-flbox"'+(h&&isFl(h)?"":" hidden")+' style="margin:0">تبقى في قائمة المهام الثابتة كل يوم ولا تُحسب فائتة إن لم تنجزها. حين تنجزها تُعامل مثل المهمة المعلّقة: نقاطها تُضاف لما جمعته ولما كان ممكناً في ذلك اليوم، وفي المقارنة تدخل مع المعلّقة بالحد نفسه.</p>'+
-  '<div class="fld" id="hf-daysbox"'+(wk||(h&&isFl(h))?" hidden":"")+'><div class="daypick">'+DAYS_ORDER.map(d=>'<label title="'+DAY_NAME[d]+'"><input type="checkbox" id="hf-d'+d+'" name="d" value="'+d+'"'+(days.includes(d)?" checked":"")+'><span>'+DAY_LETTER[d]+'</span></label>').join("")+'</div><span class="lbl">الأيام غير المجدولة لا تكسر السلسلة.</span></div>'+
+  '<div class="fld" id="hf-daysbox"'+(wk||(h&&isFl(h))?" hidden":"")+'><div class="daypick">'+DAYS_ORDER.map(d=>'<label title="'+DAY_NAME[d]+'"><input type="checkbox" id="hf-d'+d+'" name="d" value="'+d+'"'+(days.includes(d)?" checked":"")+'><span>'+DAY_LETTER[d]+'</span></label>').join("")+'</div><span class="lbl">الأيام غير المجدولة لا تكسر السلسلة. إذا لم تختر أي يوم تُحفظ المهمة «بلا يوم محدد».</span></div>'+
   '<div class="fld" id="hf-wkbox"'+(wk?"":" hidden")+'><label for="hf-wk">كم مرة في الأسبوع</label><input class="ltr" id="hf-wk" name="wk" type="number" min="1" max="7" step="1" value="'+(wk||1)+'" style="max-width:120px">'+
     '<span class="lbl">تظهر كل أيام الأسبوع حتى تكمل العدد، وتُحسب نقاطها في اليوم الذي تنجزها فيه، ولا تدخل في الحد الأقصى اليومي. الأسبوع يبدأ بالسبت.</span></div>'+
   '<label class="chk"><input type="checkbox" name="wl" id="hf-wl"'+(h?(wlink(h)?" checked":""):"")+'><span>اطلب تسجيل الوزن عند إنجازها</span></label>'+
@@ -3501,12 +3501,12 @@ function openHabit(h,pg){
     const err=$("#hf-err"),bad=m=>{err.textContent=m;err.hidden=false};
     if(!name)return bad("اكتب اسماً للمهمة.");
     if(!Number.isFinite(pts)||pts<1||pts>1000)return bad("النقاط رقم صحيح من 1 إلى 1000.");
-    const kind=fd.get("kind"),fr=fd.get("fr");let q=null,wk=0;
+    const kind=fd.get("kind");let fr=fd.get("fr");if(fr==="days"&&!days.length)fr="fl";let q=null,wk=0;
     if(kind==="q"){const raw=String(fd.get("qt")||"").trim(),qt=parseFloat(raw),qs=parseFloat(fd.get("qs"));
       if(raw&&(!Number.isFinite(qt)||qt<=0))return bad("الهدف أو الحد رقم أكبر من صفر، أو اتركه فارغاً.");
       q={t:raw?qt:0,u:String(fd.get("qu")||"").trim(),m:raw?(fd.get("qm")==="max"?"max":"min"):"none",s:Number.isFinite(qs)&&qs>0?qs:1}}
     if(fr==="wk"){wk=parseInt(fd.get("wk"),10);if(!Number.isFinite(wk)||wk<1||wk>7)return bad("عدد المرات في الأسبوع من 1 إلى 7.")}
-    else if(fr!=="fl"&&!days.length)return bad("اختر يوماً واحداً على الأقل.");
+
     let gid=String(fd.get("g")||"");
     if(gid==="__new"){const gn=String(fd.get("gnew")||"").trim();if(!gn)return bad("اكتب اسم المجموعة الجديدة.");const ng={id:uid(),name:gn};S.groups.push(ng);gid=ng.id}
     const cur=h&&S.habits.find(x=>x.id===h.id);if(h&&!cur){closeSheet();render();return}
