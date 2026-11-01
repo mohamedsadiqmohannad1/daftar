@@ -2608,6 +2608,7 @@ function fsFoodHTML(){
   const recipe=FS.mode==="recipe";
   return '<div class="f"><button class="chip-link" style="align-self:flex-start" data-act="'+(ed?"closeSheet":"fsBack")+'">'+(ed?"إغلاق":"رجوع للبحث")+'</button>'+
     '<h2 style="margin:0" dir="auto">'+esc(f.n)+'</h2><div class="lbl">'+esc(f.src)+(f.note?" · "+esc(f.note):"")+'</div>'+
+    (/^c:/.test(String(FS.fid||""))&&NUT().foods[String(FS.fid).slice(2)]?'<button class="chip-link" style="align-self:flex-start" data-act="cfEditFS" data-id="'+esc(String(FS.fid).slice(2))+'">تعديل قيم هذا الطعام</button>':"")+
     '<div class="p100"><div><b>'+L(kc0(+v[0]))+'</b><span>سعرة</span></div><div><b>'+L(num(+v[1],1))+'</b><span>بروتين</span></div><div><b>'+L(num(+v[2],1))+'</b><span>كربوهيدرات</span></div><div><b>'+L(num(+v[3],1))+'</b><span>دهون</span></div><div><b>'+(v[4]==null?"–":L(num(+v[4],1)))+'</b><span>ألياف</span></div></div><span class="lbl">القيم لكل 100 غرام'+(f.kind==="ar"||f.kind==="en"?"، من قاعدة USDA SR28":"")+'. الكربوهيدرات تشمل الألياف.</span>'+
     '<form id="fs-amt" class="f" autocomplete="off"><div class="amt"><div class="fld"><label for="fs-n">الكمية</label><input id="fs-n" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(qty!=null?qty:"")+'" required></div>'+
       '<div class="fld"><label for="fs-u">الوحدة</label><select id="fs-u" class="sel">'+units.map((u,i)=>'<option value="'+i+'"'+(i===ui?" selected":"")+'>'+esc(u[0])+(i?" ("+num(+u[1],1)+" غ)":"")+'</option>').join("")+'</select></div></div>'+
@@ -2677,26 +2678,31 @@ function fsSubmit(fd,form){
 }
 
 /* ---------- nutrition: custom foods, recipes, saved meals ---------- */
+function cfUses(id){const out=[];Object.keys(S.nutri).forEach(k=>{const d=S.nutri[k];(d&&d.it||[]).forEach(e=>{if(e.f==="c:"+id)out.push([k,e])})});return out}
 function openCustomFood(c,fromFS){
   const v=c?c.v:[],u=c&&uPairs(c.u)[0];
-  const back=fromFS&&FS?JSON.parse(JSON.stringify({k:FS.k,m:FS.m,mode:FS.mode,q:FS.q})):null;CF_BACK=back;
+  const uses=c?cfUses(c.id):[];
+  const back=fromFS&&FS&&!FS.edit?JSON.parse(JSON.stringify({k:FS.k,m:FS.m,mode:FS.mode,q:FS.q})):null;CF_BACK=back;
   openSheet('<h2>'+(c?"تعديل طعامك":"طعام جديد بالماكروز")+'</h2><form class="f" id="cf-form" autocomplete="off">'+
     '<div class="fld"><label for="cf-n">الاسم</label><input id="cf-n" name="n" maxlength="60" required value="'+esc(c?c.n:"")+'" placeholder="مثال: واي بروتين ماي بروتين"></div>'+
     '<div class="fld"><span class="lbl2">القيم</span><div class="seg2"><label><input type="radio" name="basis" value="100" checked><span>لكل 100 غ</span></label><label><input type="radio" name="basis" value="sv"><span>لكل حصة</span></label></div></div>'+
     '<div class="fld" id="cf-svbox" hidden><label for="cf-sg">وزن الحصة بالغرام</label><input id="cf-sg" name="sg" class="ltr" type="number" inputmode="decimal" min="0.1" step="any" placeholder="30"></div>'+
-    '<div class="two"><div class="fld"><label for="cf-k">السعرات (اختياري)</label><input id="cf-k" name="k" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(c&&!c.ka?r1(+v[0]):"")+'" placeholder="تلقائي"></div>'+
+    '<div class="fld"><span class="lbl2">السعرات</span><div class="seg2" role="radiogroup"><label><input type="radio" name="km" value="auto" id="cf-km-a"'+(!c||c.ka?" checked":"")+'><span>تُحسب من الماكروز</span></label><label><input type="radio" name="km" value="man" id="cf-km-m"'+(c&&!c.ka?" checked":"")+'><span>أكتبها بنفسي</span></label></div></div>'+
+    '<div class="two"><div class="fld" id="cf-kbox"'+(!c||c.ka?" hidden":"")+'><label for="cf-k">السعرات</label><input id="cf-k" name="k" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(c?r1(+v[0]):"")+'"></div>'+
     '<div class="fld"><label for="cf-p">البروتين (غ)</label><input id="cf-p" name="p" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(c?r1(+v[1]):"")+'"></div>'+
     '<div class="fld"><label for="cf-c">الكربوهيدرات (غ)</label><input id="cf-c" name="c" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(c?r1(+v[2]):"")+'"></div>'+
     '<div class="fld"><label for="cf-f">الدهون (غ)</label><input id="cf-f" name="f" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(c?r1(+v[3]):"")+'"></div>'+
     '<div class="fld"><label for="cf-fb">الألياف (غ، اختياري)</label><input id="cf-fb" name="fb" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(c&&v[4]!=null?r1(+v[4]):"")+'"></div></div>'+
     '<div class="two"><div class="fld"><label for="cf-ul">وحدة (اختياري)</label><input id="cf-ul" name="ul" maxlength="24" value="'+esc(u?u[0]:"")+'" placeholder="مثال: سكوب"></div><div class="fld"><label for="cf-ug">وزنها بالغرام</label><input id="cf-ug" name="ug" class="ltr" type="number" inputmode="decimal" min="0.1" step="any" value="'+(u?u[1]:"")+'"></div></div>'+
     '<div class="ntot" id="cf-calc">'+macroCalc(c?v[1]:0,c?v[2]:0,c?v[3]:0,c&&!c.ka?v[0]:null)+'</div>'+
-    '<p class="lbl" style="margin:0">اترك السعرات فارغة لتُحسب: البروتين والكربوهيدرات 4 سعرات لكل غرام، والدهون 9. إذا كان الملصق يذكر الكربوهيدرات بدون الألياف (صافية)، أضف الألياف إليها.</p>'+
+    '<p class="lbl" style="margin:0">من الماكروز: البروتين والكربوهيدرات 4 سعرات لكل غرام، والدهون 9، وتتحدّث كلما غيّرت الماكروز. أكتبها بنفسي: تبقى كما كتبتها، وهو الأدق إن كان الملصق يذكرها. إذا كان الملصق يذكر الكربوهيدرات بدون الألياف (صافية)، أضف الألياف إليها.</p>'+
+    (uses.length?'<label class="chk"><input type="checkbox" name="upd" id="cf-upd" checked><span>طبّق القيم الجديدة على ما سجّلته من هذا الطعام سابقاً ('+uses.length+' '+(uses.length===1?"مرة":"مرات")+')</span></label>':"")+
     '<p class="err" id="cf-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button>'+(c?'<button class="btn sm danger" type="button" data-act="cfDel" data-id="'+c.id+'">حذف هذا الطعام</button>':"")+'<button class="btn" type="button" data-act="cfCancel">إلغاء</button></div></form>',fd=>{
     const err=$("#cf-err"),bad=m=>{err.textContent=m;err.hidden=false};
     const n=String(fd.get("n")||"").trim();if(!n)return bad("اكتب اسم الطعام.");
     const g=x=>{const s=String(fd.get(x)||"");if(s==="")return null;const q=parseFloat(s);return Number.isFinite(q)&&q>=0?q:NaN};
-    let k=g("k"),p=g("p")||0,cb=g("c")||0,ft=g("f")||0,fb=g("fb");const ka=k===null;
+    const man=fd.get("km")==="man";let k=man?g("k"):null,p=g("p")||0,cb=g("c")||0,ft=g("f")||0,fb=g("fb");const ka=!man;
+    if(man&&k===null)return bad("اكتب السعرات، أو اختر حسابها من الماكروز.");
     if(Number.isNaN(k)||[p,cb,ft].some(Number.isNaN)||Number.isNaN(fb))return bad("أدخل القيم أرقاماً موجبة.");
     if(ka){k=kcalOf(p,cb,ft);if(!(k>0))return bad("أدخل البروتين أو الكربوهيدرات أو الدهون.")}
     let sc=1;if(fd.get("basis")==="sv"){const sg=parseFloat(fd.get("sg"));if(!(sg>0))return bad("أدخل وزن الحصة بالغرام.");sc=100/sg}
@@ -2704,6 +2710,7 @@ function openCustomFood(c,fromFS){
     if(!ka&&p*4+cb*4+ft*9>k*1.35+20)return bad("مجموع البروتين والكربوهيدرات والدهون أعلى بكثير من السعرات. راجع الأرقام.");
     const ul=String(fd.get("ul")||"").trim(),ug=parseFloat(fd.get("ug")),uu=ul&&ug>0?[{l:ul,g:r1(ug)}]:fd.get("basis")==="sv"?[{l:"حصة",g:r1(parseFloat(fd.get("sg")))}]:[];
     const N=NUT(),id=c?c.id:uid();N.foods[id]=Object.assign({},c||{},{id:id,n:n,v:vv,u:uu,created:c&&c.created||new Date().toISOString()});if(ka)N.foods[id].ka=1;else delete N.foods[id].ka;saveConfig();
+    if(c&&fd.get("upd")){const ds=new Set();cfUses(id).forEach(x=>{x[1].v=vv.slice();x[1].n=n;ds.add(x[0])});ds.forEach(k2=>saveN(k2))}
     CF_BACK=null;if(back){FS={k:back.k,m:back.m,mode:back.mode,q:back.q,view:"list",raw:false,added:[]};if(back.mode==="recipe"&&RD){openSheet(fsHTML(),fsSubmit)}else openSheet(fsHTML(),fsSubmit);fsPick("c:"+id);render()}else{closeSheet();render()}
   });
 }
@@ -3854,6 +3861,8 @@ document.addEventListener("change",e=>{
   if(e.target.id==="nu-swc"){const k=e.target.dataset.k||S.nu.cur,a2=ACT_BY[e.target.value],swE=effSwim(k);if(!a2)return;if(swE.a&&!swE.def){swE.a.c=a2[0];swE.a.n=a2[2];swE.a.met=a2[1];saveN(k);render(true)}else if(swE.a&&swE.def){const d=nDay(k);d.act.push({id:"swim",c:a2[0],n:a2[2],met:a2[1],min:+swE.a.min});saveN(k);render(true)}return}
   if(e.target.id==="bc-d"){const k=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&k<=todayK()){S.bc.sel=k;S.bc.msg="";e.target.blur();render(true)}return}
   if(e.target.id==="fs-raw"&&FS){FS.raw=e.target.checked;fsResults();return}
+  if(e.target.name==="km"&&e.target.closest("#cf-form")){const kb=$("#cf-kbox"),man=e.target.value==="man";if(kb)kb.hidden=!man;const gv=x=>{const el=$("#cf-"+x);const v=el?parseFloat(el.value):NaN;return Number.isFinite(v)?v:0},kel=$("#cf-k"),box=$("#cf-calc");
+    if(man&&kel&&kel.value==="")kel.value=Math.round(kcalOf(gv("p"),gv("c"),gv("f")));if(box)box.innerHTML=macroCalc(gv("p"),gv("c"),gv("f"),man&&kel&&kel.value!==""?kel.value:null);return}
   if(e.target.name==="basis"&&e.target.closest("#cf-form")){const bx=$("#cf-svbox");if(bx)bx.hidden=e.target.value!=="sv";return}
   if(e.target.name==="cmpadj"){S.cmpV.adj=e.target.value==="1";try{localStorage.setItem("dt-cmpadj",S.cmpV.adj?"1":"0")}catch(er){}render();return}
   if(e.target.name==="navpos"&&e.target.closest("#sheet")){try{localStorage.setItem("dt-navpos",e.target.value)}catch(er){}document.documentElement.classList.toggle("navtop",e.target.value==="top");navH();return}
@@ -3879,7 +3888,7 @@ document.addEventListener("input",e=>{
   if(id==="mem-q"){S.mem.q=e.target.value;drawMemList();return}
   if(id==="nt-title"||id==="nt-body"){const n=S.notes[S.nt.sel];if(!n)return;n[id==="nt-title"?"title":"body"]=e.target.value;n.updated=new Date().toISOString();n.saved=true;saveNote(n.id);lastKeep=Date.now();drawNotesList();return}
   if(id==="nt-q"){S.nt.q=e.target.value;drawNotesList();return}
-  if(e.target.closest&&(e.target.closest("#cf-form")||e.target.closest("#fs-quick"))){const q=e.target.closest("#cf-form")?"cf":"fq",gv=x=>{const el=$("#"+q+"-"+x);const v=el?parseFloat(el.value):NaN;return Number.isFinite(v)?v:0},kel=$("#"+q+"-k"),box=$("#"+q+"-calc");if(box)box.innerHTML=macroCalc(gv("p"),gv("c"),gv("f"),kel&&kel.value!==""?kel.value:null);return}
+  if(e.target.closest&&(e.target.closest("#cf-form")||e.target.closest("#fs-quick"))){const q=e.target.closest("#cf-form")?"cf":"fq",gv=x=>{const el=$("#"+q+"-"+x);const v=el?parseFloat(el.value):NaN;return Number.isFinite(v)?v:0},kel=$("#"+q+"-k"),kb=$("#"+q+"-kbox"),box=$("#"+q+"-calc");if(box)box.innerHTML=macroCalc(gv("p"),gv("c"),gv("f"),kel&&kel.value!==""&&!(kb&&kb.hidden)?kel.value:null);return}
   if(id==="fs-q"&&FS){FS.q=e.target.value;if(/[a-z]/i.test(FS.q))loadFDB();fsResults();return}
   if(id==="fs-n"&&FS&&FS.f){const v=parseFloat(e.target.value);FS.qty=Number.isFinite(v)?v:null;const t2=$("#fs-tot");if(t2)t2.innerHTML=fsTotHTML();return}
   if(id==="nu-swm"){const k=e.target.dataset.k||S.nu.cur,d=nDay(k),raw=e.target.value,v=parseInt(raw,10),sel=$("#nu-swc"),a2=ACT_BY[sel?sel.value:"18240"]||ACT_BY["18240"];
