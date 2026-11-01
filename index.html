@@ -2949,7 +2949,9 @@ function cmpPeople(){
 }
 const AR_MON=["كانون الثاني","شباط","آذار","نيسان","أيار","حزيران","تموز","آب","أيلول","تشرين الأول","تشرين الثاني","كانون الأول"];
 const fMon=k=>AR_MON[+k.slice(5,7)-1]+" "+k.slice(0,4);
-function cmpDays(){const t=todayK(),n=+S.cmpV.r||7,ks=[];for(let i=n-1;i>=0;i--)ks.push(addD(t,-i));return ks}
+function cmpDays(){const t=todayK(),ks=[];
+  if(S.cmpV.r==="7"){const ws=addD(weekStartK(t),-7*(+S.cmpV.wk||0));for(let i=0;i<7;i++){const k=addD(ws,i);if(k>t)break;ks.push(k)}return ks}
+  const n=+S.cmpV.r||7;for(let i=n-1;i>=0;i--)ks.push(addD(t,-i));return ks}
 function cmpTable(people,rows){
   // rows: [label, fn(person) -> {v, t}, true = higher is better, false = lower is better, null = no winner]
   return '<div class="ctbl" style="--np:'+people.length+'"><div class="ctr cth"><span></span>'+people.map(p=>'<span class="ctp"><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi></span>').join("")+'</div>'+
@@ -3025,14 +3027,18 @@ function matchStrip(){
 }
 function cmpHTML(){
   if(!S.cmp.length)return '<div class="cmpbox"><p class="small" style="margin:0">لم تضف أحداً للمقارنة بعد. من الإعدادات (زر الترس) انسخ رمزك وأرسله لصديقك، وأضف رمزه عندك.</p><div class="row"><button class="btn sm" data-act="settings">فتح الإعدادات</button></div></div>';
+  const tp0=cmpPeople(),tsc=cmpScores(tp0,[todayK()]),tunit=tsc.adj?"":"%";
+  const todayStrip='<div class="ctoday">'+tp0.map(p=>{const v=p.v[0];return '<div><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi><b class="num">'+(numOk(v)?L(Math.round(v)+tunit):"–")+'</b>'+(numOk(p.mm[0])?'<span class="lbl">'+num(p.mm[0],0)+' نقطة</span>':numOk(p.nn[0])?'<span class="lbl">'+p.nn[0]+' مهمة</span>':"")+'</div>'}).join("")+'<span class="lbl">اليوم حتى الآن</span></div>';
   const people=cmpPeople(),ks0=cmpDays(),i0=Math.min(ks0.length-1,Math.max(0,ks0.findIndex(k=>people.some(p=>numOk(p.pct(k)))))),ks=ks0.slice(i0),n=ks.length,sc=cmpScores(people,ks),adj=sc.adj,unit=adj?"":"%",fmt=v=>L(Math.round(v)+unit);
   const wins=people.map(()=>0);let played=0;ks.forEach((k,i)=>{const vs=people.map(p=>p.a[i]);if(vs.filter(numOk).length<2)return;played++;const mx=Math.max.apply(null,vs.filter(numOk)),w=vs.map((v,j)=>numOk(v)&&v===mx?j:-1).filter(j=>j>=0);if(w.length===1)wins[w[0]]++});
   let s='<div class="cmpbox"><div class="sec-h" style="flex-wrap:wrap"><h3 style="font-size:16px;font-weight:600">المقارنة</h3></div>';
   s+=matchHTML(people);
   s+='<div class="seg2 cmpb" role="radiogroup" aria-label="طريقة الحساب"><label><input type="radio" name="cmpadj" value="1"'+(S.cmpV.adj?" checked":"")+'><span>النسبة مع عدد المهام</span></label><label><input type="radio" name="cmpadj" value="0"'+(S.cmpV.adj?"":" checked")+'><span>النسبة فقط</span></label></div>';
   if(sc.basis!=="m")s+='<p class="small" style="margin:0">'+(sc.basis==="n"?"نقاط يوم صديقك تصل بعد أن يفتح النسخة الجديدة من البرنامج، وإلى ذلك الحين يُحسب حجم اليوم بعدد المهام.":"حجم يوم صديقك يصل بعد أن يفتح النسخة الجديدة من البرنامج، وإلى ذلك الحين تُحسب النسبة فقط.")+'</p>';
-  s+='<div class="ctoday">'+people.map(p=>{const v=p.v[n-1];return '<div><i class="cmpdot '+p.cls+'"></i><bdi>'+esc(p.name)+'</bdi><b class="num">'+(numOk(v)?fmt(v):"–")+'</b>'+(numOk(p.mm[n-1])?'<span class="lbl">'+num(p.mm[n-1],0)+' نقطة</span>':numOk(p.nn[n-1])?'<span class="lbl">'+p.nn[n-1]+' مهمة</span>':"")+'</div>'}).join("")+'<span class="lbl">اليوم حتى الآن</span></div>';
-  s+='<div class="sec-h cmpper" style="flex-wrap:wrap"><span class="lbl2">مقارنة '+({"7":"آخر أسبوع","30":"آخر شهر","90":"آخر 3 أشهر","365":"آخر سنة"}[S.cmpV.r]||"")+(i0>0?' <span class="lbl">(من أول يوم مسجّل '+esc(fNum(ks[0]))+')</span>':"")+'</span><div class="rng" role="group" aria-label="الفترة">'+[["7","أسبوع"],["30","شهر"],["90","3 أشهر"],["365","سنة"]].map(r=>'<button data-act="cmpR" data-r="'+r[0]+'" class="'+(S.cmpV.r===r[0]?"on":"")+'" aria-pressed="'+(S.cmpV.r===r[0])+'">'+r[1]+'</button>').join("")+'</div></div>';
+  s+=todayStrip;
+  s+='<div class="sec-h cmpper" style="flex-wrap:wrap"><span class="lbl2">'+(S.cmpV.r==="7"?(+S.cmpV.wk?"أسبوع ":"هذا الأسبوع ")+'<span class="lbl">من '+esc(fNum(ks0[0]))+' إلى '+esc(fNum(addD(ks0[0],6)))+'</span>':'مقارنة '+({"30":"آخر شهر","90":"آخر 3 أشهر","365":"آخر سنة"}[S.cmpV.r]||""))+(i0>0&&S.cmpV.r!=="7"?' <span class="lbl">(من أول يوم مسجّل '+esc(fNum(ks[0]))+')</span>':"")+'</span><div class="rng" role="group" aria-label="الفترة">'+[["7","أسبوع"],["30","شهر"],["90","3 أشهر"],["365","سنة"]].map(r=>'<button data-act="cmpR" data-r="'+r[0]+'" class="'+(S.cmpV.r===r[0]?"on":"")+'" aria-pressed="'+(S.cmpV.r===r[0])+'">'+r[1]+'</button>').join("")+'</div></div>';
+  if(S.cmpV.r==="7"){const first=firstLogKey(),wk=+S.cmpV.wk||0,canBack=first&&addD(ks0[0],-1)>=first;
+    s+='<div class="row cmpwk" style="gap:16px"><button class="chip-link" data-act="cmpWk" data-n="1"'+(canBack?"":" disabled")+'>‹ الأسبوع السابق</button>'+(wk?'<button class="chip-link" data-act="cmpWk" data-n="-1">الأسبوع التالي ›</button><button class="chip-link" data-act="cmpWk" data-n="0">هذا الأسبوع</button>':"")+'</div>'}
   s+=cmpTable(people,[
     [adj?"متوسط النتيجة":"متوسط النسبة",p=>p.ok.length?{v:avg(p.ok),t:fmt(avg(p.ok))}:null],
     ["أيام الفوز (بالنتيجة المعدّلة)",p=>{const i=people.indexOf(p);return {v:wins[i],t:wins[i]+" من "+played}}],
@@ -3759,7 +3765,8 @@ document.addEventListener("click",e=>{
     case "chNew":case "chAcc":case "chNo":case "chEnd":case "chLog":case "chLogDel":case "chDel":case "chEdit":chalAct(a,b);break;
     case "gtTog":{const ch=b.dataset.k==="c",g=ch?S.chal.find(x=>x.id===id):S.goals[id];if(!g)break;g.tm=g.tm||{};if(g.tm.run){gtAdd(g,+new Date(g.tm.run),Date.now());delete g.tm.run}else g.tm.run=new Date().toISOString();if(ch){if(chSync(g)){SH_LAST="";queueShare()}saveConfig()}else saveGoal(id);render();break}
     case "goCmp":S.tab="habits";CMP_ON=true;try{localStorage.setItem("dt-tab","habits");localStorage.setItem("dt-cmp","1")}catch(er){}render(true);setTimeout(()=>{const x=$(".cmpbox");if(x)x.scrollIntoView({block:"start"})},50);break;
-    case "cmpR":S.cmpV.r=b.dataset.r||"7";render();break;
+    case "cmpR":S.cmpV.r=b.dataset.r||"7";S.cmpV.wk=0;render();break;
+    case "cmpWk":{const n=+b.dataset.n;S.cmpV.wk=n===0?0:Math.max(0,(+S.cmpV.wk||0)+n);render();break}
     case "cmpTog":CMP_ON=!CMP_ON;try{localStorage.setItem("dt-cmp",CMP_ON?"1":"0")}catch(er){}render();break;
     case "cmpCopy":{const u=DB&&DB.uid;if(!u)break;const done=()=>{b.textContent="نُسخ ✓";setTimeout(()=>{if(b.isConnected)b.textContent="نسخ"},2000)};
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done).catch(()=>{const c=card.querySelector("code");if(c){const r=document.createRange();r.selectNodeContents(c);const sl=getSelection();sl.removeAllRanges();sl.addRange(r)}});else done();break}
