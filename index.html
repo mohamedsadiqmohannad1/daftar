@@ -800,6 +800,8 @@ body.resting #tbar{top:calc(env(safe-area-inset-top,0px) + var(--resth,72px))}
 .cmpper{margin-top:6px;align-items:center}
 .cmpper .lbl2{margin:0}
 .st.fl{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.st.exc{background:color-mix(in srgb,var(--muted) 18%,transparent);color:var(--muted)}
+.hexc{display:flex;flex-direction:column;gap:6px;align-items:flex-start;margin:-4px 0 12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -1067,6 +1069,7 @@ const liveHabits=()=>S.habits.filter(h=>!h.archived);
 const hStart=h=>h.created||todayK();
 const isQ=h=>!!(h.q&&(+h.q.t>0||h.q.m==="none"));
 const isWk=h=>+h.wk>0;
+const isExc=(h,k)=>{const d=S.days[k];return !!(d&&d.xh&&d.xh[h.id])};
 const isFl=(h,k)=>!!h.fl&&(!k||k>=h.fl);
 const isOff=k=>!!(S.days[k]&&S.days[k].off);
 const rawV=(h,k)=>{const d=S.days[k];return d&&d.h?d.h[h.id]:undefined};
@@ -1083,7 +1086,7 @@ const isDone=(h,k)=>frac(h,k)>=1;
 const hPts=h=>{const p=+h.pts;return Number.isFinite(p)&&p>0?p:10};
 const earned=(h,k)=>Math.round(hPts(h)*frac(h,k)*10)/10;
 function daysOn(h,k){if(Array.isArray(h.dh))for(const e of h.dh)if(e&&k<e.to)return Array.isArray(e.days)?e.days:[];return h.days}
-const isSched=(h,k)=>{if(isWk(h)||isFl(h,k)||isOff(k))return false;const d=daysOn(h,k);return !d||!d.length||d.length===7||d.includes(dow(k))};
+const isSched=(h,k)=>{if(isWk(h)||isFl(h,k)||isOff(k)||isExc(h,k))return false;const d=daysOn(h,k);return !d||!d.length||d.length===7||d.includes(dow(k))};
 function setDays(h,nd,from){
   nd=nd.length===7?[]:nd.slice().sort((a,b)=>a-b);const od=(h.days||[]).slice().sort((a,b)=>a-b);if(JSON.stringify(nd)===JSON.stringify(od))return;
   from=from||todayK();const dh=Array.isArray(h.dh)?h.dh.filter(e=>e&&e.to):[];
@@ -1301,6 +1304,8 @@ function taskRow(x,k){
   const t=todayK(),on=isDone(x,k),st=curStreak(x),wk=isWk(x),ws=weekStartK(k),wc=wk?weekCount(x,ws):0,wkMet=wk&&wc>=+x.wk&&!on;
   const badges=[];
   if(missedYesterday(x,k))badges.push('<span class="miss">فاتتك أمس</span>');
+  if(x.ld){const pv=hPrev(x,k);badges.push('<span class="st">'+(pv?(on?"قبلها ":"آخر مرة ")+'<span class="num">'+esc(fNum(pv))+'</span>':"لم تُنجز قبل")+'</span>')}
+  if(isExc(x,k))badges.push('<span class="st exc">معذور</span>');
   if(isFl(x,k))badges.push('<span class="st fl">مرنة'+(()=>{let c=0;for(let i=0;i<30;i++)if(isDone(x,addD(k,-i)))c++;return c?' · <span class="num">'+c+'</span> في 30 يوماً':""})()+'</span>');
   else if(wk)badges.push('<span class="st">'+(wkMet?"اكتملت هذا الأسبوع":"هذا الأسبوع")+' <span class="num">'+L(wc+"/"+x.wk)+'</span></span>');
   else if(k===t&&st)badges.push('<span class="st">سلسلة <span class="num">'+st+'</span> '+(st===1?"يوم":"أيام")+'</span>');
@@ -1460,7 +1465,7 @@ function vHabits(){
   s+=groupAnalysis()+taskAnalysis();
   if(live.length)s+='<div class="heat-legend"><span><i style="background:var(--accent)"></i>منجزة</span><span><i style="background:color-mix(in srgb,var(--accent) 45%,var(--miss))"></i>جزئياً</span><span><i style="background:var(--miss)"></i>فائتة</span><span><i style="background:var(--off);box-shadow:inset 0 0 0 1px var(--line)"></i>غير مجدولة</span><span>كل عمود أسبوع يبدأ بالسبت، والأحدث يميناً</span></div>';
   const card=h=>{const r=hRate(h,30),st=strength(h);
-    return '<article class="panel hcard"><div class="hhead"><div><h3>'+esc(h.name)+' '+ptsTag(hPts(h))+'</h3><div class="lbl">'+esc(schedText(h))+(isQ(h)?" · "+esc(qText(h)):"")+' · منذ '+esc(fShort(hStart(h)))+'</div></div><button class="btn sm" data-act="editHabit" data-id="'+h.id+'">تعديل</button></div>'+
+    return '<article class="panel hcard"><div class="hhead"><div><h3>'+esc(h.name)+' '+ptsTag(hPts(h))+'</h3><div class="lbl">'+esc(schedText(h))+(isQ(h)?" · "+esc(qText(h)):"")+' · منذ '+esc(fShort(hStart(h)))+(()=>{const ks=hDoneDays(h);return ks.length?' · آخر إنجاز '+esc(fShort(ks[0])):""})()+'</div></div><button class="btn sm" data-act="editHabit" data-id="'+h.id+'">تعديل</button></div>'+
     (isFl(h)?(()=>{const t=todayK(),cnt=n=>{let c=0;for(let i=0;i<n;i++){const d=addD(t,-i);if(d<hStart(h))break;if(isDone(h,d))c++}return c};return '<div class="stats"><div class="stat"><b>'+cnt(7)+'</b><span>مرات في 7 أيام</span></div><div class="stat"><b>'+cnt(30)+'</b><span>مرات في 30 يوماً</span></div><div class="stat"><b>'+cnt(365)+'</b><span>مرات في سنة</span></div></div>'})():
     '<div class="stats"><div class="stat"><b>'+st+'</b><span>القوة</span></div><div class="stat"><b>'+curStreak(h)+'</b><span>السلسلة الحالية'+(isWk(h)?" بالأسابيع":"")+'</span></div><div class="stat"><b>'+(Number.isFinite(r)?L(Math.round(r*100)+"%"):"–")+'</b><span>التزام 30 يوماً</span></div></div>'+
     '<span class="sbar wide"><i style="width:'+st+'%"></i></span>')+heat(h)+'</article>'};
@@ -3418,9 +3423,15 @@ document.addEventListener("focusout",e=>{if(e.target&&e.target.classList&&e.targ
 /* ---------- mutations ---------- */
 function ensureDay(k){if(!S.days[k])S.days[k]={d:k,h:{}};if(!S.days[k].h)S.days[k].h={};S.days[k].d=k;return S.days[k]}
 function touchStart(h,k){if(k<hStart(h)){h.created=k;saveConfig()}}
+function hDoneDays(h){return Object.keys(S.days).filter(k=>{const v=rawV(h,k);return v!==undefined&&v!==null&&v!==false&&(isQ(h)?+v>0:!!v)}).sort().reverse()}
+function hPrev(h,k){const ks=hDoneDays(h);for(const x of ks)if(x<k)return x;return null}
+function hLogHTML(h){const ks=hDoneDays(h);if(!ks.length)return '<p class="lbl" style="margin:0">لم تُنجز بعد.</p>';
+  return '<details class="hlog"><summary class="chip-link">سجل الإنجاز ('+ks.length+' '+(ks.length===1?"مرة":ks.length===2?"مرتان":"مرات")+')</summary><div class="entries" style="max-height:260px">'+
+    ks.map((k,i)=>{const nx=ks[i+1],gap=nx?diffD(nx,k):null;return '<div><span>'+esc(DAY_NAME[dow(k)])+' '+esc(fShort(k))+(isQ(h)?' <b class="num">'+L(num(+rawV(h,k),2)+(h.q.u?" "+esc(h.q.u):""))+'</b>':"")+'</span><span class="lbl">'+(gap!==null?"بعد "+gap+" "+(gap===1?"يوم":gap===2?"يومين":"أيام")+" من السابقة":"أول مرة")+'</span></div>'}).join("")+'</div></details>'}
+function clearExc(d,id){if(d.xh&&d.xh[id]){delete d.xh[id];if(!Object.keys(d.xh).length)delete d.xh}}
 function toggleHabit(id){
   const k=S.cur,h=S.habits.find(x=>x.id===id);if(!h)return;
-  const d=ensureDay(k);
+  const d=ensureDay(k);if(!d.h[id])clearExc(d,id);
   if(d.h[id]){delete d.h[id];saveDay(k);render();return}
   JUST=id;setTimeout(()=>{JUST=null},600);
   if(wlink(h)){openWeightPrompt(h,k);return}
@@ -3428,7 +3439,7 @@ function toggleHabit(id){
 }
 function setQ(id,k,v){
   const h=S.habits.find(x=>x.id===id);if(!h)return;const d=ensureDay(k);
-  if(v===null||!Number.isFinite(v)||v<0)delete d.h[id];else{d.h[id]=Math.round(v*100)/100;touchStart(h,k)}
+  if(v===null||!Number.isFinite(v)||v<0)delete d.h[id];else{d.h[id]=Math.round(v*100)/100;touchStart(h,k);if(v>0)clearExc(d,id)}
   saveDay(k);
 }
 function updateQRow(id,k){
@@ -3480,7 +3491,10 @@ card.addEventListener("submit",e=>{e.preventDefault();if(!sheetSubmit)return;cli
 function habitForm(h,pg){
   const days=h&&h.days&&h.days.length?h.days:DAYS_ORDER,gsel=h?groupOf(h):(pg||""),q=h&&isQ(h)?h.q:null,wk=h&&isWk(h)?+h.wk:0;
   const sameG=h?liveHabits().filter(x=>groupOf(x)===groupOf(h)):[],pos=h?sameG.indexOf(h):-1;
-  return '<h2>'+(h?"تعديل المهمة الثابتة":"مهمة ثابتة جديدة")+'</h2><form class="f" id="habit-form">'+
+  const xk=S.cur,exc=h&&isExc(h,xk),canX=h&&S.tab==="today"&&!isWk(h)&&!isFl(h,xk)&&!isOff(xk)&&(exc||isSched(h,xk))&&activeOn(h,xk);
+  return '<h2>'+(h?"تعديل المهمة الثابتة":"مهمة ثابتة جديدة")+'</h2>'+
+  (canX?'<div class="hexc"><button class="btn sm'+(exc?" pri":"")+'" type="button" data-act="hExc" data-id="'+h.id+'">'+(exc?"إلغاء العذر":"معذور عنها "+(xk===todayK()?"اليوم":"في "+esc(fShort(xk))))+'</button><span class="lbl">'+(exc?"هذه المهمة لا تُحسب في هذا اليوم.":"لسبب خارج إرادتك: لا تُحسب في هذا اليوم فقط، لا في نسبتك ولا في المقارنة ولا في السلسلة. باقي مهام اليوم تبقى كما هي.")+'</span></div>':"")+
+  '<form class="f" id="habit-form">'+
   '<div class="fld"><label for="hf-name">الاسم</label><input id="hf-name" name="name" maxlength="80" required value="'+esc(h?h.name:"")+'" placeholder="مثال: تمرين"></div>'+
   '<div class="two"><div class="fld"><label for="hf-pts">النقاط الكاملة</label><input class="ltr" id="hf-pts" name="pts" type="number" inputmode="numeric" min="1" max="1000" step="1" required value="'+(h?hPts(h):10)+'"></div>'+
   '<div class="fld"><label for="hf-g">المجموعة</label><select id="hf-g" name="g" class="sel"><option value="">بدون مجموعة</option>'+S.groups.map(g=>'<option value="'+g.id+'"'+(g.id===gsel?" selected":"")+'>'+esc(g.name)+'</option>').join("")+'<option value="__new">مجموعة جديدة…</option></select>'+
@@ -3497,6 +3511,8 @@ function habitForm(h,pg){
   '<div class="fld" id="hf-daysbox"'+(wk||(h&&isFl(h))?" hidden":"")+'><div class="daypick">'+DAYS_ORDER.map(d=>'<label title="'+DAY_NAME[d]+'"><input type="checkbox" id="hf-d'+d+'" name="d" value="'+d+'"'+(days.includes(d)?" checked":"")+'><span>'+DAY_LETTER[d]+'</span></label>').join("")+'</div><span class="lbl">الأيام غير المجدولة لا تكسر السلسلة. إذا لم تختر أي يوم تُحفظ المهمة «بلا يوم محدد».</span></div>'+
   '<div class="fld" id="hf-wkbox"'+(wk?"":" hidden")+'><label for="hf-wk">كم مرة في الأسبوع</label><input class="ltr" id="hf-wk" name="wk" type="number" min="1" max="7" step="1" value="'+(wk||1)+'" style="max-width:120px">'+
     '<span class="lbl">تظهر كل أيام الأسبوع حتى تكمل العدد، وتُحسب نقاطها في اليوم الذي تنجزها فيه، ولا تدخل في الحد الأقصى اليومي. الأسبوع يبدأ بالسبت.</span></div>'+
+  '<label class="chk"><input type="checkbox" name="ld" id="hf-ld"'+(h&&h.ld?" checked":"")+'><span>إظهار تاريخ آخر مرة أنجزتها على المهمة</span></label>'+
+  (h?'<div class="fld"><span class="lbl2">السجل</span>'+hLogHTML(h)+'</div>':"")+
   '<label class="chk"><input type="checkbox" name="wl" id="hf-wl"'+(h?(wlink(h)?" checked":""):"")+'><span>اطلب تسجيل الوزن عند إنجازها</span></label>'+
   '<p class="err" id="hf-err" hidden></p>'+
   '<div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div>'+
@@ -3525,7 +3541,7 @@ function openHabit(h,pg){
     else{delete tgt.fl;if(cur&&fr!=="wk")setDays(tgt,days);else tgt.days=fr==="wk"?[]:(days.length===7?[]:days)}
     if(wk)tgt.wk=wk;else delete tgt.wk;
     if(q)tgt.q=q;else delete tgt.q;
-    tgt.wl=!!fd.get("wl");
+    tgt.wl=!!fd.get("wl");if(fd.get("ld"))tgt.ld=true;else delete tgt.ld;
     if(gid)tgt.g=gid;else delete tgt.g;
     saveConfig();closeSheet();render();
   });
@@ -3647,6 +3663,7 @@ document.addEventListener("click",e=>{
     case "pick":{const k=b.dataset.k;if(k&&k<=todayK()){S.cur=k;render()}break}
     case "goToday":S.cur=todayK();render();break;
     case "toggle":toggleHabit(id);break;
+    case "hExc":{const k=S.cur,d=ensureDay(k);if(d.xh&&d.xh[id])clearExc(d,id);else{d.xh=d.xh||{};d.xh[id]=1;delete d.h[id]}saveDay(k);closeSheet();render();break}
     case "rate":{const d=ensureDay(S.cur),key=b.dataset.key,v=+b.dataset.v;if(d[key]===v)delete d[key];else d[key]=v;saveDay(S.cur);render();break}
     case "sleepStep":{const d=ensureDay(S.cur);let v=Number.isFinite(d.sleep)?d.sleep:7;if(Number.isFinite(d.sleep))v+= +b.dataset.n;v=Math.max(0,Math.min(16,v));d.sleep=v;saveDay(S.cur);render();break}
     case "sugg":{const n=b.dataset.n;const ex=S.habits.find(h=>h.name===n&&!h.archived);if(!ex){addHabit(n,[]);render()}break}
