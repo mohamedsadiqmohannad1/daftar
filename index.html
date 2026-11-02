@@ -916,7 +916,7 @@ function persistLocal(){
 function loadLocal(){
   try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.ggroups=o.ggroups||[];S.todos=o.todos||{};S.gym=o.gym&&Array.isArray(o.gym.groups)?o.gym:{groups:[],rest:90};S.wos=o.wos||{};S.nutri=o.nutri||{};S.nut=o.nut||null;if(o.ui){S.ui=o.ui;applyTheme()}}}catch(e){}
 }
-const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.cmp&&S.cmp.length)o.cmp=S.cmp;if(S.cmpS)o.cmpS=S.cmpS;if(S.chal&&S.chal.length)o.chal=S.chal;if(S.chalNo&&S.chalNo.length)o.chalNo=S.chalNo.slice(-200);if(S.ui&&(S.ui.pal||S.ui.thm||S.ui.tabs))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
+const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.cmp&&S.cmp.length)o.cmp=S.cmp;if(S.cmpS)o.cmpS=S.cmpS;if(S.chal&&S.chal.length)o.chal=S.chal;if(S.mfix&&Object.keys(S.mfix).length)o.mfix=S.mfix;if(S.chalNo&&S.chalNo.length)o.chalNo=S.chalNo.slice(-200);if(S.ui&&(S.ui.pal||S.ui.thm||S.ui.tabs))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
 const saveConfig=()=>queueWrite("app/config",cfgDoc());
 const saveNote=id=>queueWrite("notes/"+id,S.notes[id]||null);
 const saveTodoX=0;const saveTodo=id=>queueWrite("todos/"+id,S.todos[id]||null);
@@ -960,7 +960,7 @@ function startDB(db){
   const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&got.w&&got.u&&S.mode==="loading"){S.mode="db";setSync();migrateX()}render()};
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
-    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
+    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.mfix=d&&d.mfix&&typeof d.mfix==="object"?JSON.parse(JSON.stringify(d.mfix)):{};S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
     got.c=true;ready();
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -1000,7 +1000,7 @@ function startDB(db){
     S.notes=nn;got.n=true;ready();
   },onErr));
 }
-function resetState(){S.chal=[];S.chalNo=[];stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){S.mfix={};S.chal=[];S.chalNo=[];stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
@@ -2979,6 +2979,9 @@ function pairDay(me,fr,k){
   return [adj(a,la),adj(b,lb)];
 }
 const MIN_DAYS=3;
+// a finished week's result is fixed from the Sunday after it (a day to fix a forgotten tick), so later edits cannot change it.
+// S.mfix = {friend uid: {week start: [my average, friend's average, "w"|"l"|"d"]}}, kept with the settings
+let MFIX_SAVE=false;
 function matchWeeks(me,fr){
   const t=todayK(),cw=weekStartK(t),f=S.fr[fr.c.uid]||{},fks=Object.keys(f.pct||{}).sort(),mk=firstLogKey();
   if(!fks.length||!mk)return null;
@@ -2986,9 +2989,13 @@ function matchWeeks(me,fr){
   const out=[];
   for(;w<=cw;w=addD(w,7)){const sa=[],sb=[];let days=0;
     for(let i=0;i<7;i++){const k=addD(w,i);if(k>t)break;days++;const x=pairDay(me,fr,k);if(numOk(x[0]))sa.push(x[0]);if(numOk(x[1]))sb.push(x[1])}
-    const A=sa.length?avg(sa):null,B=sb.length?avg(sb):null,live=w===cw,ok=sa.length>=MIN_DAYS&&sb.length>=MIN_DAYS;
-    out.push({w:w,A:A,B:B,na:sa.length,nb:sb.length,live:live,left:live?6-diffD(w,t):0,res:ok?(Math.abs(A-B)<0.5?"d":A>B?"w":"l"):null});
+    let A=sa.length?avg(sa):null,B=sb.length?avg(sb):null;const live=w===cw,ok=sa.length>=MIN_DAYS&&sb.length>=MIN_DAYS;let res=ok?(Math.abs(A-B)<0.5?"d":A>B?"w":"l"):null;
+    const fx=(S.mfix=S.mfix||{})[fr.c.uid]=S.mfix[fr.c.uid]||{};
+    if(!live&&Array.isArray(fx[w])){A=fx[w][0];B=fx[w][1];res=fx[w][2]}
+    else if(!live&&res&&addD(w,8)<=t){fx[w]=[Math.round(A*10)/10,Math.round(B*10)/10,res];MFIX_SAVE=true}
+    out.push({w:w,A:A,B:B,na:sa.length,nb:sb.length,live:live,left:live?6-diffD(w,t):0,res:res});
   }
+  if(MFIX_SAVE){MFIX_SAVE=false;setTimeout(saveConfig,0)}
   return out;
 }
 function matchRecord(ws){
@@ -3015,7 +3022,7 @@ function matchHTML(people){
       '<div class="mrec"><span>السجل</span><b class="num">أنت '+rec.w+'</b><b class="num">'+esc(fr.name)+' '+rec.l+'</b>'+(rec.d?'<span class="num">تعادل '+rec.d+'</span>':"")+
         (()=>{const cp=chalPointsWith(fr.c.uid);return cp.me||cp.fr?'<span class="num">التحديات: أنت '+cp.me+' · <bdi>'+esc(fr.name)+'</bdi> '+cp.fr+'</span>':""})()+
         (rec.streak>=2?'<span class="mstk '+rec.sres+'">'+(rec.sres==="w"?"فزت آخر "+rec.streak+" أسابيع":"خسرت آخر "+rec.streak+" أسابيع")+'</span>':"")+'</div>'+
-      (hist.length?'<div class="mhist">'+hist.map(x=>'<div><span class="lbl">من '+esc(fNum(x.w))+'</span><span class="num">'+rnd(x.A)+' – '+rnd(x.B)+'</span>'+badge(x)+'</div>').join("")+'</div>':"")+
+      (hist.length?'<div class="mhist">'+hist.map(x=>'<div><span class="lbl">'+L(esc(fNum(x.w))+' – '+esc(fNum(addD(x.w,6))))+'</span><span class="num">'+rnd(x.A)+' – '+rnd(x.B)+'</span>'+badge(x)+'</div>').join("")+'</div>':"")+
       '</div>'}).join("");
 }
 function matchStrip(){
