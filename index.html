@@ -1666,12 +1666,12 @@ function vWeight(){
   let mnK=null;keys.forEach(k=>{if(!mnK||S.days[k].w<S.days[mnK].w)mnK=k});
   let s='<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الوزن</h2></section>';
   s+='<form id="wform" class="panel wform" autocomplete="off"><div class="fld"><label for="wf-d">اليوم</label><input id="wf-d" class="keep ltr datein" type="date" max="'+t+'" value="'+sel+'"></div>'+
-    '<div class="fld"><label for="wf-v">الوزن على الميزان (كغم)</label><input id="wf-v" class="keep ltr numin" type="number" inputmode="decimal" min="20" max="400" step="0.1" placeholder="مثال: 84.6" value="'+(Number.isFinite(dsel.w)?dsel.w:"")+'"></div>'+
+    '<div class="fld"><label for="wf-v">الوزن على الميزان (كغم)</label><input id="wf-v" class="keep ltr numin" type="number" inputmode="decimal" min="20" max="400" step="any" placeholder="مثال: 84.6" value="'+(Number.isFinite(dsel.w)?dsel.w:"")+'"></div>'+
     '<button class="btn pri" type="submit" id="wf-btn" data-saved="'+(Number.isFinite(dsel.w)?dsel.w:"")+'"'+(Number.isFinite(dsel.w)?" disabled":"")+'>'+(Number.isFinite(dsel.w)?"محفوظ ✓":"حفظ القراءة")+'</button>'+
     (Number.isFinite(dsel.w)?'<button class="btn sm danger" type="button" data-act="wdel" data-k="'+sel+'">حذف قراءة هذا اليوم</button>':"")+
     '<p class="err" id="wf-err"'+(S.wt.msg?"":" hidden")+'>'+esc(S.wt.msg)+'</p></form>'+weightGoalHTML();
   const tile=(lbl,val,sub)=>'<div class="panel tile"><span class="lbl">'+lbl+'</span><b>'+val+'</b>'+(sub?'<span class="delta muted">'+sub+'</span>':"")+'</div>';
-  const kg=v=>Number.isFinite(v)?L(num(v,1))+' <span class="u">كغم</span>':"–";
+  const kg=v=>Number.isFinite(v)?L(num(v,2))+' <span class="u">كغم</span>':"–";
   const wd=a7-a7p;
   s+='<section class="tiles">'+tile("آخر قراءة",last?kg(S.days[last].w):"–",last?esc(fShort(last)):"")+
     tile("متوسط آخر 7 أيام",kg(a7),Number.isFinite(wd)?'<span class="'+(wd<0?"down-good":wd>0?"up-bad":"")+'">'+L(signed(wd,1))+'</span> عن الأسبوع السابق':"يحتاج قراءات أسبوعين")+
@@ -1682,7 +1682,7 @@ function vWeight(){
   s+=compHTML();
   if(keys.length){const allR=keys.slice().reverse(),rec=S.wt.all?allR:allR.slice(0,14);
     s+='<section class="sec"><div class="sec-h"><h2>القراءات</h2><span class="lbl">'+keys.length+' قراءة</span></div><div class="panel wlist">'+rec.map((k,i)=>{const prev=rec[i+1],d=prev?S.days[k].w-(S.days[prev]?S.days[prev].w:NaN):(allR[i+1]?S.days[k].w-S.days[allR[i+1]].w:NaN);
-      return '<button class="wrow'+(k===sel?" sel":"")+'" data-act="wpick" data-k="'+k+'"><span>'+esc(fLong(k))+'</span><span class="num">'+L(num(S.days[k].w,1))+'</span><span class="num small '+(d<0?"down-good":d>0?"up-bad":"muted")+'">'+(Number.isFinite(d)?L(signed(d,1)):"")+'</span></button>'}).join("")+'</div>'+(allR.length>14?'<button class="chip-link" data-act="wall">'+(S.wt.all?"عرض آخر 14 قراءة فقط":"عرض كل القراءات ("+allR.length+")")+'</button>':"")+'</section>'}
+      return '<button class="wrow'+(k===sel?" sel":"")+'" data-act="wpick" data-k="'+k+'"><span>'+esc(fLong(k))+'</span><span class="num">'+L(num(S.days[k].w,2))+'</span><span class="num small '+(d<0?"down-good":d>0?"up-bad":"muted")+'">'+(Number.isFinite(d)?L(signed(d,1)):"")+'</span></button>'}).join("")+'</div>'+(allR.length>14?'<button class="chip-link" data-act="wall">'+(S.wt.all?"عرض آخر 14 قراءة فقط":"عرض كل القراءات ("+allR.length+")")+'</button>':"")+'</section>'}
   return s;
 }
 /* ---------- year in colours ---------- */
@@ -1733,7 +1733,7 @@ function weightGoalHTML(){
     else if(Math.sign(sl)!==Math.sign(rem))msg="باقٍ "+L(num(Math.abs(rem),1))+" كغم. بمعدلك الحالي ("+L(signed(sl*7,2))+" كغم أسبوعياً) أنت تبتعد عن الهدف.";
     else{const days=Math.round(rem/sl),eta=addD(t,days);msg="باقٍ "+L(num(Math.abs(rem),1))+" كغم. بمعدلك الحالي ("+L(signed(sl*7,2))+" كغم أسبوعياً، من قراءات آخر 4 أسابيع) تصل إليه في حوالي "+esc(fFull(eta))+"، بعد "+Math.max(1,Math.round(days/7))+" أسبوعاً تقريباً."}
   }
-  return '<section class="panel sec"><div class="sec-h"><h2>الوزن المستهدف</h2></div><form id="wgform" class="wform" autocomplete="off"><div class="fld"><label for="wg-v">الهدف (كغم)</label><input id="wg-v" class="keep ltr numin" type="number" inputmode="decimal" min="20" max="400" step="0.1" value="'+(has?wg:"")+'" placeholder="مثال: 80"></div>'+
+  return '<section class="panel sec"><div class="sec-h"><h2>الوزن المستهدف</h2></div><form id="wgform" class="wform" autocomplete="off"><div class="fld"><label for="wg-v">الهدف (كغم)</label><input id="wg-v" class="keep ltr numin" type="number" inputmode="decimal" min="20" max="400" step="any" value="'+(has?wg:"")+'" placeholder="مثال: 80"></div>'+
     '<button class="btn sm pri" type="submit" id="wg-btn" data-saved="'+(has?wg:"")+'"'+(has?" disabled":"")+'>'+(has?"محفوظ ✓":"حفظ الهدف")+'</button>'+(has?'<button class="btn sm" type="button" data-act="wgClear">إزالة الهدف</button>':"")+'</form>'+
     (msg?'<p class="small" style="margin:0">'+msg+'</p>':has?"":'<p class="lbl" style="margin:0">حدد وزنك المستهدف ليظهر على المنحني مع موعد الوصول المتوقع.</p>')+'</section>';
 }
@@ -2794,23 +2794,23 @@ function vNutSet(){
   s+='<form id="nu-prof" class="panel sec" autocomplete="off"><div class="sec-h"><h2>بياناتك</h2></div>'+
     '<div class="fld"><span class="lbl2">الجنس</span><div class="seg2"><label><input type="radio" name="sex" value="m"'+(p.sex!=="f"?" checked":"")+'><span>ذكر</span></label><label><input type="radio" name="sex" value="f"'+(p.sex==="f"?" checked":"")+'><span>أنثى</span></label></div></div>'+
     '<div class="two"><div class="fld"><label for="np-by">سنة الميلاد</label><input id="np-by" name="by" class="ltr" type="number" inputmode="numeric" min="1920" max="'+(new Date().getFullYear()-12)+'" value="'+(p.by||"")+'" required></div>'+
-    '<div class="fld"><label for="np-h">الطول (سم)</label><input id="np-h" name="h" class="ltr" type="number" inputmode="decimal" min="120" max="230" step="0.5" value="'+(p.h||"")+'" required></div></div>'+
+    '<div class="fld"><label for="np-h">الطول (سم)</label><input id="np-h" name="h" class="ltr" type="number" inputmode="decimal" min="120" max="230" step="any" value="'+(p.h||"")+'" required></div></div>'+
     compLine()+
     '<div class="sec-h" style="margin-top:6px"><h2>الهدف</h2></div>'+
     '<div class="fld"><label for="np-rate">معدل تغير الوزن</label><select id="np-rate" name="rate" class="sel">'+rates.map(r=>'<option value="'+r[0]+'"'+(r[0]===cr?" selected":"")+'>'+r[1]+'</option>').join("")+'</select></div>'+
-    '<div class="two"><div class="fld"><label for="np-pkg">البروتين (غ لكل كغم)</label><input id="np-pkg" name="pkg" class="ltr" type="number" inputmode="decimal" min="0.8" max="3.5" step="0.1" value="'+(+N.pkg>0?N.pkg:2)+'"></div>'+
+    '<div class="two"><div class="fld"><label for="np-pkg">البروتين (غ لكل كغم)</label><input id="np-pkg" name="pkg" class="ltr" type="number" inputmode="decimal" min="0.8" max="3.5" step="any" value="'+(+N.pkg>0?N.pkg:2)+'"></div>'+
     '<div class="fld"><label for="np-fp">الدهون (% من السعرات)</label><input id="np-fp" name="fpct" class="ltr" type="number" inputmode="numeric" min="15" max="50" step="1" value="'+(+N.fpct>0?N.fpct:25)+'"></div></div>'+
     '<span class="lbl">الباقي من السعرات يذهب للكربوهيدرات. البروتين بين 1.6 و 2.2 غ لكل كغم هو المدى الذي تذكره الدراسات لمن يتمرن بالأوزان.</span>'+
     '<div class="fld"><span class="lbl2">طريقة الهدف اليومي</span><div class="seg2"><label><input type="radio" name="tmode" value="avg"'+(N.tmode!=="day"?" checked":"")+'><span>ثابت من متوسط أسبوعين</span></label><label><input type="radio" name="tmode" value="day"'+(N.tmode==="day"?" checked":"")+'><span>يتغير مع نشاط اليوم</span></label></div>'+
       '<span class="lbl">الثابت يعطيك رقماً واحداً كل يوم ويوزع حرق تمارينك على الأسبوع. المتغير يرفع الهدف في يوم التمرين ويخفضه في يوم الراحة.</span></div>'+
-    '<div class="fld"><label for="np-st">طول خطوتك (سم)</label><input id="np-st" name="stride" class="ltr" type="number" inputmode="decimal" min="40" max="120" step="0.1" value="'+num(strideM()*100,1)+'" style="max-width:160px"><span class="lbl">القيمة الافتراضية 66.4 سم محسوبة من 7 قراءات من هاتفك: 41.2 كم في 62,016 خطوة. لتحديثها اقسم مسافة يوم على خطواته من تطبيق الصحة.</span></div>'+
+    '<div class="fld"><label for="np-st">طول خطوتك (سم)</label><input id="np-st" name="stride" class="ltr" type="number" inputmode="decimal" min="40" max="120" step="any" value="'+num(strideM()*100,1)+'" style="max-width:160px"><span class="lbl">القيمة الافتراضية 66.4 سم محسوبة من 7 قراءات من هاتفك: 41.2 كم في 62,016 خطوة. لتحديثها اقسم مسافة يوم على خطواته من تطبيق الصحة.</span></div>'+
     '<div class="fld"><label for="np-xs">خطوات بدون الهاتف</label><input id="np-xs" name="xs" class="ltr" type="number" inputmode="numeric" min="0" max="20000" step="1" value="'+(xSteps()||"")+'" placeholder="0" style="max-width:160px"><span class="lbl">عدد ثابت يُضاف كل يوم لرقم الخطوات الواصل من تطبيق الصحة، للمشي الذي لا يكون فيه الهاتف معك. لا يُضاف للرقم الذي تكتبه بيدك، ولا للقيمة الافتراضية.</span></div>'+
     '<div class="sec-h" style="margin-top:6px"><h2>يومك المعتاد</h2></div>'+
     '<div class="three"><div class="fld"><label for="np-ds">الخطوات</label><input id="np-ds" name="ds" class="ltr" type="number" inputmode="numeric" min="0" max="100000" step="1" value="'+(N.ad&&+N.ad.steps>0?N.ad.steps:"")+'" placeholder="10000"></div>'+
     '<div class="fld"><label for="np-dw">السباحة (دقائق)</label><input id="np-dw" name="dw" class="ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(N.ad&&+N.ad.swim>0?N.ad.swim:"")+'" placeholder="60"></div>'+
     '<div class="fld"><label for="np-dc">نوع السباحة</label><select id="np-dc" name="dc" class="sel">'+ACTS[0][1].map(a=>'<option value="'+a[0]+'"'+(a[0]===(N.ad&&N.ad.swc||lastSwimC(todayK()))?" selected":"")+'>'+esc(a[2])+'</option>').join("")+'</select></div></div>'+
     '<span class="lbl">تُحسب هذه القيم تلقائياً في كل يوم لا تكتب فيه رقماً، بما فيها الأيام السابقة. في اليوم المختلف اكتب الرقم الفعلي، و0 إن لم تمشِ أو لم تسبح. مهمة الخطوات لا تُنجز من القيمة الافتراضية، فقط من رقم تكتبه أو يصل من تطبيق الصحة.</span>'+
-    '<div class="fld"><label for="np-gm">شدة جلسة الجم (MET)</label><input id="np-gm" name="gmet" class="ltr" type="number" inputmode="decimal" min="0" max="9" step="0.1" value="'+(+N.gmet>0?N.gmet:"")+'" placeholder="تلقائي من العدات الباقية" style="max-width:240px"><span class="lbl">اتركه فارغاً ليُحسب لكل جلسة: 6 MET إذا وصلت للفشل، وتنخفض حتى 3.5 كلما بقيت عدات أكثر.</span></div>'+
+    '<div class="fld"><label for="np-gm">شدة جلسة الجم (MET)</label><input id="np-gm" name="gmet" class="ltr" type="number" inputmode="decimal" min="0" max="9" step="any" value="'+(+N.gmet>0?N.gmet:"")+'" placeholder="تلقائي من العدات الباقية" style="max-width:240px"><span class="lbl">اتركه فارغاً ليُحسب لكل جلسة: 6 MET إذا وصلت للفشل، وتنخفض حتى 3.5 كلما بقيت عدات أكثر.</span></div>'+
     '<p class="err" id="np-err"'+(S.nu.msg?"":" hidden")+'>'+esc(S.nu.msg||"")+'</p><div class="row"><button class="btn pri" type="submit">حفظ</button></div></form>';
   const k=todayK(),tg=targetOn(k),e=energyOn(k);
   if(tg)s+='<section class="panel sec"><div class="sec-h"><h2>هدفك اليوم</h2><button class="chip-link" data-act="nEnergy">تفاصيل الحرق</button></div><div class="kv"><div><b>'+L(kc0(tg.kcal))+'</b><span>سعرة</span></div><div><b>'+L(num(tg.p,0))+'</b><span>بروتين (غ)</span></div><div><b>'+L(num(tg.c,0))+'</b><span>كربوهيدرات (غ)</span></div><div><b>'+L(num(tg.f,0))+'</b><span>دهون (غ)</span></div></div>'+
@@ -2837,10 +2837,10 @@ function compHTML(){
     (c.m==="device"&&+((S.days[c.k]||{}).waist)>0&&p?(()=>{const dd=S.days[c.k],tape=bfTape(dd,p);return tape?'<p class="lbl" style="margin:0">للمقارنة، الشريط يعطي '+L(num(tape.bf,1)+"%")+' ('+esc(BF_M[tape.m])+'). الفرق بين الطريقتين يعكس حدود الاثنتين.</p>':""})():"");
   if(!p)s+='<p class="small" style="margin:0">الحساب يحتاج طولك وجنسك. أدخلهما في التغذية ← الأهداف والإعدادات.</p>';
   s+='<form id="bcform" class="f" autocomplete="off"><div class="two"><div class="fld"><label for="bc-d">اليوم</label><input id="bc-d" class="keep ltr datein" type="date" max="'+todayK()+'" value="'+k+'"></div>'+
-    '<div class="fld"><label for="bc-w">محيط الخصر (سم)</label><input id="bc-w" class="keep ltr" type="number" inputmode="decimal" min="40" max="200" step="0.1" value="'+(+d.waist>0?d.waist:"")+'"></div>'+
-    '<div class="fld"><label for="bc-n">محيط الرقبة (سم، اختياري)</label><input id="bc-n" class="keep ltr" type="number" inputmode="decimal" min="20" max="70" step="0.1" value="'+(+d.neck>0?d.neck:"")+'"></div>'+
-    (f?'<div class="fld"><label for="bc-h">محيط الورك (سم)</label><input id="bc-h" class="keep ltr" type="number" inputmode="decimal" min="50" max="200" step="0.1" value="'+(+d.hip>0?d.hip:"")+'"></div>':"")+
-    '<div class="fld"><label for="bc-bf">أو نسبة الدهون مباشرة (%)</label><input id="bc-bf" class="keep ltr" type="number" inputmode="decimal" min="3" max="65" step="0.1" value="'+(+d.bf>0?d.bf:"")+'" placeholder="اختياري"></div></div>'+
+    '<div class="fld"><label for="bc-w">محيط الخصر (سم)</label><input id="bc-w" class="keep ltr" type="number" inputmode="decimal" min="40" max="200" step="any" value="'+(+d.waist>0?d.waist:"")+'"></div>'+
+    '<div class="fld"><label for="bc-n">محيط الرقبة (سم، اختياري)</label><input id="bc-n" class="keep ltr" type="number" inputmode="decimal" min="20" max="70" step="any" value="'+(+d.neck>0?d.neck:"")+'"></div>'+
+    (f?'<div class="fld"><label for="bc-h">محيط الورك (سم)</label><input id="bc-h" class="keep ltr" type="number" inputmode="decimal" min="50" max="200" step="any" value="'+(+d.hip>0?d.hip:"")+'"></div>':"")+
+    '<div class="fld"><label for="bc-bf">أو نسبة الدهون مباشرة (%)</label><input id="bc-bf" class="keep ltr" type="number" inputmode="decimal" min="3" max="65" step="any" value="'+(+d.bf>0?d.bf:"")+'" placeholder="اختياري"></div></div>'+
     '<p class="err" id="bc-err"'+(S.bc.msg?"":" hidden")+'>'+esc(S.bc.msg)+'</p><div class="row"><button class="btn pri sm" type="submit">حفظ القياس</button>'+((+d.waist>0||+d.bf>0)?'<button class="btn sm danger" type="button" data-act="bcDel" data-k="'+k+'">حذف قياس هذا اليوم</button>':"")+'</div></form>'+
     '<p class="lbl" style="margin:0">'+(f?'الخصر عند أضيق نقطة، والورك عند أعرض نقطة، والرقبة تحت الحنجرة.':'الخصر على مستوى السرة، والرقبة تحت تفاحة آدم مباشرة.')+' قِس صباحاً قبل الأكل، والشريط ملاصق للجلد بلا ضغط، وبنفس الطريقة كل مرة. مع الرقبة تُستخدم معادلة البحرية الأمريكية، وبدونها معادلة كتلة الدهون النسبية من الطول والخصر فقط. النسبة المباشرة، من جهاز أو من تقديرك بالنظر، تُقدَّم على حساب الشريط إن كتبتها. كل الطرق بالشريط تقديرية، وفائدتها الأكبر في متابعة الاتجاه.</p>';
   const pts=ks.slice().reverse().map(x=>{const r=bfFromDay(x);return r?[x,r.bf]:null}).filter(Boolean);
@@ -3431,12 +3431,12 @@ function updateQRow(id,k){
 }
 function openWeightPrompt(h,k){
   const d=S.days[k]||{};
-  openSheet('<h2>'+esc(h.name)+'</h2><form class="f" id="wp-form"><div class="fld"><label for="wp-v">الوزن على الميزان (كغم) · '+esc(fShort(k))+'</label><input id="wp-v" class="ltr" type="number" inputmode="decimal" min="20" max="400" step="0.1" value="'+(Number.isFinite(d.w)?d.w:"")+'" placeholder="مثال: 84.6"></div>'+
+  openSheet('<h2>'+esc(h.name)+'</h2><form class="f" id="wp-form"><div class="fld"><label for="wp-v">الوزن على الميزان (كغم) · '+esc(fShort(k))+'</label><input id="wp-v" class="ltr" type="number" inputmode="decimal" min="20" max="400" step="any" value="'+(Number.isFinite(d.w)?d.w:"")+'" placeholder="مثال: 84.6"></div>'+
     '<p class="err" id="wp-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ وإنجاز</button><button class="btn" type="button" data-act="wpSkip" data-id="'+h.id+'">إنجاز بدون وزن</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div>'+
     '<p class="lbl" style="margin:0">القراءة تُحفظ في قسم الوزن لهذا اليوم.</p></form>',fd=>{
     const v=parseFloat($("#wp-v").value),err=$("#wp-err");
     if(!Number.isFinite(v)||v<20||v>400){err.textContent="أدخل الوزن رقماً بين 20 و 400 كغم.";err.hidden=false;return}
-    const dd=ensureDay(k);dd.w=Math.round(v*10)/10;dd.h[h.id]=1;const cur=S.habits.find(x=>x.id===h.id);if(cur)touchStart(cur,k);saveDay(k);closeSheet();render();
+    const dd=ensureDay(k);dd.w=Math.round(v*100)/100;dd.h[h.id]=1;const cur=S.habits.find(x=>x.id===h.id);if(cur)touchStart(cur,k);saveDay(k);closeSheet();render();
   });
 }
 function addHabit(name,days,pts){
@@ -3828,7 +3828,7 @@ document.addEventListener("submit",e=>{
     if(!Number.isFinite(p)||p<0||p>1000){err.textContent="النقاط رقم صحيح من 0 إلى 1000.";err.hidden=false;pt.focus();return}
     const tid=uid();S.todos[tid]={id:tid,name:name,pts:p,created:new Date().toISOString(),doneAt:null};saveTodo(tid);render(true);
     const n2=$("#xa-name");if(n2)n2.focus();return}
-  if(e.target.id==="wgform"){e.preventDefault();const v=parseFloat($("#wg-v").value);if(!Number.isFinite(v)||v<20||v>400){S.wt.msg="أدخل الهدف رقماً بين 20 و 400 كغم.";render(true);return}S.wgoal=Math.round(v*10)/10;S.wt.msg="";saveConfig();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
+  if(e.target.id==="wgform"){e.preventDefault();const v=parseFloat($("#wg-v").value);if(!Number.isFinite(v)||v<20||v>400){S.wt.msg="أدخل الهدف رقماً بين 20 و 400 كغم.";render(true);return}S.wgoal=Math.round(v*100)/100;S.wt.msg="";saveConfig();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
   if(e.target.id==="bcform"){e.preventDefault();const k=S.bc.sel,g=id2=>{const el=$("#"+id2);if(!el||el.value==="")return null;const v=parseFloat(el.value);return Number.isFinite(v)?v:NaN};
     const w=g("bc-w"),n=g("bc-n"),hp=g("bc-h"),bf=g("bc-bf"),bad=m=>{S.bc.msg=m;render(true)};
     if(w===null&&bf===null)return bad("أدخل محيط الخصر، أو نسبة الدهون من جهاز.");
@@ -3859,7 +3859,7 @@ document.addEventListener("submit",e=>{
     const k=$("#wf-d").value,v=parseFloat($("#wf-v").value);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(k)||k>todayK()){S.wt.msg="اختر يوماً حتى اليوم.";render(true);return}
     if(!Number.isFinite(v)||v<20||v>400){S.wt.msg="أدخل الوزن رقماً بين 20 و 400 كغم.";render(true);return}
-    const d=ensureDay(k);d.w=Math.round(v*10)/10;saveDay(k);S.wt.sel=k;S.wt.msg="";if(k<rangeStartFor(S.wt.range,x=>!!x&&Number.isFinite(x.w)))S.wt.range="all";
+    const d=ensureDay(k);d.w=Math.round(v*100)/100;saveDay(k);S.wt.sel=k;S.wt.msg="";if(k<rangeStartFor(S.wt.range,x=>!!x&&Number.isFinite(x.w)))S.wt.range="all";
     document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
 });
 document.addEventListener("change",e=>{
