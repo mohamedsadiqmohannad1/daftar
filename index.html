@@ -2898,11 +2898,13 @@ const FR_CLS=["w","c3","c4","c5"];
 // what was possible, up to half of the day's fixed points so a pile of pending tasks cannot outweigh the day). Extra unscheduled or weekly tasks
 // and excused days stay out.
 const TODO_CAP=0.5;
+// in the comparison a single pending or no-fixed-day task counts at most PT_CAP points, whatever points its owner gave it
+const PT_CAP=15;
 function fairDay(k){
   if(isOff(k))return null;let got=0,max=0,n=0,tp=0;
-  S.habits.forEach(h=>{if(!activeOn(h,k))return;if(typeof isFl==="function"&&isFl(h,k)){tp+=earned(h,k);return}if(!isSched(h,k))return;max+=hPts(h);got+=earned(h,k);n++});
+  S.habits.forEach(h=>{if(!activeOn(h,k))return;if(typeof isFl==="function"&&isFl(h,k)){tp+=Math.min(PT_CAP,hPts(h))*frac(h,k);return}if(!isSched(h,k))return;max+=hPts(h);got+=earned(h,k);n++});
   if(!(max>0))return null;
-  Object.values(S.todos).forEach(t=>{if(t.doneAt===k)tp+=+t.pts||0});
+  Object.values(S.todos).forEach(t=>{if(t.doneAt===k)tp+=Math.min(PT_CAP,+t.pts||0)});
   const tc=Math.min(tp,max*TODO_CAP);got+=tc;max+=tc;
   return {p:Math.min(100,Math.round(got/max*1000)/10),n:n,m:Math.round(max*10)/10,t:Math.round(tc*10)/10};
 }
@@ -3068,7 +3070,7 @@ function cmpHTML(){
     s+='<div class="lbl2" style="margin-top:4px">'+(mon?"شهراً بشهر":"أسبوعاً بأسبوع")+'</div>'+cmpTable(people,weeks.slice().reverse().map(g=>[(mon?esc(fMon(g.w)):'من '+esc(fNum(g.w))),p=>{const vs=g.idx.map(i=>p.v[i]).filter(numOk);return vs.length?{v:avg(vs),t:fmt(avg(vs))}:null}]));
   }
   s+='<p class="lbl" style="margin:0">'+(sc.basis?'النتيجة المعدّلة = نسبة الإنجاز × الجذر التربيعي لـ ('+(sc.basis==="m"?"نقاط مهام يومك المجدولة ÷ نقاط صاحب اليوم الأثقل":"عدد مهامك ÷ عدد مهام صاحب المهام الأكثر")+'). فالمهمة الكبيرة تزيد حجم يومك أكثر من الصغيرة. مثال: يوم بـ100 نقطة كله منجز مقابل يوم بـ200 نقطة: 100 × 0.71 = 71، ويوم الـ200 المنجز منه 75% = 75. أيام الفوز تُحسب دائماً بهذه النتيجة. ':'')+
-    'تُحسب المهام الثابتة المجدولة لذلك اليوم، والمهام المعلّقة والمهام الثابتة المرنة (بلا يوم محدد) التي أنجزتها في ذلك اليوم: نقاطها تُضاف لما جمعته ولما كان ممكناً معاً، بحد أقصى نصف نقاط مهامك الثابتة في اليوم. المهام غير المجدولة والأسبوعية التي تنجزها زيادة، والأيام المعذورة لا تدخل. يوم الفوز لمن كانت نتيجته الأعلى، والتعادل لا يُحسب.</p>';
+    'تُحسب المهام الثابتة المجدولة لذلك اليوم، والمهام المعلّقة والمهام الثابتة المرنة (بلا يوم محدد) التي أنجزتها في ذلك اليوم: كل واحدة تُحسب بنقاطها بحد أقصى '+PT_CAP+' نقطة مهما كانت نقاطها عندك، وتُضاف لما جمعته ولما كان ممكناً معاً، ومجموعها في اليوم لا يتجاوز نصف نقاط مهامك الثابتة. المهام غير المجدولة والأسبوعية التي تنجزها زيادة، والأيام المعذورة لا تدخل. يوم الفوز لمن كانت نتيجته الأعلى، والتعادل لا يُحسب.</p>';
   s+='<div class="cmpst">'+people.filter(p=>p.c).map(p=>'<span class="lbl"><i class="cmpdot '+p.cls+'"></i> <bdi>'+esc(p.name)+'</bdi>: '+esc(frStatus(p.c))+'</span>').join("")+'</div>';
   return s+'</div>';
 }
