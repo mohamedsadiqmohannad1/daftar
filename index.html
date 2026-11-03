@@ -3073,7 +3073,7 @@ function matchWeeks(me,fr){
   const out=[];
   for(;w<=cw;w=addD(w,7)){const sa=[],sb=[];let days=0;
     for(let i=0;i<7;i++){const k=addD(w,i);if(k>t)break;days++;const x=pairDay(me,fr,k);if(numOk(x[0]))sa.push(x[0]);if(numOk(x[1]))sb.push(x[1])}
-    const A=sa.length?avg(sa):null,B=sb.length?avg(sb):null,live=w===cw,ok=sa.length>=MIN_DAYS&&sb.length>=MIN_DAYS,res=ok?(Math.abs(A-B)<0.5?"d":A>B?"w":"l"):null;
+    const A=sa.length?avg(sa):null,B=sb.length?avg(sb):null,live=w===cw,ok=sa.length>=MIN_DAYS&&sb.length>=MIN_DAYS,res=ok?(Math.abs(A-B)<MATCH_TIE?"d":A>B?"w":"l"):null;
     out.push({w:w,A:A,B:B,na:sa.length,nb:sb.length,live:live,left:live?6-diffD(w,t):0,res:res});
   }
   return out;
@@ -3084,11 +3084,12 @@ function matchRecord(ws){
   for(let i=done.length-1;i>=0;i--){const x=done[i];if(x.res==="d")break;if(r.sres===null)r.sres=x.res;if(x.res!==r.sres)break;r.streak++}
   return r;
 }
-const rnd=v=>numOk(v)?Math.round(v):"–";
+// match scores are shown with one decimal so the score always agrees with the result (a draw is a gap under 0.5)
+const MATCH_TIE=0.5,rnd=v=>numOk(v)?(Math.round(v*10)/10).toFixed(1):"–";
 function liveLine(cur,fname){
   if(!cur||!numOk(cur.A)||!numOk(cur.B))return "المباراة تبدأ حين يسجّل كل منكما نقاطاً هذا الأسبوع.";
-  const d=Math.round(cur.A)-Math.round(cur.B),left=cur.left===0?"آخر يوم في الأسبوع":"باقي "+cur.left+" "+(cur.left===1?"يوم":cur.left===2?"يومان":"أيام");
-  return (d>0?"متقدّم بـ"+d:d<0?"متأخر بـ"+(-d):"متعادلان")+" · "+left+(cur.na<MIN_DAYS||cur.nb<MIN_DAYS?" · تحتاج المباراة "+MIN_DAYS+" أيام مسجلة لكل منكما":"");
+  const d=Math.round((cur.A-cur.B)*10)/10,left=cur.left===0?"آخر يوم في الأسبوع":"باقي "+cur.left+" "+(cur.left===1?"يوم":cur.left===2?"يومان":"أيام");
+  return (Math.abs(cur.A-cur.B)<MATCH_TIE?"متعادلان"+(d?" (الفرق "+Math.abs(d).toFixed(1)+" أقل من "+MATCH_TIE+")":""):d>0?"متقدّم بـ"+d.toFixed(1):"متأخر بـ"+(-d).toFixed(1))+" · "+left+(cur.na<MIN_DAYS||cur.nb<MIN_DAYS?" · تحتاج المباراة "+MIN_DAYS+" أيام مسجلة لكل منكما":"");
 }
 function matchHTML(people){
   const me=people[0];
