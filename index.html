@@ -899,7 +899,41 @@ function queueWrite(path,data){
   dirty.set(path,{data:data,timer:setTimeout(()=>flush(path),450)});
   setSync();
 }
-async function doWrite(path,data){const ref=DB.doc(path);if(data===null)await ref.delete();else await ref.set(data)}
+// Writes send only the fields that changed since the version of the document this device last saw (BASE), so a device
+// holding old data cannot wipe what another device changed in other fields. A document this device never saw is merged,
+// never replaced. Per-day task values, each frozen week and each custom food, recipe and saved meal are separate fields.
+const BASE=new Map(),DEL={del:1};
+// which maps are compared key by key (a nested object = go one level further); everything else is written as one field
+const DEPTH={"app/config":{dfix:{},nut:{foods:{},recipes:{},meals:{},units:{}},gym:{xn:{}},ui:{}},days:{h:{},xh:{}}};
+const isObj=x=>!!x&&typeof x==="object"&&!Array.isArray(x);
+const stab=x=>JSON.stringify(x,(k,v)=>isObj(v)?Object.keys(v).sort().reduce((o,kk)=>{o[kk]=v[kk];return o},{}):v);
+function seenDoc(p,d){if(d==null)BASE.delete(p);else BASE.set(p,JSON.stringify(d))}
+function seenCol(pre,docs){const ids=new Set();docs.forEach(doc=>{const p=pre+doc.id;ids.add(p);if(!isDirty(p))seenDoc(p,doc.data())});
+  BASE.forEach((v,p)=>{if(p.startsWith(pre)&&!ids.has(p)&&!isDirty(p))BASE.delete(p)})}
+function diffInto(ops,path,b,n,spec){
+  new Set(Object.keys(b).concat(Object.keys(n))).forEach(k=>{
+    const bv=b[k],nv=n[k];if(stab(bv)===stab(nv))return;const fp=path.concat(k);
+    if(nv===undefined){ops.push([fp,DEL]);return}
+    if(spec&&spec[k]&&isObj(bv)&&isObj(nv)){diffInto(ops,fp,bv,nv,spec[k]);return}
+    ops.push([fp,nv]);
+  });
+}
+function fieldOps(p,data){ // [[field path], value or DEL]; null when this device has no earlier version of the document
+  const bj=BASE.get(p);if(bj==null)return null;const ops=[];
+  diffInto(ops,[],JSON.parse(bj),data,DEPTH[p]||DEPTH[p.split("/")[0]]||null);
+  return ops;
+}
+async function doWrite(path,data){
+  const ref=DB.doc(path);
+  if(data===null){BASE.delete(path);await ref.delete();return}
+  const ops=typeof ref.update==="function"?fieldOps(path,data):null,prev=BASE.get(path),mine=JSON.stringify(data);
+  BASE.set(path,mine);
+  try{
+    if(ops===null){await ref.set(data,true);return}
+    if(!ops.length)return;
+    try{await ref.update(ops)}catch(e){if(e&&e.code==="not-found"){await ref.set(data,true);return}throw e}
+  }catch(e){if(BASE.get(path)===mine){if(prev==null)BASE.delete(path);else BASE.set(path,prev)}throw e}
+}
 function flush(path){
   const it=dirty.get(path);if(!it)return;
   clearTimeout(it.timer);dirty.delete(path);pendingN++;setSync();
@@ -938,11 +972,13 @@ function getCfg(){if(EMBED_CFG)return EMBED_CFG;try{const r=localStorage.getItem
 
 function mkDB(M,fs,uid){
   const base="users/"+uid+"/";
-  const wrap=s=>({id:s.id,exists:s.exists(),data:()=>s.data()});
+  const wrap=s=>({id:s.id,exists:s.exists(),data:()=>s.data(),fromCache:!!(s.metadata&&s.metadata.fromCache)}),MD={includeMetadataChanges:true};
   const query=q=>({orderBy:(f,d)=>query(M.query(q,M.orderBy(f,d))),limit:n=>query(M.query(q,M.limit(n))),
-    onSnapshot:(n,e)=>M.onSnapshot(q,s=>n({docs:s.docs.map(wrap)}),e)});
+    onSnapshot:(n,e)=>M.onSnapshot(q,MD,s=>n({docs:s.docs.map(wrap),fromCache:!!s.metadata.fromCache,nch:s.docChanges().length}),e)});
   return {
-    doc:p=>{const r=M.doc(fs,base+p);return {set:d=>M.setDoc(r,d),delete:()=>M.deleteDoc(r),onSnapshot:(n,e)=>M.onSnapshot(r,s=>n(wrap(s)),e)}},
+    doc:p=>{const r=M.doc(fs,base+p);return {set:(d,merge)=>merge?M.setDoc(r,d,{merge:true}):M.setDoc(r,d),
+      update:ops=>{const a=[];ops.forEach(o=>{a.push(new M.FieldPath(...o[0]),o[1]===DEL?M.deleteField():o[1])});return M.updateDoc(r,...a)},
+      delete:()=>M.deleteDoc(r),onSnapshot:(n,e)=>M.onSnapshot(r,MD,s=>n(wrap(s)),e)}},
     collection:p=>query(M.collection(fs,base+p)),
     uid:uid,
     shareSet:d=>M.setDoc(M.doc(fs,"shares/"+uid),d),
@@ -954,55 +990,68 @@ function mkDB(M,fs,uid){
   };
 }
 let unsubs=[];
+// Listeners first deliver what is stored on this device, then the database's copy. Work that writes on its own
+// (freezing finished weeks, publishing the shared numbers, steps, old-format migration) waits until every listener
+// has delivered the database's copy at least once; freezing a week also needs them all to be current at that moment.
+const SYNC_KEYS=["c","d","g","n","t","w","u"];let LIVE={},SRV_ONCE=false;
+const srvNow=()=>SRV_ONCE&&SYNC_KEYS.every(x=>LIVE[x]);
+function syncMark(key,fromCache){LIVE[key]=!fromCache;if(!SRV_ONCE&&S.mode==="db"&&SYNC_KEYS.every(x=>LIVE[x])){SRV_ONCE=true;migrateX();watchHK();queueShare()}}
 function startDB(db){
   stopFriends();stopHK();SH_LAST="";SH_ERR="";
-  DB=db;S.mode="loading";render();
+  DB=db;S.mode="loading";BASE.clear();LIVE={};SRV_ONCE=false;render();
   unsubs.forEach(u=>{try{u()}catch(e){}});unsubs=[];
   let got={c:false,d:false,g:false,n:false,t:false,w:false,u:false};
-  const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&got.w&&got.u&&S.mode==="loading"){S.mode="db";setSync();migrateX()}render()};
+  const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&got.w&&got.u&&S.mode==="loading"){S.mode="db";setSync()}render()};let cfgJ=null;
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
-    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.dfix=d&&d.dfix&&typeof d.dfix==="object"?JSON.parse(JSON.stringify(d.dfix)):{};S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
-    got.c=true;ready();
+    const j=snap.exists?stab(snap.data()):"";if(got.c&&j===cfgJ){syncMark("c",snap.fromCache);return}
+    if(!isDirty("app/config")){cfgJ=j;const d=snap.exists?snap.data():null;seenDoc("app/config",d);S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.dfix=d&&d.dfix&&typeof d.dfix==="object"?JSON.parse(JSON.stringify(d.dfix)):{};S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
+    got.c=true;ready();syncMark("c",snap.fromCache);
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
+    if(got.d&&snap.nch===0){syncMark("d",snap.fromCache);return}seenCol("days/",snap.docs);
     const nd={};
     snap.docs.forEach(doc=>{const p="days/"+doc.id;nd[doc.id]=isDirty(p)&&S.days[doc.id]?S.days[doc.id]:JSON.parse(JSON.stringify(doc.data()))});
     Object.keys(S.days).forEach(k=>{if(!nd[k]&&isDirty("days/"+k))nd[k]=S.days[k]});
-    S.days=nd;got.d=true;ready();
+    S.days=nd;got.d=true;ready();syncMark("d",snap.fromCache);
   },onErr));
   unsubs.push(DB.collection("goals").onSnapshot(snap=>{
+    if(got.g&&snap.nch===0){syncMark("g",snap.fromCache);return}seenCol("goals/",snap.docs);
     const ng={};
     snap.docs.forEach(doc=>{const p="goals/"+doc.id;ng[doc.id]=isDirty(p)&&S.goals[doc.id]?S.goals[doc.id]:JSON.parse(JSON.stringify(doc.data()))});
     Object.keys(S.goals).forEach(k=>{const it=dirty.get("goals/"+k);if(!ng[k]&&it&&it.data!==null)ng[k]=S.goals[k]});
-    S.goals=ng;got.g=true;ready();
+    S.goals=ng;got.g=true;ready();syncMark("g",snap.fromCache);
   },onErr));
   unsubs.push(DB.collection("workouts").onSnapshot(snap=>{
+    if(got.w&&snap.nch===0){syncMark("w",snap.fromCache);return}seenCol("workouts/",snap.docs);
     const nw={};
     snap.docs.forEach(doc=>{const p="workouts/"+doc.id;nw[doc.id]=isDirty(p)&&S.wos[doc.id]?S.wos[doc.id]:JSON.parse(JSON.stringify(doc.data()))});
     Object.keys(S.wos).forEach(k=>{const it=dirty.get("workouts/"+k);if(!nw[k]&&it&&it.data!==null)nw[k]=S.wos[k]});
-    S.wos=nw;got.w=true;ready();
+    S.wos=nw;got.w=true;ready();syncMark("w",snap.fromCache);
   },onErr));
   unsubs.push(DB.collection("nutri").orderBy("d","desc").limit(400).onSnapshot(snap=>{
+    if(got.u&&snap.nch===0){syncMark("u",snap.fromCache);return}seenCol("nutri/",snap.docs);
     const nn={};
     snap.docs.forEach(doc=>{const p="nutri/"+doc.id;nn[doc.id]=isDirty(p)&&S.nutri[doc.id]?S.nutri[doc.id]:JSON.parse(JSON.stringify(doc.data()))});
     Object.keys(S.nutri).forEach(k=>{const it=dirty.get("nutri/"+k);if(!nn[k]&&it&&it.data!==null)nn[k]=S.nutri[k]});
-    S.nutri=nn;got.u=true;ready();
+    S.nutri=nn;got.u=true;ready();syncMark("u",snap.fromCache);
   },onErr));
   unsubs.push(DB.collection("todos").onSnapshot(snap=>{
+    if(got.t&&snap.nch===0){syncMark("t",snap.fromCache);return}seenCol("todos/",snap.docs);
     const nt={};
     snap.docs.forEach(doc=>{const p="todos/"+doc.id;nt[doc.id]=isDirty(p)&&S.todos[doc.id]?S.todos[doc.id]:JSON.parse(JSON.stringify(doc.data()))});
     Object.keys(S.todos).forEach(k=>{const it=dirty.get("todos/"+k);if(!nt[k]&&it&&it.data!==null)nt[k]=S.todos[k]});
-    S.todos=nt;got.t=true;ready();
+    S.todos=nt;got.t=true;ready();syncMark("t",snap.fromCache);
   },onErr));
   unsubs.push(DB.collection("notes").onSnapshot(snap=>{
+    if(got.n&&snap.nch===0){syncMark("n",snap.fromCache);return}seenCol("notes/",snap.docs);
     const nn={};
     snap.docs.forEach(doc=>{const p="notes/"+doc.id;nn[doc.id]=isDirty(p)&&S.notes[doc.id]?S.notes[doc.id]:JSON.parse(JSON.stringify(doc.data()))});
     Object.keys(S.notes).forEach(k=>{if(nn[k])return;const it=dirty.get("notes/"+k);if((it&&it.data!==null)||(k===S.nt.sel&&!S.notes[k].saved))nn[k]=S.notes[k]});
-    S.notes=nn;got.n=true;ready();
+    S.notes=nn;got.n=true;ready();syncMark("n",snap.fromCache);
   },onErr));
 }
-function resetState(){S.dfix={};S.chal=[];S.chalNo=[];stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){BASE.clear();LIVE={};SRV_ONCE=false;S.dfix={};S.chal=[];S.chalNo=[];stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
@@ -2906,9 +2955,9 @@ const TODO_CAP=0.5;
 // in the comparison a single pending or no-fixed-day task counts at most PT_CAP points, whatever points its owner gave it
 const PT_CAP=15;
 // S.dfix = {week start: {date: [%, task count, possible points, pending points]}}: my numbers of finished weeks, kept with the settings.
-// From the Sunday after a week, its numbers are taken from here, so later edits, point changes or new rules do not change them
+// From the Sunday after a week (once this device holds the database copy of everything), its numbers are taken from here, so later edits, point changes or new rules do not change them
 // (neither here nor in what the friend receives). The friend's app does the same with his numbers, so both see the same result.
-function fixWeeks(){const fk=firstLogKey();if(!fk)return false;const t=todayK();S.dfix=S.dfix||{};let w=weekStartK(fk>addD(t,-400)?fk:addD(t,-400)),ch=false;
+function fixWeeks(){if(!srvNow())return false;const fk=firstLogKey();if(!fk)return false;const t=todayK();S.dfix=S.dfix||{};let w=weekStartK(fk>addD(t,-400)?fk:addD(t,-400)),ch=false;
   for(;addD(w,8)<=t;w=addD(w,7)){if(S.dfix[w])continue;const o={};for(let i=0;i<7;i++){const k=addD(w,i),f=fairDayLive(k);if(f)o[k]=[f.p,f.n,f.m,f.t]}S.dfix[w]=o;ch=true}
   if(ch)setTimeout(saveConfig,0);return ch}
 function fairDay(k){const fz=S.dfix&&S.dfix[weekStartK(k)];if(fz){const e=fz[k];return Array.isArray(e)?{p:e[0],n:e[1],m:e[2],t:e[3]}:null}return fairDayLive(k)}
@@ -2929,7 +2978,7 @@ function shareData(){
   return o;
 }
 function queueShare(){
-  if(!DB||!DB.shareSet||S.mode!=="db")return;
+  if(!DB||!DB.shareSet||S.mode!=="db"||!SRV_ONCE)return;
   clearTimeout(SH_T);SH_T=setTimeout(()=>{
     const readers=S.cmp.map(c=>c.uid),d=Object.assign({readers:readers},readers.length?shareData():{pct:{},pn:{},pm:{},pt:{}},{updated:new Date().toISOString()}),j=JSON.stringify([d.readers,d.pct,d.pn,d.pm,d.pt,d.ch||null]);
     if(j===SH_LAST)return;SH_LAST=j;
@@ -3139,6 +3188,7 @@ function stopHK(){clearTimeout(HK_RT);try{HK_UN&&HK_UN()}catch(e){}HK_UN=null;HK
 function watchHK(){
   const id=S.nut&&typeof S.nut.hk==="string"?S.nut.hk:"";
   if(!DB||!DB.rawWatch||S.mode==="local"||!id){if(HK_ID||HK_UN)stopHK();return}
+  if(!SRV_ONCE)return; // steps write to days and nutrition, so they wait for the database copy of both
   if(id===HK_ID&&HK_UN)return;
   stopHK();HK_ID=id;
   HK_UN=DB.rawWatch("hk/"+id,d=>{HK_ERR="";hkApply(d)},e=>{
