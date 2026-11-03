@@ -1543,8 +1543,10 @@ const ggName=id=>{const g=S.ggroups.find(x=>x.id===id);return g?g.name:""};
 // challenges sit in the goals grid and follow the same group filter
 // g.tm = {run: start time while running, d: {date: seconds}}; a run that crosses midnight is split between the two days
 function gtAdd(g,a,b){g.tm=g.tm||{};const d=g.tm.d=g.tm.d||{};let x=a;while(x<b){const k=keyOf(new Date(x)),nx=Math.min(b,parse(addD(k,1)).setHours(0,0,0,0));d[k]=Math.round(((+d[k]||0)+(nx-x)/1000));x=nx}}
-function gtToday(g){const k=todayK(),tm=g.tm||{};let v=+(tm.d&&tm.d[k])||0;if(tm.run){const st=Math.max(+new Date(tm.run),new Date(parse(k)).setHours(0,0,0,0));v+=Math.max(0,(Date.now()-st)/1000)}return v}
-function gtWeek(g){const t=todayK(),ws=weekStartK(t),d=(g.tm&&g.tm.d)||{};let v=0;Object.keys(d).forEach(k=>{if(k>=ws&&k<t)v+=+d[k]||0});return v+gtToday(g)}
+// seconds per day including a session still running, split at midnight the same way gtAdd does when it stops; nothing is saved
+function tmD(g){const tm=g.tm||{},o={d:Object.assign({},tm.d||{})};if(tm.run)gtAdd({tm:o},+new Date(tm.run),Date.now());return o.d}
+function gtToday(g){return +tmD(g)[todayK()]||0}
+function gtWeek(g){const t=todayK(),ws=weekStartK(t),d=tmD(g);let v=0;Object.keys(d).forEach(k=>{if(k>=ws&&k<=t)v+=+d[k]||0});return v}
 // kind "g" = goal (saved in goals/), "c" = challenge (saved with the settings)
 const gtObj=key=>{const k=key.slice(0,1),id=key.slice(2);return k==="c"?S.chal.find(x=>x.id===id):S.goals[id]};
 function gTimerHTML(g,kind){kind=kind||"g";const on=!!(g.tm&&g.tm.run),key=kind+":"+g.id;
@@ -3280,13 +3282,13 @@ function chalInvites(){
 // timer challenges (c.tq = minutes per step): progress is in minutes, taken from the challenge's work timer.
 // Each day's timer total (plus minutes added by hand) is counted in whole steps: with steps of 10, 37 minutes count as 30.
 const isTq=c=>+c.tq>0;
-const chMin=(c,k)=>{let sec=+((c.tm&&c.tm.d&&c.tm.d[k])||0);if(k===todayK()&&c.tm&&c.tm.run)sec=gtToday(c);return sec/60};
+const chMin=(c,k)=>(+tmD(c)[k]||0)/60;
 const chStep=(c,k)=>Math.floor(chMin(c,k)/c.tq+1e-9)*c.tq;
-function chSync(c){if(!isTq(c))return false;const d=(c.tm&&c.tm.d)||{},ks=new Set(Object.keys(d));if(c.tm&&c.tm.run)ks.add(todayK());const nl={};
+function chSync(c){if(!isTq(c))return false;const ks=new Set(Object.keys(tmD(c)));if(c.tm&&c.tm.run)ks.add(todayK());const nl={};
   ks.forEach(k=>{if(k<c.from)return;const v=chStep(c,k);if(v>0)nl[k]=v});const ch=JSON.stringify(nl)!==JSON.stringify(c.log||{});c.log=nl;return ch}
 function chTqLine(c){const m=chMin(c,todayK()),got=chStep(c,todayK());
   return 'مسجّل اليوم '+amt(got)+' دقيقة · الدفعة التالية بعد '+Math.max(1,Math.round(got+c.tq-m))+' د'}
-setInterval(()=>{let ch=false;S.chal.forEach(c=>{if(isTq(c)&&c.tm&&c.tm.run&&!chalState(c).done){const k=todayK();if(chStep(c,k)!==(+(c.log||{})[k]||0)){chSync(c);ch=true}
+setInterval(()=>{let ch=false;S.chal.forEach(c=>{if(isTq(c)&&c.tm&&c.tm.run&&!chalState(c).done){if(chSync(c))ch=true;
   const el=document.querySelector('[data-gq="'+c.id+'"]');if(el)el.textContent=chTqLine(c)}});
   if(ch){saveConfig();SH_LAST="";queueShare();render()}},1000);
 document.addEventListener("change",e=>{if(e.target.name!=="chm")return;const m=e.target.value==="tq",a=$("#ch-ubox"),b=$("#ch-qbox");if(a)a.hidden=m;if(b)b.hidden=!m;const tl=$("#ch-tl");if(tl)tl.textContent=m?"الدقائق المطلوبة (اختياري)":"الكمية المطلوبة (اختياري)"});
@@ -3348,7 +3350,7 @@ function openChalNew(){
 let CHL=null;
 function openChalLog(id){
   const c=S.chal.find(x=>x.id===id);if(!c)return;CHL=id;const k=todayK();
-  const tq=isTq(c),src=tq?((c.tm&&c.tm.d)||{}):(c.log||{}),val=x=>tq?Math.round((+src[x]||0)/60):+src[x];
+  const tq=isTq(c),src=tq?tmD(c):(c.log||{}),val=x=>tq?Math.round((+src[x]||0)/60):+src[x];
   const ks=Object.keys(src).filter(x=>x>=c.from&&val(x)>0).sort().reverse();
   openSheet('<h2>تسجيل تقدّم: <bdi>'+esc(c.n)+'</bdi></h2><form class="f" id="chl-form" autocomplete="off">'+
     '<div class="two"><div class="fld"><label for="chl-d">اليوم</label><input id="chl-d" name="d" class="ltr datein" type="date" min="'+c.from+'" max="'+k+'" value="'+k+'"></div>'+
