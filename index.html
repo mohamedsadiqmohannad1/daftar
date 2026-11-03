@@ -1117,24 +1117,29 @@ async function doAuth(kind){
 // frequency: fixed weekdays (h.days) or N times per week (h.wk)
 const liveHabits=()=>S.habits.filter(h=>!h.archived);
 const hStart=h=>h.created||todayK();
-const isQ=h=>!!(h.q&&(+h.q.t>0||h.q.m==="none"));
+// points and quantity settings keep a history like the schedule (h.dh): h.ph = [{to, v: older points}], h.qh = [{to, q: older settings or null}];
+// a day before "to" uses the older value, so editing a task changes it from today on and leaves past days as they were
+const qOn=(h,k)=>{if(k&&Array.isArray(h.qh))for(const e of h.qh)if(e&&k<e.to)return e.q||null;return h.q||null};
+const isQq=q=>!!(q&&(+q.t>0||q.m==="none"));
+const isQ=(h,k)=>isQq(qOn(h,k));
 const isWk=h=>+h.wk>0;
 const isExc=(h,k)=>{const d=S.days[k];return !!(d&&d.xh&&d.xh[h.id])};
 const isFl=(h,k)=>!!h.fl&&(!k||k>=h.fl);
 const isOff=k=>!!(S.days[k]&&S.days[k].off);
 const rawV=(h,k)=>{const d=S.days[k];return d&&d.h?d.h[h.id]:undefined};
-const entered=(h,k)=>{const v=rawV(h,k);if(v===undefined||v===null||v===false)return false;return isQ(h)?Number.isFinite(+v):!!v};
+const entered=(h,k)=>{const v=rawV(h,k);if(v===undefined||v===null||v===false)return false;return isQ(h,k)?Number.isFinite(+v):!!v};
 function frac(h,k){
   if(!entered(h,k))return 0;
-  if(!isQ(h))return 1;
-  const n=+rawV(h,k),t=+h.q.t;
-  if(h.q.m==="none")return n>0?1:0;
-  if(h.q.m==="max")return n<=t?1:Math.max(0,1-(n-t)/t); // full credit under the limit, falls to zero at twice the limit
+  const q=qOn(h,k);if(!isQq(q))return 1;
+  const n=+rawV(h,k),t=+q.t;
+  if(q.m==="none")return n>0?1:0;
+  if(q.m==="max")return n<=t?1:Math.max(0,1-(n-t)/t); // full credit under the limit, falls to zero at twice the limit
   return Math.max(0,Math.min(1,n/t));
 }
 const isDone=(h,k)=>frac(h,k)>=1;
-const hPts=h=>{const p=+h.pts;return Number.isFinite(p)&&p>0?p:10};
-const earned=(h,k)=>Math.round(hPts(h)*frac(h,k)*10)/10;
+const hPts=(h,k)=>{let p=+h.pts;if(k&&Array.isArray(h.ph))for(const e of h.ph)if(e&&k<e.to){p=+e.v;break}return Number.isFinite(p)&&p>0?p:10};
+function histPush(h,key,entry,from){const a=Array.isArray(h[key])?h[key].filter(e=>e&&e.to):[];if(from>hStart(h)&&!a.some(e=>e.to===from))a.push(Object.assign({to:from},entry));a.sort((x,y)=>x.to<y.to?-1:1);if(a.length)h[key]=a;else delete h[key]}
+const earned=(h,k)=>Math.round(hPts(h,k)*frac(h,k)*10)/10;
 function daysOn(h,k){if(Array.isArray(h.dh))for(const e of h.dh)if(e&&k<e.to)return Array.isArray(e.days)?e.days:[];return h.days}
 const isSched=(h,k)=>{if(isWk(h)||isFl(h,k)||isOff(k)||isExc(h,k))return false;const d=daysOn(h,k);return !d||!d.length||d.length===7||d.includes(dow(k))};
 function setDays(h,nd,from){
@@ -1147,7 +1152,7 @@ const activeOn=(h,k)=>hStart(h)<=k&&(!h.archived||(h.archivedAt&&h.archivedAt>k)
 const wlink=h=>h.wl===true||(h.wl===undefined&&/الوزن/.test(h.name||""));
 function scoreOf(items,k){
   let got=0,max=0;
-  items.forEach(h=>{if(!activeOn(h,k))return;const p=hPts(h),e=earned(h,k);if(isSched(h,k))max+=p;else if(e>0)max+=e;got+=e});
+  items.forEach(h=>{if(!activeOn(h,k))return;const p=hPts(h,k),e=earned(h,k);if(isSched(h,k))max+=p;else if(e>0)max+=e;got+=e});
   return {got:Math.round(got*10)/10,max:Math.round(max*10)/10};
 }
 function weekCount(h,ws){let c=0;const t=todayK();for(let i=0;i<7;i++){const d=addD(ws,i);if(d>t)break;if(isDone(h,d))c++}return c}
@@ -1364,7 +1369,7 @@ function taskRow(x,k){
   if(isQ(x)){
     const v=rawV(x,k),has=entered(x,k),f=frac(x,k),e=earned(x,k);
     return '<div class="xrow"><div class="hrow qrow'+(on?" on":"")+(dim?" dim":"")+'" id="qr-'+x.id+'"><div class="qtop"><span class="nmw"><span class="nm">'+esc(x.name)+'</span>'+badges.join("")+'</span>'+
-      '<span class="pts" id="qp-'+x.id+'">'+L(num(e,1)+" / "+hPts(x))+'</span></div>'+
+      '<span class="pts" id="qp-'+x.id+'">'+L(num(e,1)+" / "+hPts(x,k))+'</span></div>'+
       '<div class="qctl"><button class="iconbtn qb" data-act="qstep" data-id="'+x.id+'" data-n="-1" aria-label="إنقاص">−</button>'+
       '<input id="q-'+x.id+'" class="keep ltr qin" type="number" inputmode="decimal" min="0" step="any" value="'+(has?+v:"")+'" placeholder="0" aria-label="الكمية">'+
       '<button class="iconbtn qb" data-act="qstep" data-id="'+x.id+'" data-n="1" aria-label="زيادة">+</button>'+
@@ -1372,7 +1377,7 @@ function taskRow(x,k){
       (x.q.m==="none"?"":'<div class="qbar'+(x.q.m==="max"?" mx":"")+'"><i id="qb-'+x.id+'" style="width:'+Math.round(f*100)+'%"></i></div>')+'</div>'+edit+'</div>';
   }
   return '<div class="xrow"><button class="hrow'+(on?" on":"")+(dim?" dim":"")+(JUST===x.id?" just":"")+'" data-act="toggle" data-id="'+x.id+'" aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+esc(x.name)+'</span>'+badges.join("")+'</span>'+
-    dots7(x,k)+ptsTag(hPts(x))+'</button>'+edit+'</div>';
+    dots7(x,k)+ptsTag(hPts(x,k))+'</button>'+edit+'</div>';
 }
 function backupDue(){
   if(!(S.mode==="db"||S.mode==="local"))return null;
@@ -1502,7 +1507,7 @@ function taskAnalysis(){
     '<p class="lbl" style="margin:0">القوة من 0 إلى 100: ترتفع مع كل إنجاز وتنخفض مع كل فوات، ويوم فائت بعد التزام طويل ينقصها قليلاً فقط. التغير مقارنة بالثلاثين يوماً التي قبلها. أضعف يوم يظهر إن كان التزامك فيه أقل من 80% خلال آخر ثمانية أسابيع.</p></section>';
 }
 function vHabits(){
-  const live=liveHabits(),arch=S.habits.filter(h=>h.archived),t=todayK();
+  const live=liveHabits(),arch=S.habits.filter(h=>h.archived&&!h.del),t=todayK();
   let s='<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">المهام</h2><div class="row"><button class="btn sm" data-act="newGroup">مجموعة جديدة</button><button class="btn pri sm" data-act="newHabit">مهمة ثابتة جديدة</button></div></section>';
   const last7=[],wk=[];for(let i=0;i<7;i++)last7.push(dayScore(addD(t,-i)).got);
   for(let k=weekStartK(t);k<=t;k=addD(k,1))wk.push(dayScore(k).got);
@@ -2983,7 +2988,7 @@ function fixWeeks(){if(!srvNow())return false;const fk=firstLogKey();if(!fk)retu
 function fairDay(k){const fz=S.dfix&&S.dfix[weekStartK(k)];if(fz){const e=fz[k];return Array.isArray(e)?{p:e[0],n:e[1],m:e[2],t:e[3]}:null}return fairDayLive(k)}
 function fairDayLive(k){
   if(isOff(k))return null;let got=0,max=0,n=0,tp=0;
-  S.habits.forEach(h=>{if(!activeOn(h,k))return;if(typeof isFl==="function"&&isFl(h,k)){tp+=Math.min(PT_CAP,hPts(h))*frac(h,k);return}if(!isSched(h,k))return;max+=hPts(h);got+=earned(h,k);n++});
+  S.habits.forEach(h=>{if(!activeOn(h,k))return;if(typeof isFl==="function"&&isFl(h,k)){tp+=Math.min(PT_CAP,hPts(h,k))*frac(h,k);return}if(!isSched(h,k))return;max+=hPts(h,k);got+=earned(h,k);n++});
   if(!(max>0))return null;
   Object.values(S.todos).forEach(t=>{if(t.doneAt===k)tp+=Math.min(PT_CAP,+t.pts||0)});
   const tc=Math.min(tp,max*TODO_CAP);got+=tc;max+=tc;
@@ -3527,7 +3532,7 @@ function setQ(id,k,v){
 }
 function updateQRow(id,k){
   const h=S.habits.find(x=>x.id===id);if(!h)return;const f=frac(h,k);
-  const p=$("#qp-"+id);if(p)p.innerHTML=L(num(earned(h,k),1)+" / "+hPts(h));
+  const p=$("#qp-"+id);if(p)p.innerHTML=L(num(earned(h,k),1)+" / "+hPts(h,k));
   const b=$("#qb-"+id);if(b)b.style.width=Math.round(f*100)+"%";
   const r=$("#qr-"+id);if(r)r.classList.toggle("on",f>=1);
   const sc=dayScore(k),big=document.querySelector(".summary .big");if(big)big.innerHTML='<span class="num">'+num(sc.got,1)+'</span> <span class="small muted" style="font-family:var(--f-body)">نقطة من</span> <span class="num">'+num(sc.max,1)+'</span>';
@@ -3597,10 +3602,11 @@ function habitForm(h,pg){
   '<label class="chk"><input type="checkbox" name="ld" id="hf-ld"'+(h&&h.ld?" checked":"")+'><span>إظهار تاريخ آخر مرة أنجزتها على المهمة</span></label>'+
   (h?'<div class="fld"><span class="lbl2">السجل</span>'+hLogHTML(h)+'</div>':"")+
   '<label class="chk"><input type="checkbox" name="wl" id="hf-wl"'+(h?(wlink(h)?" checked":""):"")+'><span>اطلب تسجيل الوزن عند إنجازها</span></label>'+
+  (h&&hStart(h)<todayK()?'<label class="chk"><input type="checkbox" name="hpast"><span>طبّق النقاط والكمية الجديدة على كل الأيام السابقة أيضاً</span></label><span class="lbl">بدونها يسري تغيير النقاط أو الكمية من اليوم، وتبقى الأيام السابقة محسوبة كما كانت. استخدمها لتصحيح خطأ قديم فقط.</span>':"")+
   '<p class="err" id="hf-err" hidden></p>'+
   '<div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div>'+
   (h?'<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn sm" type="button" data-act="hMove" data-id="'+h.id+'" data-n="-1"'+(pos<=0?" disabled":"")+'>تحريك للأعلى</button><button class="btn sm" type="button" data-act="hMove" data-id="'+h.id+'" data-n="1"'+(pos<0||pos>=sameG.length-1?" disabled":"")+'>تحريك للأسفل</button></div>'+
-    '<div class="row"><button class="btn sm" type="button" data-act="archHabit" data-id="'+h.id+'">'+(h.archived?"إعادة تفعيل":"أرشفة")+'</button><button class="btn sm danger" type="button" data-act="delHabit" data-id="'+h.id+'">حذف نهائي</button></div><p class="lbl" style="margin:0">الأرشفة تخفي المهمة وتحتفظ بسجلها. الحذف يزيلها من القائمة.</p>':"")+
+    '<div class="row"><button class="btn sm" type="button" data-act="archHabit" data-id="'+h.id+'">'+(h.archived?"إعادة تفعيل":"أرشفة")+'</button><button class="btn sm danger" type="button" data-act="delHabit" data-id="'+h.id+'">حذف نهائي</button></div><p class="lbl" style="margin:0">الأرشفة تخفي المهمة ويمكن إعادتها. الحذف يزيلها نهائياً من القوائم، وتبقى الأيام السابقة محسوبة كما كانت.</p>':"")+
   '</form>';
 }
 function openHabit(h,pg){
@@ -3619,6 +3625,9 @@ function openHabit(h,pg){
     if(gid==="__new"){const gn=String(fd.get("gnew")||"").trim();if(!gn)return bad("اكتب اسم المجموعة الجديدة.");const ng={id:uid(),name:gn};S.groups.push(ng);gid=ng.id}
     const cur=h&&S.habits.find(x=>x.id===h.id);if(h&&!cur){closeSheet();render();return}
     const tgt=cur||addHabit(name,days,pts);if(!tgt)return;
+    if(cur){const past=!!fd.get("hpast"),from=todayK(),oq=cur.q?JSON.parse(JSON.stringify(cur.q)):null,nq=q?JSON.parse(JSON.stringify(q)):null;
+      if(hPts(cur)!==pts){if(past)delete cur.ph;else histPush(cur,"ph",{v:hPts(cur)},from)}
+      if(JSON.stringify(oq)!==JSON.stringify(nq)){if(past)delete cur.qh;else histPush(cur,"qh",{q:oq},from)}}
     tgt.name=name;tgt.pts=pts;
     if(fr==="fl"){if(!tgt.fl)tgt.fl=cur?todayK():hStart(tgt)}
     else{delete tgt.fl;if(cur&&fr!=="wk")setDays(tgt,days);else tgt.days=fr==="wk"?[]:(days.length===7?[]:days)}
@@ -3854,7 +3863,7 @@ document.addEventListener("click",e=>{
     case "ntDel":{const nid=S.nt.sel;if(!nid)break;if(confirmArm[a+nid]){delete S.notes[nid];saveNote(nid);S.nt.sel=null;delete confirmArm[a+nid];render(true)}else{confirmArm[a+nid]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+nid];if(b.isConnected)b.textContent="حذف الفكرة"},4000)}break}
     case "editHabit":{const h=S.habits.find(x=>x.id===id);if(h)openHabit(h);break}
     case "archHabit":{const h=S.habits.find(x=>x.id===id);if(h){if(h.archived){h.archived=false;delete h.archivedAt}else{h.archived=true;h.archivedAt=todayK()}saveConfig();closeSheet();render()}break}
-    case "delHabit":{if(confirmArm[a+id]){S.habits=S.habits.filter(x=>x.id!==id);saveConfig();closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف نهائي"},4000)}break}
+    case "delHabit":{if(confirmArm[a+id]){const hd=S.habits.find(x=>x.id===id);if(hd&&hStart(hd)<todayK()){hd.del=1;hd.archived=true;hd.archivedAt=hd.archivedAt||todayK()}else S.habits=S.habits.filter(x=>x.id!==id);saveConfig();closeSheet();render();delete confirmArm[a+id]}else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف نهائي"},4000)}break}
     case "newGoal":openGoal(null);break;
     case "editGoal":{const g=S.goals[id];if(g)openGoal(g);break}
     case "logGoal":{const g=S.goals[id];if(g)openLog(g);break}
