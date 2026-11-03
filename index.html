@@ -996,7 +996,7 @@ let unsubs=[];
 // has delivered the database's copy at least once; freezing a week also needs them all to be current at that moment.
 const SYNC_KEYS=["c","d","g","n","t","w","u"];let LIVE={},SRV_ONCE=false;
 const srvNow=()=>SRV_ONCE&&SYNC_KEYS.every(x=>LIVE[x]);
-function syncMark(key,fromCache){LIVE[key]=!fromCache;if(!SRV_ONCE&&S.mode==="db"&&SYNC_KEYS.every(x=>LIVE[x])){SRV_ONCE=true;migrateX();watchHK();queueShare()}}
+function syncMark(key,fromCache){LIVE[key]=!fromCache;if(!SRV_ONCE&&S.mode==="db"&&SYNC_KEYS.every(x=>LIVE[x])){SRV_ONCE=true;migrateX();watchHK();queueShare();gtCap()}}
 function startDB(db){
   stopFriends();stopHK();SH_LAST="";SH_ERR="";
   DB=db;S.mode="loading";BASE.clear();LIVE={};SRV_ONCE=false;render();
@@ -1544,14 +1544,31 @@ const ggName=id=>{const g=S.ggroups.find(x=>x.id===id);return g?g.name:""};
 // g.tm = {run: start time while running, d: {date: seconds}}; a run that crosses midnight is split between the two days
 function gtAdd(g,a,b){g.tm=g.tm||{};const d=g.tm.d=g.tm.d||{};let x=a;while(x<b){const k=keyOf(new Date(x)),nx=Math.min(b,parse(addD(k,1)).setHours(0,0,0,0));d[k]=Math.round(((+d[k]||0)+(nx-x)/1000));x=nx}}
 // seconds per day including a session still running, split at midnight the same way gtAdd does when it stops; nothing is saved
-function tmD(g){const tm=g.tm||{},o={d:Object.assign({},tm.d||{})};if(tm.run)gtAdd({tm:o},+new Date(tm.run),Date.now());return o.d}
+// one session counts at most GT_MAX: a timer left running is stopped there (gtCap) and shown capped until then
+const GT_MAX=4*3600e3,gtEnd=g=>Math.min(Date.now(),+new Date(g.tm.run)+GT_MAX);
+function tmD(g){const tm=g.tm||{},o={d:Object.assign({},tm.d||{})};if(tm.run)gtAdd({tm:o},+new Date(tm.run),gtEnd(g));return o.d}
+function gtStop(g){if(!(g.tm&&g.tm.run))return;gtAdd(g,+new Date(g.tm.run),gtEnd(g));delete g.tm.run}
+function gtCap(){ // stops forgotten timers; waits for the database copy so a stale device does not stop a timer already handled elsewhere
+  if(typeof srvNow!=="function"||!srvNow())return;const names=[];let chCh=false;
+  Object.keys(S.goals).forEach(id=>{const g=S.goals[id];if(g&&g.tm&&g.tm.run&&Date.now()-new Date(g.tm.run)>GT_MAX){gtStop(g);saveGoal(id);names.push(g.name||"هدف")}});
+  (S.chal||[]).forEach(c=>{if(c.tm&&c.tm.run&&Date.now()-new Date(c.tm.run)>GT_MAX){gtStop(c);chSync(c);chCh=true;names.push(c.n||"تحدٍّ")}});
+  if(chCh){saveConfig();SH_LAST="";queueShare()}
+  if(names.length)showBanner("أوقفنا مؤقت «"+names.join("»، «")+"» تلقائياً بعد 4 ساعات متواصلة، وحُسبت 4 ساعات فقط. إن كان الوقت أقل فاحذف ذلك اليوم من «تعديل الوقت» في الهدف، أو من «إضافة دقائق» في تحدي الدقائق، ثم أضف الوقت الصحيح.");
+}
 function gtToday(g){return +tmD(g)[todayK()]||0}
 function gtWeek(g){const t=todayK(),ws=weekStartK(t),d=tmD(g);let v=0;Object.keys(d).forEach(k=>{if(k>=ws&&k<=t)v+=+d[k]||0});return v}
 // kind "g" = goal (saved in goals/), "c" = challenge (saved with the settings)
 const gtObj=key=>{const k=key.slice(0,1),id=key.slice(2);return k==="c"?S.chal.find(x=>x.id===id):S.goals[id]};
 function gTimerHTML(g,kind){kind=kind||"g";const on=!!(g.tm&&g.tm.run),key=kind+":"+g.id;
-  return '<div class="gtm'+(on?" on":"")+'"><span class="gtl">وقت العمل اليوم</span><b class="num" data-gt="'+key+'">'+fmtDur(gtToday(g))+'</b><span class="lbl" data-gw="'+key+'">هذا الأسبوع '+fmtDur(gtWeek(g))+'</span><button class="btn sm'+(on?" danger":" pri")+'" data-act="gtTog" data-id="'+g.id+'" data-k="'+kind+'">'+(on?"إيقاف":"ابدأ العمل")+'</button></div>'}
-setInterval(()=>{document.querySelectorAll("[data-gt]").forEach(el=>{const g=gtObj(el.dataset.gt);if(g)el.textContent=fmtDur(gtToday(g))});document.querySelectorAll("[data-gw]").forEach(el=>{const g=gtObj(el.dataset.gw);if(g)el.textContent="هذا الأسبوع "+fmtDur(gtWeek(g))})},1000);
+  return '<div class="gtm'+(on?" on":"")+'"><span class="gtl">وقت العمل اليوم</span><b class="num" data-gt="'+key+'">'+fmtDur(gtToday(g))+'</b><span class="lbl" data-gw="'+key+'">هذا الأسبوع '+fmtDur(gtWeek(g))+'</span><button class="btn sm'+(on?" danger":" pri")+'" data-act="gtTog" data-id="'+g.id+'" data-k="'+kind+'">'+(on?"إيقاف":"ابدأ العمل")+'</button>'+
+    (kind==="c"&&isTq(g)?"":'<button class="chip-link" type="button" data-act="gtLog" data-g="'+key+'" style="grid-column:1;justify-self:start">تعديل الوقت</button>')+'</div>'}
+// days of a goal's (or a non-timer challenge's) work time, each can be removed; a running session is stopped first
+function gtLogHTML(key){const g=gtObj(key);if(!g)return "";const d=(g.tm&&g.tm.d)||{},ks=Object.keys(d).filter(k=>+d[k]>0).sort().reverse();
+  return '<h2>تعديل الوقت: <bdi>'+esc(key[0]==="c"?g.n:g.name||"")+'</bdi></h2><div class="f">'+(g.tm&&g.tm.run?'<p class="small" style="margin:0">المؤقت يعمل الآن. أوقفه أولاً ليظهر وقت هذه الجلسة هنا.</p>':"")+
+  (ks.length?'<div class="entries" style="max-height:none">'+ks.map(k=>'<div><span>'+esc(fShort(k))+' <b class="num">'+L(fmtDur(+d[k]))+'</b></span><button class="chip-link" type="button" data-act="gtDel" data-g="'+key+'" data-k="'+k+'">حذف</button></div>').join("")+'</div>':'<p class="muted small" style="margin:0">لا وقت مسجّل بعد.</p>')+
+  '<div class="row"><button class="btn" data-act="closeSheet">إغلاق</button></div></div>'}
+function gtSave(key,g){if(key[0]==="c"){if(chSync(g)){SH_LAST="";queueShare()}saveConfig()}else saveGoal(g.id)}
+setInterval(()=>{gtCap();document.querySelectorAll("[data-gt]").forEach(el=>{const g=gtObj(el.dataset.gt);if(g)el.textContent=fmtDur(gtToday(g))});document.querySelectorAll("[data-gw]").forEach(el=>{const g=gtObj(el.dataset.gw);if(g)el.textContent="هذا الأسبوع "+fmtDur(gtWeek(g))})},1000);
 function vGoals(){let s=vGoals0();const i=s.indexOf('</section>');if(i>=0)s=s.slice(0,i+10)+chalHTML()+s.slice(i+10);
   const cc=chalCards(S.gl.g);if(!cc)return s;const j=s.indexOf('<div class="cols">');
   if(j>=0)return s.slice(0,j+18)+cc+s.slice(j+18);
@@ -3380,7 +3397,7 @@ function chalAct(a,b){
     const c={id:id,n:String(inv.n||"تحدي").slice(0,50),u:String(inv.u||"").slice(0,16),t:+inv.t>0?+inv.t:0,from:inv.from||todayK(),by:inv.by,to:inv.to,log:{}};if(inv.end)c.end=inv.end;if(+inv.tq>0){c.tq=Math.min(600,Math.round(+inv.tq));c.u="دقيقة"}
     S.chal.push(c);saveConfig();SH_LAST="";queueShare();render();return true}
   if(a==="chNo"){S.chalNo.push(id);saveConfig();render();return true}
-  if(a==="chEnd"){if(confirmArm[a+id]){delete confirmArm[a+id];const c=S.chal.find(x=>x.id===id);if(c&&!c.e){if(c.tm&&c.tm.run){gtAdd(c,+new Date(c.tm.run),Date.now());delete c.tm.run;chSync(c)}c.e=todayK();saveConfig();SH_LAST="";queueShare()}render()}
+  if(a==="chEnd"){if(confirmArm[a+id]){delete confirmArm[a+id];const c=S.chal.find(x=>x.id===id);if(c&&!c.e){if(c.tm&&c.tm.run){gtStop(c);chSync(c)}c.e=todayK();saveConfig();SH_LAST="";queueShare()}render()}
     else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى لإنهائه";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="إنهاء التحدي"},4000)}return true}
   if(a==="chDel"){if(confirmArm[a+id]){delete confirmArm[a+id];const c=S.chal.find(x=>x.id===id);if(c){c.hide=true;saveConfig()}render()}
     else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف من القائمة"},4000)}return true}
@@ -3467,7 +3484,7 @@ function render(force){
   if(S.mode==="setup"){v.innerHTML=setupHTML();return}
   CH=[];enReset();
   let h="";
-  if(bannerMsg)h+='<div class="banner">'+esc(bannerMsg)+'</div>';
+  if(bannerMsg)h+='<div class="banner">'+esc(bannerMsg)+' <button class="chip-link" data-act="bannerX">إخفاء</button></div>';
   if(S.mode==="local"&&S.tab==="today")h+='<div class="banner">بياناتك محفوظة على هذا الجهاز فقط. لتزامنها مع أجهزتك الأخرى افتح الإعدادات من زر الترس.</div>';
   h+=S.tab==="nutri"?vNut():S.tab==="gym"?vGym():S.tab==="notes"?vNotes():S.tab==="habits"?vHabits():S.tab==="goals"?vGoals():S.tab==="weight"?vWeight():S.tab==="memories"?vMem():vToday();
   v.innerHTML=h;
@@ -3844,6 +3861,10 @@ document.addEventListener("click",e=>{
     case "entFill":{const v=$("#lf-v"),d2=$("#lf-d");if(v)v.value=b.dataset.v;if(d2)d2.value=b.dataset.d;if(v)v.focus();break}
     case "delEntry":{const g=S.goals[id];if(g){g.entries=(g.entries||[]).filter(x=>x.d!==b.dataset.d);saveGoal(id);card.innerHTML=logForm(g);render()}break}
     case "closeSheet":closeSheet();break;
+    case "gtLog":openSheet(gtLogHTML(b.dataset.g),null);break;
+    case "gtDel":{const key=b.dataset.g,g=gtObj(key),k=b.dataset.k;if(!g||!g.tm||!g.tm.d)break;if(!confirmArm[a+key+k]){confirmArm[a+key+k]=1;b.textContent="اضغط مرة أخرى";setTimeout(()=>{delete confirmArm[a+key+k];if(b.isConnected)b.textContent="حذف"},4000);break}
+      delete confirmArm[a+key+k];delete g.tm.d[k];gtSave(key,g);card.innerHTML=gtLogHTML(key);render();break}
+    case "bannerX":bannerMsg="";render();break;
     case "settings":openSheet(settingsHTML(),settingsSubmit);break;
     case "signOut":closeSheet();flushAll();if(FB)FB.UM.signOut(FB.auth);break;
     case "authUp":doAuth("up");break;
@@ -3872,7 +3893,7 @@ document.addEventListener("click",e=>{
     case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
     case "chNew":case "chAcc":case "chNo":case "chEnd":case "chLog":case "chLogDel":case "chDel":case "chEdit":chalAct(a,b);break;
-    case "gtTog":{const ch=b.dataset.k==="c",g=ch?S.chal.find(x=>x.id===id):S.goals[id];if(!g)break;g.tm=g.tm||{};if(g.tm.run){gtAdd(g,+new Date(g.tm.run),Date.now());delete g.tm.run}else g.tm.run=new Date().toISOString();if(ch){if(chSync(g)){SH_LAST="";queueShare()}saveConfig()}else saveGoal(id);render();break}
+    case "gtTog":{const ch=b.dataset.k==="c",g=ch?S.chal.find(x=>x.id===id):S.goals[id];if(!g)break;g.tm=g.tm||{};if(g.tm.run)gtStop(g);else g.tm.run=new Date().toISOString();if(ch){if(chSync(g)){SH_LAST="";queueShare()}saveConfig()}else saveGoal(id);render();break}
     case "goCmp":S.tab="habits";CMP_ON=true;try{localStorage.setItem("dt-tab","habits");localStorage.setItem("dt-cmp","1")}catch(er){}render(true);setTimeout(()=>{const x=$(".cmpbox");if(x)x.scrollIntoView({block:"start"})},50);break;
     case "cmpR":S.cmpV.r=b.dataset.r||"7";S.cmpV.wk=0;render();break;
     case "cmpWk":{const n=+b.dataset.n;S.cmpV.wk=n===0?0:Math.max(0,(+S.cmpV.wk||0)+n);render();break}
