@@ -3657,7 +3657,8 @@ function openLog(g){
 
 /* ---------- export ---------- */
 function doExport(){
-  const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos,nutri:S.nutri,nut:S.nut},null,1);
+  const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos,nutri:S.nutri,nut:S.nut,
+    chal:S.chal,chalNo:S.chalNo,dfix:S.dfix,cmp:S.cmp,cmpS:S.cmpS,ui:S.ui},null,1);
   try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download="daftar-backup-"+todayK()+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}catch(e){}
   S.lastBackup=new Date().toISOString();saveConfig();render();
 }
@@ -3673,7 +3674,7 @@ function settingsHTML(){
     '<div class="fld"><span class="lbl2">شريط الأقسام على الهاتف</span><div class="seg2" role="radiogroup" aria-label="مكان شريط الأقسام"><label><input type="radio" name="navpos" value=""'+(navTop()?"":" checked")+'><span>أسفل الشاشة</span></label><label><input type="radio" name="navpos" value="top"'+(navTop()?" checked":"")+'><span>أعلى الشاشة</span></label></div><span class="lbl">يُحفظ على هذا الجهاز فقط. على الكمبيوتر الشريط دائماً في الأعلى.</span></div>'+
     cmpSettingsHTML()+
     '<div class="fld"><span class="lbl2">نسخة احتياطية</span>'+backupLine()+'<div class="row"><button class="btn sm" data-act="export">تصدير ملف</button><label class="btn sm filebtn">استيراد ملف<input id="imp-file" type="file" accept=".json,application/json"></label></div>'+
-      '<span class="lbl">الاستيراد يضيف محتوى الملف إلى بياناتك الحالية ولا يحذف شيئاً منها. استخدمه لنقل بياناتك من النسخة القديمة.</span><p class="err" id="imp-err" hidden></p></div>'+
+      '<span class="lbl">الاستيراد يضيف من الملف ما ليس عندك فقط، ولا يغيّر ولا يحذف شيئاً موجوداً. الملف يحفظ كل بياناتك، ومنها التحديات والأسابيع المقفلة والأصدقاء.</span><p class="err" id="imp-err" hidden></p></div>'+
     (!embedded&&S.mode==="db"?'<div class="fld"><span class="lbl2">مشروع المزامنة</span><div class="row"><button class="btn sm danger" data-act="resetCfg">تغيير إعدادات المشروع على هذا الجهاز</button></div></div>':"")+
     '<div class="row"><button class="btn" data-act="closeSheet">إغلاق</button></div></div>';
 }
@@ -3681,30 +3682,45 @@ let IMP=null;
 function importSummary(o){
   const n=x=>x&&typeof x==="object"?(Array.isArray(x)?x.length:Object.keys(x).length):0;
   return '<h2>استيراد نسخة احتياطية</h2><div class="f">'+(Array.isArray(o.habitPatch)?'<p class="small" style="margin:0">'+o.habitPatch.map(p=>{const h=S.habits.find(x=>x.id===p.id);return h?'تغيير أيام «'+esc(h.name)+'» إلى: '+esc(DAYS_ORDER.filter(d=>(p.days||[]).includes(d)).map(d=>DAY_NAME[d]).join("، "))+(p.from?' ابتداءً من '+esc(fShort(p.from)):""):'مهمة غير موجودة عندك ('+esc(p.id)+')'}).join("<br>")+'</p>':"")+'<div class="kv"><div><b>'+n(o.days)+'</b><span>يوماً مسجّلاً</span></div><div><b>'+n(o.habits)+'</b><span>مهمة ثابتة</span></div><div><b>'+n(o.groups)+'</b><span>مجموعة</span></div><div><b>'+n(o.goals)+'</b><span>هدفاً</span></div><div><b>'+n(o.notes)+'</b><span>فكرة</span></div>'+(o.gym&&Array.isArray(o.gym.groups)?'<div><b>'+o.gym.groups.length+'</b><span>مجموعة تمارين</span></div><div><b>'+o.gym.groups.reduce((a,g)=>a+((g.ex||[]).length),0)+'</b><span>تمريناً</span></div>':'')+(o.wos?'<div><b>'+n(o.wos)+'</b><span>جلسة تمرين</span></div>':'')+(o.nutri?'<div><b>'+n(o.nutri)+'</b><span>يوم تغذية</span></div>':'')+'</div>'+
-    '<p class="small muted" style="margin:0">الأيام الموجودة في الملف وفي بياناتك معاً تُدمج، وقيم الملف تحل محل القيم المختلفة في اليوم نفسه.</p>'+
+    (Array.isArray(o.chal)||o.dfix||Array.isArray(o.cmp)?'<div class="kv">'+(Array.isArray(o.chal)?'<div><b>'+o.chal.length+'</b><span>تحدياً</span></div>':'')+(o.dfix?'<div><b>'+n(o.dfix)+'</b><span>أسبوعاً مقفلاً</span></div>':'')+(Array.isArray(o.cmp)?'<div><b>'+o.cmp.length+'</b><span>صديقاً</span></div>':'')+'</div>':'')+
+    '<p class="small muted" style="margin:0">يُضاف من الملف ما ليس عندك فقط. ما هو موجود عندك من مهام وأيام وأهداف وتحديات وغيرها يبقى كما هو.</p>'+
     '<p class="err" id="imp-err2" hidden></p><div class="row"><button class="btn pri" data-act="impGo">استيراد</button><button class="btn" data-act="closeSheet">إلغاء</button></div></div>';
 }
+// Import adds what this account does not have yet and leaves everything already here as it is, so an older file
+// cannot undo later edits. A day that already exists here is kept whole (an unticked task has no value, so filling
+// gaps inside a day would tick it again).
 async function applyImport(o){
-  const clone=x=>JSON.parse(JSON.stringify(x));const ops=[];
-  if(Array.isArray(o.groups)){const ids=new Set(S.groups.map(g=>g.id));o.groups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.groups.push(clone(g))})}
-  if(Array.isArray(o.habits)){o.habits.forEach(h=>{if(!h||!h.id)return;const i=S.habits.findIndex(x=>x.id===h.id);if(i>=0)S.habits[i]=clone(h);else S.habits.push(clone(h))})}
+  const clone=x=>JSON.parse(JSON.stringify(x)),ops=[],isO=x=>!!x&&typeof x==="object"&&!Array.isArray(x),addById=(arr,inc)=>{const ids=new Set(arr.map(x=>x&&x.id));(inc||[]).forEach(x=>{if(x&&x.id&&!ids.has(x.id)){arr.push(clone(x));ids.add(x.id)}})};
+  if(Array.isArray(o.groups))addById(S.groups,o.groups);
+  if(Array.isArray(o.habits))addById(S.habits,o.habits);
   if(Array.isArray(o.habitPatch))o.habitPatch.forEach(p=>{const h=p&&S.habits.find(x=>x.id===p.id);if(h&&Array.isArray(p.days))setDays(h,p.days.map(Number).filter(d=>d>=0&&d<=6),/^\d{4}-\d{2}-\d{2}$/.test(p.from||"")?p.from:todayK())});
-  if(+o.wgoal>0&&!(+S.wgoal>0))S.wgoal=+o.wgoal;ops.push({path:"app/config",data:cfgDoc()});
-  if(o.days&&typeof o.days==="object")Object.keys(o.days).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;const v=clone(o.days[k]),cur=S.days[k]||{};
-    S.days[k]=Object.assign({},cur,v,{d:k,h:Object.assign({},cur.h||{},v.h||{})});ops.push({path:"days/"+k,data:S.days[k]})});
-  if(o.goals&&typeof o.goals==="object")Object.keys(o.goals).forEach(id=>{S.goals[id]=clone(o.goals[id]);ops.push({path:"goals/"+id,data:S.goals[id]})});
-  if(o.gym&&Array.isArray(o.gym.groups)){const inc=o.gym.groups.filter(g=>g&&g.id).map(clone),ids=new Set(inc.map(g=>g.id));S.gym.groups=inc.concat(S.gym.groups.filter(g=>!ids.has(g.id)));if(+o.gym.rest>0&&S.gym.rest===90)S.gym.rest=+o.gym.rest;ops[0].data=cfgDoc()}
-  if(o.wos&&typeof o.wos==="object")Object.keys(o.wos).forEach(id=>{S.wos[id]=clone(o.wos[id]);ops.push({path:"workouts/"+id,data:S.wos[id]})});
-  if(Array.isArray(o.ggroups)){const ids=new Set(S.ggroups.map(g=>g.id));o.ggroups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.ggroups.push(clone(g))});ops[0].data=cfgDoc()}
-  if(Array.isArray(o.ngroups)){const ids=new Set(S.ngroups.map(g=>g.id));o.ngroups.forEach(g=>{if(g&&g.id&&!ids.has(g.id))S.ngroups.push(clone(g))});ops[0].data=cfgDoc()}
-  if(o.todos&&typeof o.todos==="object")Object.keys(o.todos).forEach(id=>{S.todos[id]=clone(o.todos[id]);ops.push({path:"todos/"+id,data:S.todos[id]})});
-  if(o.nut&&typeof o.nut==="object"){const N=NUT(),inc=clone(o.nut);["foods","recipes","meals","units"].forEach(k=>{if(inc[k]&&typeof inc[k]==="object")Object.keys(inc[k]).forEach(id=>{if(!N[k][id])N[k][id]=inc[k][id]})});
-    if(!nProf()&&inc.prof)["prof","rate","pkg","fpct","tmode","gmet"].forEach(k=>{if(inc[k]!==undefined)N[k]=inc[k]});ops[0].data=cfgDoc()}
-  if(o.nutri&&typeof o.nutri==="object")Object.keys(o.nutri).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;S.nutri[k]=clone(o.nutri[k]);S.nutri[k].d=k;ops.push({path:"nutri/"+k,data:S.nutri[k]})});
-  if(o.notes&&typeof o.notes==="object")Object.keys(o.notes).forEach(id=>{const n=clone(o.notes[id]);if(!(n.title||"").trim()&&!(n.body||"").trim())return;S.notes[id]=n;ops.push({path:"notes/"+id,data:n})});
+  if(+o.wgoal>0&&!(+S.wgoal>0))S.wgoal=+o.wgoal;
+  if(Array.isArray(o.ggroups))addById(S.ggroups,o.ggroups);
+  if(Array.isArray(o.ngroups))addById(S.ngroups,o.ngroups);
+  if(o.gym&&Array.isArray(o.gym.groups)){addById(S.gym.groups,o.gym.groups);if(+o.gym.rest>0&&S.gym.rest===90)S.gym.rest=+o.gym.rest;
+    if(isO(o.gym.xn)){S.gym.xn=S.gym.xn||{};Object.keys(o.gym.xn).forEach(id=>{if(S.gym.xn[id]===undefined)S.gym.xn[id]=o.gym.xn[id]})}}
+  if(isO(o.nut)){const N=NUT(),inc=clone(o.nut);["foods","recipes","meals","units"].forEach(k=>{if(isO(inc[k]))Object.keys(inc[k]).forEach(id=>{if(!N[k][id])N[k][id]=inc[k][id]})});
+    if(!nProf()&&inc.prof)["prof","rate","pkg","fpct","tmode","gmet"].forEach(k=>{if(inc[k]!==undefined)N[k]=inc[k]})}
+  // challenges, finished weeks, friends and the look: added only when missing here
+  if(Array.isArray(o.chal))addById(S.chal,o.chal.filter(c=>c&&c.log!==undefined));
+  if(Array.isArray(o.chalNo))o.chalNo.map(String).forEach(id=>{if(!S.chalNo.includes(id))S.chalNo.push(id)});
+  if(isO(o.dfix)){S.dfix=S.dfix||{};Object.keys(o.dfix).forEach(w=>{if(/^\d{4}-\d{2}-\d{2}$/.test(w)&&isO(o.dfix[w])&&!S.dfix[w])S.dfix[w]=clone(o.dfix[w])})}
+  let frAdded=false;
+  if(Array.isArray(o.cmp))o.cmp.forEach(c=>{const u=c&&String(c.uid||"");if(!/^[A-Za-z0-9]{20,64}$/.test(u)||(DB&&u===DB.uid)||S.cmp.some(x=>x.uid===u)||S.cmp.length>=4)return;S.cmp.push({uid:u,name:String(c.name||"صديق").slice(0,24)});frAdded=true});
+  if(isO(o.cmpS)&&!S.cmpS)S.cmpS={g:o.cmpS.g!==false,gym:!!o.cmpS.gym,st:!!o.cmpS.st};
+  if(isO(o.ui)&&!S.ui.pal&&!S.ui.thm&&!S.ui.tabs){S.ui={pal:o.ui.pal==="pink"?"pink":"",thm:o.ui.thm==="light"||o.ui.thm==="dark"?o.ui.thm:""};if(Array.isArray(o.ui.tabs))S.ui.tabs=o.ui.tabs.map(String);saveUiLocal();applyTheme();applyTabs()}
+  ops.push({path:"app/config",data:cfgDoc()});
+  if(isO(o.days))Object.keys(o.days).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k)||!isO(o.days[k])||S.days[k])return;S.days[k]=Object.assign(clone(o.days[k]),{d:k});ops.push({path:"days/"+k,data:S.days[k]})});
+  const addDocs=(inc,mine,col,ok)=>{if(!isO(inc))return;Object.keys(inc).forEach(id=>{if(mine[id]||!isO(inc[id])||(ok&&!ok(inc[id],id)))return;mine[id]=clone(inc[id]);ops.push({path:col+"/"+id,data:mine[id]})})};
+  addDocs(o.goals,S.goals,"goals");
+  addDocs(o.wos,S.wos,"workouts");
+  addDocs(o.todos,S.todos,"todos");
+  addDocs(o.nutri,S.nutri,"nutri",(x,k)=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return false;x.d=k;return true});
+  addDocs(o.notes,S.notes,"notes",n=>!!((n.title||"").trim()||(n.body||"").trim()));
   if(S.mode==="local"){persistLocal();return}
   if(DB&&DB.batch){pendingN++;setSync();try{await DB.batch(ops)}finally{pendingN--;setSync()}}
   else ops.forEach(op=>queueWrite(op.path,op.data));
+  if(frAdded){SH_LAST="";watchFriends();queueShare()}
 }
 /* ---------- events ---------- */
 const confirmArm={};
@@ -3963,7 +3979,7 @@ document.addEventListener("change",e=>{
   if((e.target.name==="pal"||e.target.name==="thm")&&e.target.closest("#sheet")){S.ui[e.target.name]=e.target.value;saveUiLocal();applyTheme();saveConfig();return}
   if(e.target.id==="imp-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
     r.onload=()=>{let o=null;try{o=JSON.parse(r.result)}catch(er){}
-      if(!o||typeof o!=="object"||!(o.days||o.habits||o.habitPatch||o.notes||o.gym||o.wos||o.todos||o.goals||o.nutri||o.nut)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
+      if(!o||typeof o!=="object"||!(o.days||o.habits||o.habitPatch||o.notes||o.gym||o.wos||o.todos||o.goals||o.nutri||o.nut||o.chal||o.dfix)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
       IMP=o;card.innerHTML=importSummary(o)};r.readAsText(f);return}
   if(e.target.name==="kind"&&e.target.closest("#habit-form")){const bx=$("#hf-qbox");if(bx)bx.hidden=e.target.value!=="q";return}
   if(e.target.name==="fr"&&e.target.closest("#habit-form")){const v=e.target.value;$("#hf-daysbox").hidden=v!=="days";$("#hf-wkbox").hidden=v!=="wk";$("#hf-flbox").hidden=v!=="fl";return}
