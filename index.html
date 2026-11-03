@@ -2954,11 +2954,11 @@ const FR_CLS=["w","c3","c4","c5"];
 const TODO_CAP=0.5;
 // in the comparison a single pending or no-fixed-day task counts at most PT_CAP points, whatever points its owner gave it
 const PT_CAP=15;
-// S.dfix = {week start: {date: [%, task count, possible points, pending points]}}: my numbers of finished weeks, kept with the settings.
+// S.dfix = {week start: {date: [%, task count, possible points, pending points], or 0 for an excused day}}: my numbers of finished weeks, kept with the settings.
 // From the Sunday after a week (once this device holds the database copy of everything), its numbers are taken from here, so later edits, point changes or new rules do not change them
 // (neither here nor in what the friend receives). The friend's app does the same with his numbers, so both see the same result.
 function fixWeeks(){if(!srvNow())return false;const fk=firstLogKey();if(!fk)return false;const t=todayK();S.dfix=S.dfix||{};let w=weekStartK(fk>addD(t,-400)?fk:addD(t,-400)),ch=false;
-  for(;addD(w,8)<=t;w=addD(w,7)){if(S.dfix[w])continue;const o={};for(let i=0;i<7;i++){const k=addD(w,i),f=fairDayLive(k);if(f)o[k]=[f.p,f.n,f.m,f.t]}S.dfix[w]=o;ch=true}
+  for(;addD(w,8)<=t;w=addD(w,7)){if(S.dfix[w])continue;const o={};for(let i=0;i<7;i++){const k=addD(w,i),f=fairDayLive(k);if(f)o[k]=[f.p,f.n,f.m,f.t];else if(isOff(k))o[k]=0}S.dfix[w]=o;ch=true}
   if(ch)setTimeout(saveConfig,0);return ch}
 function fairDay(k){const fz=S.dfix&&S.dfix[weekStartK(k)];if(fz){const e=fz[k];return Array.isArray(e)?{p:e[0],n:e[1],m:e[2],t:e[3]}:null}return fairDayLive(k)}
 function fairDayLive(k){
@@ -2969,18 +2969,20 @@ function fairDayLive(k){
   const tc=Math.min(tp,max*TODO_CAP);got+=tc;max+=tc;
   return {p:Math.min(100,Math.round(got/max*1000)/10),n:n,m:Math.round(max*10)/10,t:Math.round(tc*10)/10};
 }
+// an excused day: frozen as 0 in a finished week (weeks frozen before this rule fall back to the day itself), live otherwise
+function dayExc(k){const fz=S.dfix&&S.dfix[weekStartK(k)];if(fz)return fz[k]===0||(!(k in fz)&&isOff(k));return isOff(k)}
 function dayPct(k){const f=fairDay(k);return f?f.p:null}
 function shareData(){
   fixWeeks();
-  const fk=firstLogKey(),t=todayK(),o={pct:{},pn:{},pm:{},pt:{}};if(!fk)return o;
-  let k=fk>addD(t,-400)?fk:addD(t,-400);for(;k<=t;k=addD(k,1)){const f=fairDay(k);if(f){o.pct[k]=f.p;o.pn[k]=f.n;o.pm[k]=f.m;if(f.t)o.pt[k]=f.t}}
+  const fk=firstLogKey(),t=todayK(),o={pct:{},pn:{},pm:{},pt:{},px:{}};if(!fk)return o;
+  let k=fk>addD(t,-400)?fk:addD(t,-400);for(;k<=t;k=addD(k,1)){const f=fairDay(k);if(f){o.pct[k]=f.p;o.pn[k]=f.n;o.pm[k]=f.m;if(f.t)o.pt[k]=f.t}else if(dayExc(k))o.px[k]=1}
   if(S.chal&&S.chal.length)o.ch=chalShare();
   return o;
 }
 function queueShare(){
   if(!DB||!DB.shareSet||S.mode!=="db"||!SRV_ONCE)return;
   clearTimeout(SH_T);SH_T=setTimeout(()=>{
-    const readers=S.cmp.map(c=>c.uid),d=Object.assign({readers:readers},readers.length?shareData():{pct:{},pn:{},pm:{},pt:{}},{updated:new Date().toISOString()}),j=JSON.stringify([d.readers,d.pct,d.pn,d.pm,d.pt,d.ch||null]);
+    const readers=S.cmp.map(c=>c.uid),d=Object.assign({readers:readers},readers.length?shareData():{pct:{},pn:{},pm:{},pt:{},px:{}},{updated:new Date().toISOString()}),j=JSON.stringify([d.readers,d.pct,d.pn,d.pm,d.pt,d.px||null,d.ch||null]);
     if(j===SH_LAST)return;SH_LAST=j;
     DB.shareSet(d).then(()=>{if(SH_ERR){SH_ERR="";refreshSettings()}}).catch(e=>{SH_LAST="";SH_ERR=(e&&e.code)||"err";refreshSettings()});
   },2500);
@@ -2992,7 +2994,7 @@ function watchFriends(){
   const want=new Set(S.cmp.map(c=>c.uid));
   Object.keys(FR_UNS).forEach(u=>{if(!want.has(u)){try{FR_UNS[u]&&FR_UNS[u]()}catch(e){}delete FR_UNS[u];delete S.fr[u]}});
   want.forEach(u=>{if(FR_UNS[u])return;
-    FR_UNS[u]=DB.shareWatch(u,d=>{S.fr[u]=d?{pct:objOr(d.pct)||{},pn:objOr(d.pn),pm:objOr(d.pm),pt:objOr(d.pt),ch:objOr(d.ch),updated:d.updated||""}:{none:true};if((S.tab==="habits"&&CMP_ON)||S.tab==="today"||S.tab==="goals")render();refreshSettings()},
+    FR_UNS[u]=DB.shareWatch(u,d=>{S.fr[u]=d?{pct:objOr(d.pct)||{},pn:objOr(d.pn),pm:objOr(d.pm),pt:objOr(d.pt),px:objOr(d.px),ch:objOr(d.ch),updated:d.updated||""}:{none:true};if((S.tab==="habits"&&CMP_ON)||S.tab==="today"||S.tab==="goals")render();refreshSettings()},
       e=>{S.fr[u]={err:(e&&e.code)||"err"};FR_UNS[u]=null;if(S.tab==="habits"&&CMP_ON)render();refreshSettings();setTimeout(()=>{if(FR_UNS[u]===null){delete FR_UNS[u];watchFriends()}},60000)})});
 }
 function frStatus(c){
@@ -3007,8 +3009,8 @@ function frStatus(c){
 S.cmpV={r:"7",adj:(()=>{try{return localStorage.getItem("dt-cmpadj")!=="0"}catch(e){return true}})()};
 const numOk=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(+v);
 function cmpPeople(){
-  const me={name:"أنت",cls:"a",me:true,hasN:true,hasM:true,pct:k=>dayPct(k),n:k=>{const f=fairDay(k);return f?f.n:null},m:k=>{const f=fairDay(k);return f?f.m:null},tp:k=>{const f=fairDay(k);return f?f.t:0},hasT:true};
-  return [me].concat(S.cmp.map((c,i)=>{const f=S.fr[c.uid]||{};return {name:c.name,cls:FR_CLS[i%FR_CLS.length],c:c,hasN:!!f.pn,hasM:!!f.pm,
+  const me={name:"أنت",cls:"a",me:true,hasN:true,hasM:true,hasX:true,x:k=>dayExc(k),pct:k=>dayPct(k),n:k=>{const f=fairDay(k);return f?f.n:null},m:k=>{const f=fairDay(k);return f?f.m:null},tp:k=>{const f=fairDay(k);return f?f.t:0},hasT:true};
+  return [me].concat(S.cmp.map((c,i)=>{const f=S.fr[c.uid]||{};return {name:c.name,cls:FR_CLS[i%FR_CLS.length],c:c,hasX:!!f.px,x:k=>!!(f.px&&f.px[k]),hasN:!!f.pn,hasM:!!f.pm,
     pct:k=>f.pct&&numOk(f.pct[k])?+f.pct[k]:null,n:k=>f.pn&&numOk(f.pn[k])?+f.pn[k]:null,m:k=>f.pm&&numOk(f.pm[k])?+f.pm[k]:null,tp:k=>f.pt&&numOk(f.pt[k])?+f.pt[k]:0,hasT:!!f.pt}}));
 }
 const AR_MON=["كانون الثاني","شباط","آذار","نيسان","أيار","حزيران","تموز","آب","أيلول","تشرين الأول","تشرين الثاني","كانون الأول"];
@@ -3115,7 +3117,8 @@ function cmpHTML(){
     ["متوسط النقاط المتاحة في اليوم",p=>{const ms=p.mm.filter(numOk);return ms.length?{v:avg(ms),t:L(num(avg(ms),0))}:null},null],
     ["متوسط النقاط المحقّقة في اليوم",p=>{const es=p.mm.map((m,i)=>numOk(m)&&numOk(p.raw[i])?m*p.raw[i]/100:null).filter(numOk);return es.length?{v:avg(es),t:L(num(avg(es),0))}:null}],
     ["متوسط المهام في اليوم",p=>{const ns=p.nn.filter(numOk);return ns.length?{v:avg(ns),t:L(num(avg(ns),1))}:null},null],
-    ["أيام بلا نقاط",p=>{const c=n-p.ok.length;return {v:c,t:String(c)}},false]
+    ["أيام بلا نقاط",p=>{const c=n-p.ok.length-(p.hasX?ks.filter(k=>p.x(k)).length:0);return {v:c,t:String(c)}},false],
+    ["الأيام المعذورة",p=>{if(!p.hasX)return null;const c=ks.filter(k=>p.x(k)).length;return {v:c,t:String(c)}},null]
   ]);
   const any=people.some(p=>p.ok.length),top=Math.max(100,...people.map(p=>Math.max(0,...p.ok)));
   if(any)s+=chart(W=>lineChart({w:W,h:200,xMin:0,xMax:n-1,yMin:0,yMax:top,gap:1.5,series:people.map(p=>({pts:p.v.map((v,i)=>numOk(v)?[i,v]:null).filter(Boolean),cls:p.cls})),
@@ -3126,7 +3129,7 @@ function cmpHTML(){
     s+='<div class="lbl2" style="margin-top:4px">'+(mon?"شهراً بشهر":"أسبوعاً بأسبوع")+'</div>'+cmpTable(people,weeks.slice().reverse().map(g=>[(mon?esc(fMon(g.w)):'من '+esc(fNum(g.w))),p=>{const vs=g.idx.map(i=>p.v[i]).filter(numOk);return vs.length?{v:avg(vs),t:fmt(avg(vs))}:null}]));
   }
   s+='<p class="lbl" style="margin:0">'+(sc.basis?'النتيجة المعدّلة = نسبة الإنجاز × الجذر التربيعي لـ ('+(sc.basis==="m"?"نقاط مهام يومك المجدولة ÷ نقاط صاحب اليوم الأثقل":"عدد مهامك ÷ عدد مهام صاحب المهام الأكثر")+'). فالمهمة الكبيرة تزيد حجم يومك أكثر من الصغيرة. مثال: يوم بـ100 نقطة كله منجز مقابل يوم بـ200 نقطة: 100 × 0.71 = 71، ويوم الـ200 المنجز منه 75% = 75. أيام الفوز تُحسب دائماً بهذه النتيجة. ':'')+
-    'تُحسب المهام الثابتة المجدولة لذلك اليوم، والمهام المعلّقة والمهام الثابتة المرنة (بلا يوم محدد) التي أنجزتها في ذلك اليوم: كل واحدة تُحسب بنقاطها بحد أقصى '+PT_CAP+' نقطة مهما كانت نقاطها عندك، وتُضاف لما جمعته ولما كان ممكناً معاً، ومجموعها في اليوم لا يتجاوز نصف نقاط مهامك الثابتة. المهام غير المجدولة والأسبوعية التي تنجزها زيادة، والأيام المعذورة لا تدخل. يوم الفوز لمن كانت نتيجته الأعلى، والتعادل لا يُحسب.</p>';
+    'تُحسب المهام الثابتة المجدولة لذلك اليوم، والمهام المعلّقة والمهام الثابتة المرنة (بلا يوم محدد) التي أنجزتها في ذلك اليوم: كل واحدة تُحسب بنقاطها بحد أقصى '+PT_CAP+' نقطة مهما كانت نقاطها عندك، وتُضاف لما جمعته ولما كان ممكناً معاً، ومجموعها في اليوم لا يتجاوز نصف نقاط مهامك الثابتة. المهام غير المجدولة والأسبوعية التي تنجزها زيادة، والأيام المعذورة لا تدخل، ويظهر عددها لكل منكما في الجدول. يوم الفوز لمن كانت نتيجته الأعلى، والتعادل لا يُحسب.</p>';
   s+='<div class="cmpst">'+people.filter(p=>p.c).map(p=>'<span class="lbl"><i class="cmpdot '+p.cls+'"></i> <bdi>'+esc(p.name)+'</bdi>: '+esc(frStatus(p.c))+'</span>').join("")+'</div>';
   return s+'</div>';
 }
