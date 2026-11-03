@@ -918,7 +918,7 @@ function persistLocal(){
 function loadLocal(){
   try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.ggroups=o.ggroups||[];S.todos=o.todos||{};S.gym=o.gym&&Array.isArray(o.gym.groups)?o.gym:{groups:[],rest:90};S.wos=o.wos||{};S.nutri=o.nutri||{};S.nut=o.nut||null;if(o.ui){S.ui=o.ui;applyTheme()}}}catch(e){}
 }
-const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.cmp&&S.cmp.length)o.cmp=S.cmp;if(S.cmpS)o.cmpS=S.cmpS;if(S.chal&&S.chal.length)o.chal=S.chal;if(S.mfix&&Object.keys(S.mfix).length)o.mfix=S.mfix;if(S.chalNo&&S.chalNo.length)o.chalNo=S.chalNo.slice(-200);if(S.ui&&(S.ui.pal||S.ui.thm||S.ui.tabs))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
+const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.cmp&&S.cmp.length)o.cmp=S.cmp;if(S.cmpS)o.cmpS=S.cmpS;if(S.chal&&S.chal.length)o.chal=S.chal;if(S.dfix&&Object.keys(S.dfix).length)o.dfix=S.dfix;if(S.chalNo&&S.chalNo.length)o.chalNo=S.chalNo.slice(-200);if(S.ui&&(S.ui.pal||S.ui.thm||S.ui.tabs))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
 const saveConfig=()=>queueWrite("app/config",cfgDoc());
 const saveNote=id=>queueWrite("notes/"+id,S.notes[id]||null);
 const saveTodoX=0;const saveTodo=id=>queueWrite("todos/"+id,S.todos[id]||null);
@@ -962,7 +962,7 @@ function startDB(db){
   const ready=()=>{if(got.c&&got.d&&got.g&&got.n&&got.t&&got.w&&got.u&&S.mode==="loading"){S.mode="db";setSync();migrateX()}render()};
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
-    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.mfix=d&&d.mfix&&typeof d.mfix==="object"?JSON.parse(JSON.stringify(d.mfix)):{};S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
+    if(!isDirty("app/config")){const d=snap.exists?snap.data():null;S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.dfix=d&&d.dfix&&typeof d.dfix==="object"?JSON.parse(JSON.stringify(d.dfix)):{};S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
     got.c=true;ready();
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -1002,7 +1002,7 @@ function startDB(db){
     S.notes=nn;got.n=true;ready();
   },onErr));
 }
-function resetState(){S.mfix={};S.chal=[];S.chalNo=[];stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){S.dfix={};S.chal=[];S.chalNo=[];stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
@@ -1358,11 +1358,11 @@ function todoRow(t,k){
 }
 function openTodo(t){
   openSheet('<h2>تعديل المهمة</h2><form class="f" id="td-form" autocomplete="off"><div class="fld"><label for="td-n">المهمة</label><input id="td-n" name="n" maxlength="80" required value="'+esc(t.name)+'"></div>'+
-    '<div class="fld"><label for="td-p">النقاط</label><input id="td-p" name="p" class="ltr" type="number" inputmode="numeric" min="0" max="1000" step="1" value="'+(+t.pts||0)+'" style="max-width:140px"></div>'+
+    '<div class="fld"><label for="td-p">النقاط</label><input id="td-p" name="p" class="ltr" type="number" inputmode="decimal" min="0" max="1000" step="any" value="'+(+t.pts||0)+'" style="max-width:140px"></div>'+
     '<div class="fld"><label for="td-d">تاريخ الإنجاز</label><input id="td-d" name="d" class="ltr datein" type="date" max="'+todayK()+'" value="'+(t.doneAt||"")+'" style="max-width:200px"><span class="lbl">اتركه فارغاً إن لم تنجزها بعد. نقاطها تُحسب في هذا اليوم.</span></div>'+
     '<p class="lbl" style="margin:0">أُضيفت '+esc(fShort(keyOf(new Date(t.created))))+(t.doneAt?' · أُنجزت '+esc(fShort(t.doneAt)):"")+'</p>'+
     '<p class="err" id="td-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button>'+(t.doneAt?'<button class="btn" type="button" data-act="tundo" data-id="'+t.id+'">إلغاء الإنجاز</button>':"")+'<button class="btn danger" type="button" data-act="tdel2" data-id="'+t.id+'">حذف المهمة</button></div></form>',fd=>{
-    const n=String(fd.get("n")||"").trim(),p=parseInt(fd.get("p")||"0",10),err=$("#td-err");
+    const n=String(fd.get("n")||"").trim(),p=Math.round(parseFloat(fd.get("p")||"0")*100)/100,err=$("#td-err");
     if(!n){err.textContent="اكتب اسم المهمة.";err.hidden=false;return}if(!(p>=0&&p<=1000)){err.textContent="النقاط من 0 إلى 1000.";err.hidden=false;return}
     const dr=String(fd.get("d")||"");if(dr&&!(/^\d{4}-\d{2}-\d{2}$/.test(dr)&&dr<=todayK())){err.textContent="تاريخ الإنجاز لا يكون بعد اليوم.";err.hidden=false;return}
     const c=S.todos[t.id];if(c){c.name=n;c.pts=p;c.doneAt=dr||null;saveTodo(c.id)}closeSheet();render();
@@ -1373,7 +1373,7 @@ function todoPanel(k){
   const pend=all.filter(t=>!t.doneAt).sort(byC),here=all.filter(t=>t.doneAt===k).sort(byC),older=all.filter(t=>t.doneAt&&t.doneAt!==k).sort((a,b)=>a.doneAt<b.doneAt?1:-1);
   return '<section class="sec"><div class="sec-h"><h2>مهام معلّقة</h2><span class="lbl">'+(pend.length?pend.length+" باقية":"لا شيء معلّق")+'</span></div>'+
     '<form id="xadd" class="panel xadd" autocomplete="off"><div class="fld"><label for="xa-name">مهمة جديدة</label><input id="xa-name" class="keep" maxlength="80" placeholder="مثال: تجديد الجواز"></div>'+
-    '<div class="row"><div class="fld" style="flex:1;min-width:110px"><label for="xa-pts">النقاط (اختياري)</label><input id="xa-pts" class="keep ltr" type="number" inputmode="numeric" min="0" max="1000" step="1" placeholder="0"></div><button class="btn pri" type="submit" style="align-self:flex-end">إضافة</button></div>'+
+    '<div class="row"><div class="fld" style="flex:1;min-width:110px"><label for="xa-pts">النقاط (اختياري)</label><input id="xa-pts" class="keep ltr" type="number" inputmode="decimal" min="0" max="1000" step="any" placeholder="0"></div><button class="btn pri" type="submit" style="align-self:flex-end">إضافة</button></div>'+
     '<p class="err" id="xa-err" hidden></p></form>'+
     (pend.length?'<div class="hlist">'+pend.map(t=>todoRow(t,k)).join("")+'</div>':'<p class="muted small" style="margin:0">المهام هنا تبقى ظاهرة كل يوم حتى تنجزها، وتُحسب نقاطها في اليوم الذي تنجزها فيه.</p>')+
     (here.length&&!HIDE_DONE?'<div class="lbl">أُنجزت في هذا اليوم</div><div class="hlist">'+here.map(t=>todoRow(t,k)).join("")+'</div>':"")+
@@ -1390,7 +1390,7 @@ function vToday(){
   const k=S.cur,t=todayK(),day=S.days[k]||{},off=!!day.off;
   const fk=firstLogKey(),dayN=fk&&fk<=k?diffD(fk,k)+1:null;
   const head=backupBanner()+'<section class="datebar"><button class="iconbtn" data-act="day" data-n="-1" aria-label="اليوم السابق">'+ICON.prev+'</button>'+
-    '<div class="d"><h1>'+esc(fLong(k))+'</h1><div class="lbl">'+(k===t?"اليوم":(diffD(k,t)===1?"أمس":"قبل "+daysAr(diffD(k,t))))+(dayN?' · اليوم <span class="num">'+dayN+'</span> في السجل':"")+'</div>'+'<div class="dbtns">'+(k!==t?'<button class="chip-link" data-act="goToday">العودة لليوم</button>':"")+'<button class="chip-link'+(off?" on":"")+'" data-act="dayOff" aria-pressed="'+off+'">'+(off?"إلغاء العذر":"يوم معذور")+'</button></div></div>'+
+    '<div class="d"><h1>'+esc(fLong(k))+'</h1><div class="lbl">'+(k===t?"اليوم":(diffD(k,t)===1?"أمس":"قبل "+daysAr(diffD(k,t))))+(dayN?' · اليوم <span class="num">'+dayN+'</span> في السجل':"")+'</div>'+'<div class="dbtns">'+(k!==t?'<button class="chip-link" data-act="goToday">العودة لليوم</button>':"")+'<button class="chip-link'+(off?" on":"")+'" data-act="dayOff" aria-pressed="'+off+'">'+(off?"إلغاء العذر":"يوم معذور")+'</button>'+(off?"":'<button class="chip-link'+(((S.days[k]||{}).xh&&Object.keys(S.days[k].xh).length)?" on":"")+'" data-act="hExcPick">مهمة معذورة'+(((S.days[k]||{}).xh&&Object.keys(S.days[k].xh).length)?" ("+Object.keys(S.days[k].xh).length+")":"")+'</button>')+'</div></div>'+
     
     '<button class="iconbtn" data-act="day" data-n="1" aria-label="اليوم التالي"'+(k>=t?" disabled":"")+'>'+ICON.next+'</button></section>';
   const live=liveHabits(),sc=dayScore(k),p=sc.max?sc.got/sc.max:NaN;
@@ -2905,7 +2905,14 @@ const FR_CLS=["w","c3","c4","c5"];
 const TODO_CAP=0.5;
 // in the comparison a single pending or no-fixed-day task counts at most PT_CAP points, whatever points its owner gave it
 const PT_CAP=15;
-function fairDay(k){
+// S.dfix = {week start: {date: [%, task count, possible points, pending points]}}: my numbers of finished weeks, kept with the settings.
+// From the Sunday after a week, its numbers are taken from here, so later edits, point changes or new rules do not change them
+// (neither here nor in what the friend receives). The friend's app does the same with his numbers, so both see the same result.
+function fixWeeks(){const fk=firstLogKey();if(!fk)return false;const t=todayK();S.dfix=S.dfix||{};let w=weekStartK(fk>addD(t,-400)?fk:addD(t,-400)),ch=false;
+  for(;addD(w,8)<=t;w=addD(w,7)){if(S.dfix[w])continue;const o={};for(let i=0;i<7;i++){const k=addD(w,i),f=fairDayLive(k);if(f)o[k]=[f.p,f.n,f.m,f.t]}S.dfix[w]=o;ch=true}
+  if(ch)setTimeout(saveConfig,0);return ch}
+function fairDay(k){const fz=S.dfix&&S.dfix[weekStartK(k)];if(fz){const e=fz[k];return Array.isArray(e)?{p:e[0],n:e[1],m:e[2],t:e[3]}:null}return fairDayLive(k)}
+function fairDayLive(k){
   if(isOff(k))return null;let got=0,max=0,n=0,tp=0;
   S.habits.forEach(h=>{if(!activeOn(h,k))return;if(typeof isFl==="function"&&isFl(h,k)){tp+=Math.min(PT_CAP,hPts(h))*frac(h,k);return}if(!isSched(h,k))return;max+=hPts(h);got+=earned(h,k);n++});
   if(!(max>0))return null;
@@ -2915,6 +2922,7 @@ function fairDay(k){
 }
 function dayPct(k){const f=fairDay(k);return f?f.p:null}
 function shareData(){
+  fixWeeks();
   const fk=firstLogKey(),t=todayK(),o={pct:{},pn:{},pm:{},pt:{}};if(!fk)return o;
   let k=fk>addD(t,-400)?fk:addD(t,-400);for(;k<=t;k=addD(k,1)){const f=fairDay(k);if(f){o.pct[k]=f.p;o.pn[k]=f.n;o.pm[k]=f.m;if(f.t)o.pt[k]=f.t}}
   if(S.chal&&S.chal.length)o.ch=chalShare();
@@ -2986,9 +2994,7 @@ function pairDay(me,fr,k){
   return [adj(a,la),adj(b,lb)];
 }
 const MIN_DAYS=3;
-// a finished week's result is fixed from the Sunday after it (a day to fix a forgotten tick), so later edits cannot change it.
-// S.mfix = {friend uid: {week start: [my average, friend's average, "w"|"l"|"d"]}}, kept with the settings
-let MFIX_SAVE=false;
+
 function matchWeeks(me,fr){
   const t=todayK(),cw=weekStartK(t),f=S.fr[fr.c.uid]||{},fks=Object.keys(f.pct||{}).sort(),mk=firstLogKey();
   if(!fks.length||!mk)return null;
@@ -2996,13 +3002,9 @@ function matchWeeks(me,fr){
   const out=[];
   for(;w<=cw;w=addD(w,7)){const sa=[],sb=[];let days=0;
     for(let i=0;i<7;i++){const k=addD(w,i);if(k>t)break;days++;const x=pairDay(me,fr,k);if(numOk(x[0]))sa.push(x[0]);if(numOk(x[1]))sb.push(x[1])}
-    let A=sa.length?avg(sa):null,B=sb.length?avg(sb):null;const live=w===cw,ok=sa.length>=MIN_DAYS&&sb.length>=MIN_DAYS;let res=ok?(Math.abs(A-B)<0.5?"d":A>B?"w":"l"):null;
-    const fx=(S.mfix=S.mfix||{})[fr.c.uid]=S.mfix[fr.c.uid]||{};
-    if(!live&&Array.isArray(fx[w])){A=fx[w][0];B=fx[w][1];res=fx[w][2]}
-    else if(!live&&res&&addD(w,8)<=t){fx[w]=[Math.round(A*10)/10,Math.round(B*10)/10,res];MFIX_SAVE=true}
+    const A=sa.length?avg(sa):null,B=sb.length?avg(sb):null,live=w===cw,ok=sa.length>=MIN_DAYS&&sb.length>=MIN_DAYS,res=ok?(Math.abs(A-B)<0.5?"d":A>B?"w":"l"):null;
     out.push({w:w,A:A,B:B,na:sa.length,nb:sb.length,live:live,left:live?6-diffD(w,t):0,res:res});
   }
-  if(MFIX_SAVE){MFIX_SAVE=false;setTimeout(saveConfig,0)}
   return out;
 }
 function matchRecord(ws){
@@ -3423,6 +3425,10 @@ document.addEventListener("focusout",e=>{if(e.target&&e.target.classList&&e.targ
 /* ---------- mutations ---------- */
 function ensureDay(k){if(!S.days[k])S.days[k]={d:k,h:{}};if(!S.days[k].h)S.days[k].h={};S.days[k].d=k;return S.days[k]}
 function touchStart(h,k){if(k<hStart(h)){h.created=k;saveConfig()}}
+function excPickHTML(){const k=S.cur,list=liveHabits().filter(h=>activeOn(h,k)&&!isWk(h)&&!isFl(h,k)&&(isExc(h,k)||isSched(h,k)));
+  return '<h2>مهمة معذورة '+(k===todayK()?"اليوم":"في "+esc(fShort(k)))+'</h2><p class="lbl" style="margin:0">اختر المهمة التي لم تستطع أداءها لسبب خارج إرادتك. لا تُحسب في هذا اليوم فقط، لا في نسبتك ولا في المقارنة ولا في السلسلة، وباقي المهام تبقى كما هي.</p>'+
+    (list.length?'<div class="entries" style="max-height:none">'+list.map(h=>{const x=isExc(h,k);return '<div><span>'+esc(h.name)+(isDone(h,k)?' <span class="lbl">منجزة</span>':"")+'</span><button class="btn sm'+(x?" pri":"")+'" type="button" data-act="hExc2" data-id="'+h.id+'">'+(x?"معذور ✓":"معذور")+'</button></div>'}).join("")+'</div>':'<p class="muted small" style="margin:0">لا مهام مجدولة في هذا اليوم.</p>')+
+    '<div class="row"><button class="btn" type="button" data-act="closeSheet">تم</button></div>'}
 function hDoneDays(h){return Object.keys(S.days).filter(k=>{const v=rawV(h,k);return v!==undefined&&v!==null&&v!==false&&(isQ(h)?+v>0:!!v)}).sort().reverse()}
 function hPrev(h,k){const ks=hDoneDays(h);for(const x of ks)if(x<k)return x;return null}
 function hLogHTML(h){const ks=hDoneDays(h);if(!ks.length)return '<p class="lbl" style="margin:0">لم تُنجز بعد.</p>';
@@ -3496,7 +3502,7 @@ function habitForm(h,pg){
   (canX?'<div class="hexc"><button class="btn sm'+(exc?" pri":"")+'" type="button" data-act="hExc" data-id="'+h.id+'">'+(exc?"إلغاء العذر":"معذور عنها "+(xk===todayK()?"اليوم":"في "+esc(fShort(xk))))+'</button><span class="lbl">'+(exc?"هذه المهمة لا تُحسب في هذا اليوم.":"لسبب خارج إرادتك: لا تُحسب في هذا اليوم فقط، لا في نسبتك ولا في المقارنة ولا في السلسلة. باقي مهام اليوم تبقى كما هي.")+'</span></div>':"")+
   '<form class="f" id="habit-form">'+
   '<div class="fld"><label for="hf-name">الاسم</label><input id="hf-name" name="name" maxlength="80" required value="'+esc(h?h.name:"")+'" placeholder="مثال: تمرين"></div>'+
-  '<div class="two"><div class="fld"><label for="hf-pts">النقاط الكاملة</label><input class="ltr" id="hf-pts" name="pts" type="number" inputmode="numeric" min="1" max="1000" step="1" required value="'+(h?hPts(h):10)+'"></div>'+
+  '<div class="two"><div class="fld"><label for="hf-pts">النقاط الكاملة</label><input class="ltr" id="hf-pts" name="pts" type="number" inputmode="decimal" min="0.01" max="1000" step="any" required value="'+(h?hPts(h):10)+'"></div>'+
   '<div class="fld"><label for="hf-g">المجموعة</label><select id="hf-g" name="g" class="sel"><option value="">بدون مجموعة</option>'+S.groups.map(g=>'<option value="'+g.id+'"'+(g.id===gsel?" selected":"")+'>'+esc(g.name)+'</option>').join("")+'<option value="__new">مجموعة جديدة…</option></select>'+
   '<input id="hf-gnew" name="gnew" maxlength="40" placeholder="اسم المجموعة الجديدة" hidden></div></div>'+
   '<div class="fld"><span class="lbl2">نوع المهمة</span><div class="seg2" role="radiogroup"><label><input type="radio" name="kind" value="bin" id="hf-k-bin"'+(q?"":" checked")+'><span>إنجاز</span></label><label><input type="radio" name="kind" value="q" id="hf-k-q"'+(q?" checked":"")+'><span>كمية</span></label></div></div>'+
@@ -3522,10 +3528,10 @@ function habitForm(h,pg){
 }
 function openHabit(h,pg){
   openSheet(habitForm(h,pg),fd=>{
-    const name=String(fd.get("name")||"").trim(),days=fd.getAll("d").map(Number),pts=parseInt(fd.get("pts"),10);
+    const name=String(fd.get("name")||"").trim(),days=fd.getAll("d").map(Number),pts=Math.round(parseFloat(fd.get("pts"))*100)/100;
     const err=$("#hf-err"),bad=m=>{err.textContent=m;err.hidden=false};
     if(!name)return bad("اكتب اسماً للمهمة.");
-    if(!Number.isFinite(pts)||pts<1||pts>1000)return bad("النقاط رقم صحيح من 1 إلى 1000.");
+    if(!Number.isFinite(pts)||pts<=0||pts>1000)return bad("النقاط رقم أكبر من صفر وحتى 1000، ويقبل الكسور مثل 7.5.");
     const kind=fd.get("kind");let fr=fd.get("fr");if(fr==="days"&&!days.length)fr="fl";let q=null,wk=0;
     if(kind==="q"){const raw=String(fd.get("qt")||"").trim(),qt=parseFloat(raw),qs=parseFloat(fd.get("qs"));
       if(raw&&(!Number.isFinite(qt)||qt<=0))return bad("الهدف أو الحد رقم أكبر من صفر، أو اتركه فارغاً.");
@@ -3663,6 +3669,8 @@ document.addEventListener("click",e=>{
     case "pick":{const k=b.dataset.k;if(k&&k<=todayK()){S.cur=k;render()}break}
     case "goToday":S.cur=todayK();render();break;
     case "toggle":toggleHabit(id);break;
+    case "hExcPick":openSheet(excPickHTML(),null);break;
+    case "hExc2":{const k=S.cur,d=ensureDay(k);if(d.xh&&d.xh[id])clearExc(d,id);else{d.xh=d.xh||{};d.xh[id]=1;delete d.h[id]}saveDay(k);const c=$("#sheet-card");if(c){const y=c.scrollTop;c.innerHTML=excPickHTML();c.scrollTop=y}render();break}
     case "hExc":{const k=S.cur,d=ensureDay(k);if(d.xh&&d.xh[id])clearExc(d,id);else{d.xh=d.xh||{};d.xh[id]=1;delete d.h[id]}saveDay(k);closeSheet();render();break}
     case "rate":{const d=ensureDay(S.cur),key=b.dataset.key,v=+b.dataset.v;if(d[key]===v)delete d[key];else d[key]=v;saveDay(S.cur);render();break}
     case "sleepStep":{const d=ensureDay(S.cur);let v=Number.isFinite(d.sleep)?d.sleep:7;if(Number.isFinite(d.sleep))v+= +b.dataset.n;v=Math.max(0,Math.min(16,v));d.sleep=v;saveDay(S.cur);render();break}
@@ -3849,9 +3857,9 @@ document.addEventListener("submit",e=>{
     if(!c){S.setupErr="لم أجد apiKey و projectId و appId في النص. انسخ الكتلة كاملة.";render(true);return}
     try{localStorage.setItem("dt-fbcfg",JSON.stringify(c))}catch(er){}location.reload();return}
   if(e.target.id==="xadd"){e.preventDefault();
-    const nm=$("#xa-name"),pt=$("#xa-pts"),err=$("#xa-err"),name=(nm.value||"").trim(),p=pt.value===""?0:parseInt(pt.value,10);
+    const nm=$("#xa-name"),pt=$("#xa-pts"),err=$("#xa-err"),name=(nm.value||"").trim(),p=pt.value===""?0:Math.round(parseFloat(pt.value)*100)/100;
     if(!name){err.textContent="اكتب اسم المهمة.";err.hidden=false;nm.focus();return}
-    if(!Number.isFinite(p)||p<0||p>1000){err.textContent="النقاط رقم صحيح من 0 إلى 1000.";err.hidden=false;pt.focus();return}
+    if(!Number.isFinite(p)||p<0||p>1000){err.textContent="النقاط من 0 إلى 1000، وتقبل الكسور مثل 7.5.";err.hidden=false;pt.focus();return}
     const tid=uid();S.todos[tid]={id:tid,name:name,pts:p,created:new Date().toISOString(),doneAt:null};saveTodo(tid);render(true);
     const n2=$("#xa-name");if(n2)n2.focus();return}
   if(e.target.id==="wgform"){e.preventDefault();const v=parseFloat($("#wg-v").value);if(!Number.isFinite(v)||v<20||v>400){S.wt.msg="أدخل الهدف رقماً بين 20 و 400 كغم.";render(true);return}S.wgoal=Math.round(v*100)/100;S.wt.msg="";saveConfig();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();render(true);return}
