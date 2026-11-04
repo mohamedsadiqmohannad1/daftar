@@ -1291,7 +1291,7 @@ function dots7(h,k){
   for(let i=6;i>=0;i--){const d=addD(k,-i),f=frac(h,d);s+='<i class="'+(d<hStart(h)?"o":f>=1?"d":f>0?"p":isSched(h,d)?"":"o")+'"></i>'}
   return s+'</span>';
 }
-const ptsTag=p=>'<span class="pts">'+L("+"+p)+'</span>';
+const ptsTag=p=>'<span class="pts">'+L("+"+num(p,0))+'</span>';
 const MOB=()=>{try{return matchMedia("(max-width:700px)").matches}catch(e){return false}};
 const FOPEN=new Set();
 let DT0=null,ZOOM=false;
@@ -1371,7 +1371,7 @@ function taskRow(x,k){
   if(isQ(x)){
     const v=rawV(x,k),has=entered(x,k),f=frac(x,k),e=earned(x,k);
     return '<div class="xrow"><div class="hrow qrow'+(on?" on":"")+(dim?" dim":"")+'" id="qr-'+x.id+'"><div class="qtop"><span class="nmw"><span class="nm">'+esc(x.name)+'</span>'+badges.join("")+'</span>'+
-      '<span class="pts" id="qp-'+x.id+'">'+L(num(e,1)+" / "+hPts(x,k))+'</span></div>'+
+      '<span class="pts" id="qp-'+x.id+'">'+L(num(e,0)+" / "+num(hPts(x,k),0))+'</span></div>'+
       '<div class="qctl"><button class="iconbtn qb" data-act="qstep" data-id="'+x.id+'" data-n="-1" aria-label="إنقاص">−</button>'+
       '<input id="q-'+x.id+'" class="keep ltr qin" type="number" inputmode="decimal" min="0" step="any" value="'+(has?+v:"")+'" placeholder="0" aria-label="الكمية">'+
       '<button class="iconbtn qb" data-act="qstep" data-id="'+x.id+'" data-n="1" aria-label="زيادة">+</button>'+
@@ -3093,11 +3093,12 @@ function matchRecord(ws){
   return r;
 }
 // match scores are shown with one decimal so the score always agrees with the result (a draw is a gap under 0.5)
-const MATCH_TIE=0.5,rnd=v=>numOk(v)?(Math.round(v*10)/10).toFixed(1):"–";
+// scores are shown as whole numbers; the result still uses the exact averages (a draw is a gap under MATCH_TIE)
+const MATCH_TIE=0.5,rnd=v=>numOk(v)?Math.round(v):"–";
 function liveLine(cur,fname){
   if(!cur||!numOk(cur.A)||!numOk(cur.B))return "المباراة تبدأ حين يسجّل كل منكما نقاطاً هذا الأسبوع.";
-  const d=Math.round((cur.A-cur.B)*10)/10,left=cur.left===0?"آخر يوم في الأسبوع":"باقي "+cur.left+" "+(cur.left===1?"يوم":cur.left===2?"يومان":"أيام");
-  return (Math.abs(cur.A-cur.B)<MATCH_TIE?"متعادلان"+(d?" (الفرق "+Math.abs(d).toFixed(1)+" أقل من "+MATCH_TIE+")":""):d>0?"متقدّم بـ"+d.toFixed(1):"متأخر بـ"+(-d).toFixed(1))+" · "+left+(cur.na<MIN_DAYS||cur.nb<MIN_DAYS?" · تحتاج المباراة "+MIN_DAYS+" أيام مسجلة لكل منكما":"");
+  const g=Math.max(1,Math.round(Math.abs(cur.A-cur.B))),left=cur.left===0?"آخر يوم في الأسبوع":"باقي "+cur.left+" "+(cur.left===1?"يوم":cur.left===2?"يومان":"أيام");
+  return (Math.abs(cur.A-cur.B)<MATCH_TIE?"متعادلان":cur.A>cur.B?"متقدّم بـ"+g:"متأخر بـ"+g)+" · "+left+(cur.na<MIN_DAYS||cur.nb<MIN_DAYS?" · تحتاج المباراة "+MIN_DAYS+" أيام مسجلة لكل منكما":"");
 }
 function matchHTML(people){
   const me=people[0];
@@ -3145,7 +3146,7 @@ function cmpHTML(){
     ["نقاط المعلّقة والمرنة",p=>{if(!p.hasT)return null;const v=ks.reduce((a,k)=>a+(+p.tp(k)||0),0);return {v:v,t:L(num(v,0))}},null],
     ["متوسط النقاط المتاحة في اليوم",p=>{const ms=p.mm.filter(numOk);return ms.length?{v:avg(ms),t:L(num(avg(ms),0))}:null},null],
     ["متوسط النقاط المحقّقة في اليوم",p=>{const es=p.mm.map((m,i)=>numOk(m)&&numOk(p.raw[i])?m*p.raw[i]/100:null).filter(numOk);return es.length?{v:avg(es),t:L(num(avg(es),0))}:null}],
-    ["متوسط المهام في اليوم",p=>{const ns=p.nn.filter(numOk);return ns.length?{v:avg(ns),t:L(num(avg(ns),1))}:null},null],
+    ["متوسط المهام في اليوم",p=>{const ns=p.nn.filter(numOk);return ns.length?{v:avg(ns),t:L(num(avg(ns),0))}:null},null],
     ["أيام بلا نقاط",p=>{const c=n-p.ok.length-(p.hasX?ks.filter(k=>p.x(k)).length:0);return {v:c,t:String(c)}},false],
     ["الأيام المعذورة",p=>{if(!p.hasX)return null;const c=ks.filter(k=>p.x(k)).length;return {v:c,t:String(c)}},null]
   ]);
@@ -3536,7 +3537,7 @@ function setQ(id,k,v){
 }
 function updateQRow(id,k){
   const h=S.habits.find(x=>x.id===id);if(!h)return;const f=frac(h,k);
-  const p=$("#qp-"+id);if(p)p.innerHTML=L(num(earned(h,k),1)+" / "+hPts(h,k));
+  const p=$("#qp-"+id);if(p)p.innerHTML=L(num(earned(h,k),0)+" / "+num(hPts(h,k),0));
   const b=$("#qb-"+id);if(b)b.style.width=Math.round(f*100)+"%";
   const r=$("#qr-"+id);if(r)r.classList.toggle("on",f>=1);
   const sc=dayScore(k),big=document.querySelector(".summary .big");if(big)big.innerHTML='<span class="num">'+num(sc.got,1)+'</span> <span class="small muted" style="font-family:var(--f-body)">نقطة من</span> <span class="num">'+num(sc.max,1)+'</span>';
