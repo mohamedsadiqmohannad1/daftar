@@ -1196,9 +1196,11 @@ function weakDay(h){ // weekday with the lowest completion over the last 8 weeks
   let worst=null;Object.keys(c).forEach(w=>{const r=c[w][1]/c[w][0];if(c[w][0]>=3&&(!worst||r<worst.r))worst={w:+w,r:r}});
   return worst&&worst.r<0.8?worst:null;
 }
+// a day counts as logged only if it holds something; an empty day (left by opening a date) does not move the start of the log
+const dayHas=d=>!!d&&Object.keys(d).some(x=>{if(x==="d")return false;const v=d[x];return v!==null&&v!==undefined&&v!==""&&!(typeof v==="object"&&!Object.keys(v).length)});
 function firstLogKey(){
   let f=null;S.habits.forEach(h=>{if(h.created&&(!f||h.created<f))f=h.created});
-  Object.keys(S.days).forEach(k=>{if(!f||k<f)f=k});return f;
+  Object.keys(S.days).forEach(k=>{if((!f||k<f)&&dayHas(S.days[k]))f=k});return f;
 }
 function schedText(h){
   if(isFl(h))return "بلا يوم محدد";
@@ -2982,9 +2984,10 @@ const PT_CAP=15;
 // S.dfix = {week start: {date: [%, task count, possible points, pending points], or 0 for an excused day}}: my numbers of finished weeks, kept with the settings.
 // From the Sunday after a week (once this device holds the database copy of everything), its numbers are taken from here, so later edits, point changes or new rules do not change them
 // (neither here nor in what the friend receives). The friend's app does the same with his numbers, so both see the same result.
-function fixWeeks(){if(!srvNow())return false;const fk=firstLogKey();if(!fk)return false;const t=todayK();S.dfix=S.dfix||{};let w=weekStartK(fk>addD(t,-400)?fk:addD(t,-400)),ch=false;
+function fixWeeks(){if(!srvNow())return false;const fk=firstLogKey();if(!fk)return false;const t=todayK();S.dfix=S.dfix||{};
+  let pr=false;const w0=weekStartK(fk);Object.keys(S.dfix).forEach(w=>{const o=S.dfix[w];if(w<w0&&o&&typeof o==="object"&&!Object.keys(o).length){delete S.dfix[w];pr=true}});let w=weekStartK(fk>addD(t,-400)?fk:addD(t,-400)),ch=false;
   for(;addD(w,8)<=t;w=addD(w,7)){if(S.dfix[w])continue;const o={};for(let i=0;i<7;i++){const k=addD(w,i),f=fairDayLive(k);if(f)o[k]=[f.p,f.n,f.m,f.t];else if(isOff(k))o[k]=0}S.dfix[w]=o;ch=true}
-  if(ch)setTimeout(saveConfig,0);return ch}
+  if(ch||pr)setTimeout(saveConfig,0);return ch||pr}
 function fairDay(k){const fz=S.dfix&&S.dfix[weekStartK(k)];if(fz){const e=fz[k];return Array.isArray(e)?{p:e[0],n:e[1],m:e[2],t:e[3]}:null}return fairDayLive(k)}
 function fairDayLive(k){
   if(isOff(k))return null;let got=0,max=0,n=0,tp=0;
@@ -3494,7 +3497,8 @@ function render(force){
   if(S.mode==="local"&&S.tab==="today")h+='<div class="banner">بياناتك محفوظة على هذا الجهاز فقط. لتزامنها مع أجهزتك الأخرى افتح الإعدادات من زر الترس.</div>';
   h+=S.tab==="nutri"?vNut():S.tab==="gym"?vGym():S.tab==="notes"?vNotes():S.tab==="habits"?vHabits():S.tab==="goals"?vGoals():S.tab==="weight"?vWeight():S.tab==="memories"?vMem():vToday();
   v.innerHTML=h;
-  v.querySelectorAll("[data-ch]").forEach(el=>{const f=CH[+el.dataset.ch];if(f)el.innerHTML=f(Math.max(240,Math.floor(el.clientWidth)))});
+  // read every chart's width first, then draw them all: alternating reads and writes forced a full layout per chart
+  {const els=Array.from(v.querySelectorAll("[data-ch]")),ws=els.map(el=>Math.max(240,Math.floor(el.clientWidth)));els.forEach((el,i)=>{const f=CH[+el.dataset.ch];if(f)el.innerHTML=f(ws[i])})}
   if(S.tab==="memories"){drawMemChart();drawMemList();drawYear()}
   if(S.tab==="habits")drawTaskChart();
   if(S.tab==="weight")drawWeightChart();
