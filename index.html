@@ -300,6 +300,8 @@ h3 .pts{vertical-align:middle;margin-inline-start:4px}
 .mon-t a{color:var(--accent);text-decoration:underline}
 .mon-ed{width:34px;height:34px;border:0;color:var(--muted)}
 .mon-ct{align-self:flex-start}
+.fnote{border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;gap:2px}
+.fnote p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
 .filebtn{position:relative;overflow:hidden;cursor:pointer;display:inline-flex;align-items:center}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .dbtns{display:flex;gap:16px;margin-top:2px}
@@ -2421,8 +2423,8 @@ function food(fid){
   if(!fid||typeof fid!=="string")return null;const t=fid.slice(0,2),id=fid.slice(2);
   if(t==="u:"){const a=AR_BY[id];if(a)return {fid:fid,n:a[1],v:a[5],u:a[6].concat(userUnits(fid)),note:a[4],src:"USDA · "+id,kind:"ar",cat:a[2]};
     const x=FDB&&FDB[id];if(x)return {fid:fid,n:x[1],v:[x[2],x[3],x[4],x[5],x[6]],u:[[x[10],x[9]],[x[12],x[11]]].filter(q=>q[0]&&+q[1]>0).concat(userUnits(fid)),note:x[14]?"غير مطبوخ أو بحالته قبل التحضير":"",src:"USDA · "+id,kind:"en",raw:!!x[14]};return null}
-  if(t==="c:"){const c=NUT().foods[id];return c?{fid:fid,n:c.n,v:c.v,u:uPairs(c.u).concat(userUnits(fid)),note:c.note||"",src:"طعامك",kind:"c"}:null}
-  if(t==="r:"){const r=NUT().recipes[id];if(!r)return null;const rv=recipeV(r);return {fid:fid,n:r.n,v:rv.v,u:rv.u.concat(userUnits(fid)),note:+r.tw>0?"محسوبة على الوزن النهائي بعد الطبخ ("+Math.round(r.tw)+" غ)":"محسوبة على مجموع أوزان المكوّنات، بلا وزن نهائي بعد الطبخ",src:"وصفتك",kind:"r"}}
+  if(t==="c:"){const c=NUT().foods[id];return c?{fid:fid,n:c.n,v:c.v,u:uPairs(c.u).concat(userUnits(fid)),note:c.note||"",nt:c.nt||"",src:"طعامك",kind:"c"}:null}
+  if(t==="r:"){const r=NUT().recipes[id];if(!r)return null;const rv=recipeV(r);return {fid:fid,n:r.n,v:rv.v,u:rv.u.concat(userUnits(fid)),note:+r.tw>0?"محسوبة على الوزن النهائي بعد الطبخ ("+Math.round(r.tw)+" غ)":"محسوبة على مجموع أوزان المكوّنات، بلا وزن نهائي بعد الطبخ",nt:r.nt||"",src:"وصفتك",kind:"r"}}
   return null;
 }
 const foodOr=e=>food(e.f)||{fid:e.f,n:e.n,v:e.v,u:userUnits(e.f),note:"",src:"محفوظ مع التسجيل",kind:"snap"};
@@ -2727,6 +2729,7 @@ function fsFoodHTML(){
   const recipe=FS.mode==="recipe";
   return '<div class="f"><button class="chip-link" style="align-self:flex-start" data-act="'+(ed?"closeSheet":"fsBack")+'">'+(ed?"إغلاق":"رجوع للبحث")+'</button>'+
     '<h2 style="margin:0" dir="auto">'+esc(f.n)+'</h2><div class="lbl">'+esc(f.src)+(f.note?" · "+esc(f.note):"")+'</div>'+
+    (f.nt?'<div class="fnote"><span class="lbl2">ملاحظاتك</span><p dir="auto">'+esc(f.nt)+'</p></div>':"")+
     (/^c:/.test(String(FS.fid||""))&&NUT().foods[String(FS.fid).slice(2)]?'<button class="chip-link" style="align-self:flex-start" data-act="cfEditFS" data-id="'+esc(String(FS.fid).slice(2))+'">تعديل قيم هذا الطعام</button>':"")+
     '<div class="p100"><div><b>'+L(kc0(+v[0]))+'</b><span>سعرة</span></div><div><b>'+L(num(+v[1],1))+'</b><span>بروتين</span></div><div><b>'+L(num(+v[2],1))+'</b><span>كربوهيدرات</span></div><div><b>'+L(num(+v[3],1))+'</b><span>دهون</span></div><div><b>'+(v[4]==null?"–":L(num(+v[4],1)))+'</b><span>ألياف</span></div></div><span class="lbl">القيم لكل 100 غرام'+(f.kind==="ar"||f.kind==="en"?"، من قاعدة USDA SR28":"")+'. الكربوهيدرات تشمل الألياف.</span>'+
     '<form id="fs-amt" class="f" autocomplete="off"><div class="amt"><div class="fld"><label for="fs-n">الكمية</label><input id="fs-n" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(qty!=null?qty:"")+'" required></div>'+
@@ -2815,6 +2818,7 @@ function openCustomFood(c,fromFS){
     '<div class="two"><div class="fld"><label for="cf-ul">وحدة (اختياري)</label><input id="cf-ul" name="ul" maxlength="24" value="'+esc(u?u[0]:"")+'" placeholder="مثال: سكوب"></div><div class="fld"><label for="cf-ug">وزنها بالغرام</label><input id="cf-ug" name="ug" class="ltr" type="number" inputmode="decimal" min="0.1" step="any" value="'+(u?u[1]:"")+'"></div></div>'+
     '<div class="ntot" id="cf-calc">'+macroCalc(c?v[1]:0,c?v[2]:0,c?v[3]:0,c&&!c.ka?v[0]:null)+'</div>'+
     '<p class="lbl" style="margin:0">من الماكروز: البروتين والكربوهيدرات 4 سعرات لكل غرام، والدهون 9، وتتحدّث كلما غيّرت الماكروز. أكتبها بنفسي: تبقى كما كتبتها، وهو الأدق إن كان الملصق يذكرها. إذا كان الملصق يذكر الكربوهيدرات بدون الألياف (صافية)، أضف الألياف إليها.</p>'+
+    '<div class="fld"><label for="cf-nt">ملاحظات (اختياري)</label><textarea id="cf-nt" name="nt" rows="3" maxlength="1000" dir="auto" placeholder="مثال: طريقة التحضير، أو من أين تشتريه">'+esc(c&&c.nt||"")+'</textarea></div>'+
     (uses.length?'<label class="chk"><input type="checkbox" name="upd" id="cf-upd" checked><span>طبّق القيم الجديدة على ما سجّلته من هذا الطعام سابقاً ('+uses.length+' '+(uses.length===1?"مرة":"مرات")+')</span></label>':"")+
     '<p class="err" id="cf-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button>'+(c?'<button class="btn sm danger" type="button" data-act="cfDel" data-id="'+c.id+'">حذف هذا الطعام</button>':"")+'<button class="btn" type="button" data-act="cfCancel">إلغاء</button></div></form>',fd=>{
     const err=$("#cf-err"),bad=m=>{err.textContent=m;err.hidden=false};
@@ -2828,7 +2832,8 @@ function openCustomFood(c,fromFS){
     const vv=[k*sc,p*sc,cb*sc,ft*sc,fb===null?null:fb*sc].map(x=>x===null?null:Math.round(x*100)/100);
     if(!ka&&p*4+cb*4+ft*9>k*1.35+20)return bad("مجموع البروتين والكربوهيدرات والدهون أعلى بكثير من السعرات. راجع الأرقام.");
     const ul=String(fd.get("ul")||"").trim(),ug=parseFloat(fd.get("ug")),uu=ul&&ug>0?[{l:ul,g:r1(ug)}]:fd.get("basis")==="sv"?[{l:"حصة",g:r1(parseFloat(fd.get("sg")))}]:[];
-    const N=NUT(),id=c?c.id:uid();N.foods[id]=Object.assign({},c||{},{id:id,n:n,v:vv,u:uu,created:c&&c.created||new Date().toISOString()});if(ka)N.foods[id].ka=1;else delete N.foods[id].ka;saveConfig();
+    const N=NUT(),id=c?c.id:uid();N.foods[id]=Object.assign({},c||{},{id:id,n:n,v:vv,u:uu,created:c&&c.created||new Date().toISOString()});if(ka)N.foods[id].ka=1;else delete N.foods[id].ka;
+    const nt=String(fd.get("nt")||"").trim().slice(0,1000);if(nt)N.foods[id].nt=nt;else delete N.foods[id].nt;saveConfig();
     if(c&&fd.get("upd")){const ds=new Set();cfUses(id).forEach(x=>{x[1].v=vv.slice();x[1].n=n;ds.add(x[0])});ds.forEach(k2=>saveN(k2))}
     CF_BACK=null;if(back){FS={k:back.k,m:back.m,mode:back.mode,q:back.q,view:"list",raw:false,added:[]};if(back.mode==="recipe"&&RD){openSheet(fsHTML(),fsSubmit)}else openSheet(fsHTML(),fsSubmit);fsPick("c:"+id);render()}else{closeSheet();render()}
   });
@@ -2850,9 +2855,10 @@ function recipeHTML(){
       '<div class="fld"><label for="rc-sv">عدد الحصص (اختياري)</label><input id="rc-sv" name="sv" class="ltr" type="number" inputmode="numeric" min="1" max="100" step="1" value="'+(+RD.sv>0?RD.sv:"")+'"></div></div>'+
     '<div class="ntot">المجموع: <b>'+L(kc0(rv.t[0]))+'</b> سعرة · '+L(num(rv.sumG,0))+' غ مكونات'+(rv.W>0?'<br><span class="lbl">لكل 100 غ مطبوخ: '+L(kc0(rv.v[0]))+' سعرة · '+macLine(rv.v)+'</span>':"")+'</div>'+
     '<p class="lbl" style="margin:0">الطبخ يغير الوزن بتبخر الماء أو امتصاصه، فالوزن النهائي هو ما يجعل الحساب دقيقاً عندما تزن صحنك بعد الطبخ.</p>'+
+    '<div class="fld"><label for="rc-nt">ملاحظات (اختياري)</label><textarea id="rc-nt" name="nt" rows="3" maxlength="1000" dir="auto" placeholder="مثال: طريقة الطبخ أو التعديلات">'+esc(RD.nt||"")+'</textarea></div>'+
     '<p class="err" id="rc-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ الوصفة</button>'+(!RD.isNew?'<button class="btn sm danger" type="button" data-act="rcRemove">حذف الوصفة</button>':"")+'<button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>';
 }
-function rcSync(){const n=$("#rc-n"),tw=$("#rc-tw"),sv=$("#rc-sv");if(n)RD.n=n.value;if(tw){const v=parseFloat(tw.value);RD.tw=v>0?v:null}if(sv){const v=parseInt(sv.value,10);RD.sv=v>0?v:null}}
+function rcSync(){const n=$("#rc-n"),tw=$("#rc-tw"),sv=$("#rc-sv"),nt=$("#rc-nt");if(n)RD.n=n.value;if(nt){const t=nt.value.trim().slice(0,1000);if(t)RD.nt=t;else delete RD.nt}if(tw){const v=parseFloat(tw.value);RD.tw=v>0?v:null}if(sv){const v=parseInt(sv.value,10);RD.sv=v>0?v:null}}
 function rcSave(fd){
   rcSync();const err=$("#rc-err"),bad=m=>{err.textContent=m;err.hidden=false};
   RD.n=String(RD.n||"").trim();if(!RD.n)return bad("اكتب اسم الأكلة.");if(!RD.it.length)return bad("أضف مكوناً واحداً على الأقل.");
