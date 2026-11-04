@@ -264,6 +264,42 @@ h3 .pts{vertical-align:middle;margin-inline-start:4px}
 .gate h2{font-family:var(--f-display);font-weight:500;font-size:22px}
 .gate input{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;width:100%;box-sizing:border-box}
 .code{font-family:var(--f-num);font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0;overflow-x:auto}
+.mon-kv{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+.mon-rev{border-top:1px solid var(--line);padding-top:12px;gap:8px}
+.mon-rate{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
+.mon-rate label{position:relative}
+.mon-rate input{position:absolute;opacity:0;inset:0}
+.mon-rate span{display:grid;place-items:center;height:34px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:var(--surface)}
+.mon-rate input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.mon-rate input:focus-visible+span{outline:2px solid var(--accent);outline-offset:1px}
+.mtbl-w{overflow-x:auto;max-width:100%}
+.mtbl{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
+.mtbl th,.mtbl td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:center}
+.mtbl thead th{color:var(--muted);font-weight:500;font-size:12px}
+.mtbl tbody th{text-align:start;font-weight:500}
+.mtbl td.best{color:var(--accent);font-weight:700}
+.mon-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media(min-width:900px){.mon-wrap{grid-template-columns:230px minmax(0,1fr);align-items:start}}
+.mon-side{padding:8px 10px}
+.mon-yh{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:none;padding:8px 4px;font-size:15px;color:var(--ink)}
+.mon-yh svg{width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2;transition:transform .15s}
+.mon-yh[aria-expanded="false"] svg{transform:rotate(90deg)}
+.mon-ms{display:flex;flex-direction:column;gap:2px;border-inline-start:2px solid var(--line);margin:0 6px 6px;padding-inline-start:6px}
+.mon-m{display:flex;justify-content:space-between;align-items:center;border:0;background:none;padding:8px 10px;border-radius:8px;color:var(--ink);font-size:14px}
+.mon-m:hover{background:var(--line)}
+.mon-m.on{background:var(--accent);color:var(--accent-ink)}
+.mon-main{display:flex;flex-direction:column;gap:10px;min-width:0}
+.mon-list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.mon-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.mon-box{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);background:none;display:grid;place-items:center;flex:none;padding:0}
+.mon-box svg{width:14px;height:14px;stroke:var(--accent-ink);stroke-width:3;fill:none;opacity:0}
+.mon-row.on .mon-box{background:var(--accent);border-color:var(--accent)}
+.mon-row.on .mon-box svg{opacity:1}
+.mon-t{flex:1;min-width:0;overflow-wrap:anywhere;font-size:15px;line-height:1.5}
+.mon-row.on .mon-t{color:var(--muted);text-decoration:line-through}
+.mon-t a{color:var(--accent);text-decoration:underline}
+.mon-ed{width:34px;height:34px;border:0;color:var(--muted)}
+.mon-ct{align-self:flex-start}
 .filebtn{position:relative;overflow:hidden;cursor:pointer;display:inline-flex;align-items:center}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .dbtns{display:flex;gap:16px;margin-top:2px}
@@ -821,6 +857,7 @@ body.resting #tbar{top:calc(env(safe-area-inset-top,0px) + var(--resth,72px))}
     <button class="more-t" data-act="tab" data-t="notes" id="tab-notes"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>الأفكار</button>
     <button class="more-t" data-act="tab" data-t="goals" id="tab-goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8"/></svg>الأهداف</button>
     <button class="more-t" data-act="tab" data-t="weight" id="tab-weight"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 9.5a5 5 0 0 1 7 0L12 13z"/></svg>الوزن</button>
+    <button class="more-t" data-act="tab" data-t="month" id="tab-month"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M8 14h8M8 17h5"/></svg>الشهر</button>
     <button data-act="moreTog" id="tab-more" aria-label="المزيد من الأقسام"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span class="mlab">المزيد</span></button>
   </div>
 </nav>
@@ -871,8 +908,8 @@ const ICON={
 
 /* ---------- state ---------- */
 const S={gym:{groups:[],rest:90},wos:{},gsel:null,gall:false,habits:[],groups:[],ngroups:[],ggroups:[],todos:{},days:{},goals:{},notes:{},wgoal:null,lastBackup:null,mode:"loading",cur:todayK(),tab:"today"};
-try{const t=localStorage.getItem("dt-tab");if(t&&["today","memories","habits","gym","nutri","notes","goals","weight"].includes(t))S.tab=t}catch(e){}
-if(["today","memories","habits","gym","nutri","notes","goals","weight"].includes(location.hash.slice(1)))S.tab=location.hash.slice(1);
+try{const t=localStorage.getItem("dt-tab");if(t&&["today","memories","habits","gym","nutri","notes","goals","weight","month"].includes(t))S.tab=t}catch(e){}
+if(["today","memories","habits","gym","nutri","notes","goals","weight","month"].includes(location.hash.slice(1)))S.tab=location.hash.slice(1);
 
 /* ---------- storage ---------- */
 // Embedded sync settings. Leave null to use the in-app setup screen instead.
@@ -904,7 +941,7 @@ function queueWrite(path,data){
 // never replaced. Per-day task values, each frozen week and each custom food, recipe and saved meal are separate fields.
 const BASE=new Map(),DEL={del:1};
 // which maps are compared key by key (a nested object = go one level further); everything else is written as one field
-const DEPTH={"app/config":{dfix:{},nut:{foods:{},recipes:{},meals:{},units:{}},gym:{xn:{}},ui:{}},days:{h:{},xh:{}}};
+const DEPTH={"app/config":{monx:{},mon:{},dfix:{},nut:{foods:{},recipes:{},meals:{},units:{}},gym:{xn:{}},ui:{}},days:{h:{},xh:{}}};
 const isObj=x=>!!x&&typeof x==="object"&&!Array.isArray(x);
 const stab=x=>JSON.stringify(x,(k,v)=>isObj(v)?Object.keys(v).sort().reduce((o,kk)=>{o[kk]=v[kk];return o},{}):v);
 function seenDoc(p,d){if(d==null)BASE.delete(p);else BASE.set(p,JSON.stringify(d))}
@@ -947,12 +984,12 @@ window.addEventListener("pagehide",flushAll);
 let localTimer=null;
 function persistLocal(){
   clearTimeout(localTimer);
-  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos,nutri:S.nutri,nut:S.nut,ui:S.ui}))}catch(e){}},250);
+  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos,nutri:S.nutri,nut:S.nut,ui:S.ui,mon:S.mon,monx:S.monx}))}catch(e){}},250);
 }
 function loadLocal(){
-  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.ggroups=o.ggroups||[];S.todos=o.todos||{};S.gym=o.gym&&Array.isArray(o.gym.groups)?o.gym:{groups:[],rest:90};S.wos=o.wos||{};S.nutri=o.nutri||{};S.nut=o.nut||null;if(o.ui){S.ui=o.ui;applyTheme()}}}catch(e){}
+  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.ggroups=o.ggroups||[];S.todos=o.todos||{};S.gym=o.gym&&Array.isArray(o.gym.groups)?o.gym:{groups:[],rest:90};S.wos=o.wos||{};S.nutri=o.nutri||{};S.nut=o.nut||null;S.mon=o.mon&&typeof o.mon==="object"?o.mon:{};S.monx=o.monx&&typeof o.monx==="object"?o.monx:{};if(o.ui){S.ui=o.ui;applyTheme()}}}catch(e){}
 }
-const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.cmp&&S.cmp.length)o.cmp=S.cmp;if(S.cmpS)o.cmpS=S.cmpS;if(S.chal&&S.chal.length)o.chal=S.chal;if(S.dfix&&Object.keys(S.dfix).length)o.dfix=S.dfix;if(S.chalNo&&S.chalNo.length)o.chalNo=S.chalNo.slice(-200);if(S.ui&&(S.ui.pal||S.ui.thm||S.ui.tabs))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
+const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.cmp&&S.cmp.length)o.cmp=S.cmp;if(S.cmpS)o.cmpS=S.cmpS;if(S.chal&&S.chal.length)o.chal=S.chal;if(S.dfix&&Object.keys(S.dfix).length)o.dfix=S.dfix;if(S.mon&&Object.keys(S.mon).length)o.mon=S.mon;if(S.monx&&Object.keys(S.monx).length)o.monx=S.monx;if(S.chalNo&&S.chalNo.length)o.chalNo=S.chalNo.slice(-200);if(S.ui&&(S.ui.pal||S.ui.thm||S.ui.tabs||S.ui.pts))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
 const saveConfig=()=>queueWrite("app/config",cfgDoc());
 const saveNote=id=>queueWrite("notes/"+id,S.notes[id]||null);
 const saveTodoX=0;const saveTodo=id=>queueWrite("todos/"+id,S.todos[id]||null);
@@ -1006,7 +1043,7 @@ function startDB(db){
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
     const j=snap.exists?stab(snap.data()):"";if(got.c&&j===cfgJ){syncMark("c",snap.fromCache);return}
-    if(!isDirty("app/config")){cfgJ=j;const d=snap.exists?snap.data():null;seenDoc("app/config",d);S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.dfix=d&&d.dfix&&typeof d.dfix==="object"?JSON.parse(JSON.stringify(d.dfix)):{};S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||""};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
+    if(!isDirty("app/config")){cfgJ=j;const d=snap.exists?snap.data():null;seenDoc("app/config",d);S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.dfix=d&&d.dfix&&typeof d.dfix==="object"?JSON.parse(JSON.stringify(d.dfix)):{};S.mon=d&&d.mon&&typeof d.mon==="object"&&!Array.isArray(d.mon)?JSON.parse(JSON.stringify(d.mon)):{};S.monx=d&&d.monx&&typeof d.monx==="object"&&!Array.isArray(d.monx)?JSON.parse(JSON.stringify(d.monx)):{};S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||"",pts:!!d.ui.pts};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
     got.c=true;ready();syncMark("c",snap.fromCache);
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -1052,7 +1089,7 @@ function startDB(db){
     S.notes=nn;got.n=true;ready();syncMark("n",snap.fromCache);
   },onErr));
 }
-function resetState(){BASE.clear();LIVE={};SRV_ONCE=false;S.dfix={};S.chal=[];S.chalNo=[];stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){BASE.clear();LIVE={};SRV_ONCE=false;S.dfix={};S.mon={};S.monx={};S.chal=[];S.chalNo=[];stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
@@ -1256,13 +1293,13 @@ function lineChart(o){
 }
 function barChart(o){
   const W=o.w,H=o.h,P={l:34,r:6,t:10,b:24},iw=W-P.l-P.r,ih=H-P.t-P.b,n=o.vals.length,bw=iw/n;
-  const Y=v=>P.t+ih-v*ih;
+  const Y=v=>P.t+ih-v*ih,yl=o.yLab||(v=>Math.round(v*100)+"%"); // yLab: label for a 0..1 value
   let s='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.label||"")+'">';
-  [0,.5,1].forEach(v=>{s+='<line class="grid" x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'"/><text class="ax" x="'+(P.l-6)+'" y="'+(Y(v)+4).toFixed(1)+'" text-anchor="end">'+Math.round(v*100)+'%</text>'});
+  [0,.5,1].forEach(v=>{s+='<line class="grid" x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'"/><text class="ax" x="'+(P.l-6)+'" y="'+(Y(v)+4).toFixed(1)+'" text-anchor="end">'+yl(v)+'</text>'});
   const every=Math.ceil(n/Math.max(1,Math.floor(iw/44)));
   o.vals.forEach((b,i)=>{
     const x=P.l+i*bw+bw*.18,w=bw*.64;
-    if(Number.isFinite(b.v)&&b.v>0)s+='<rect class="barr'+(b.cur?" cur":"")+'" x="'+x.toFixed(1)+'" y="'+Y(b.v).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+(ih*b.v).toFixed(1)+'" rx="3"><title>'+esc(b.label)+": "+Math.round(b.v*100)+'%</title></rect>';
+    if(Number.isFinite(b.v)&&b.v>0)s+='<rect class="barr'+(b.cur?" cur":"")+'" x="'+x.toFixed(1)+'" y="'+Y(b.v).toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+(ih*b.v).toFixed(1)+'" rx="3"><title>'+esc(b.label)+": "+yl(b.v)+'</title></rect>';
     if((n-1-i)%every===0)s+='<text class="ax" x="'+(x+w/2).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+esc(b.label)+'</text>';
   });
   return s+"</svg>";
@@ -1291,7 +1328,8 @@ function dots7(h,k){
   for(let i=6;i>=0;i--){const d=addD(k,-i),f=frac(h,d);s+='<i class="'+(d<hStart(h)?"o":f>=1?"d":f>0?"p":isSched(h,d)?"":"o")+'"></i>'}
   return s+'</span>';
 }
-const ptsTag=p=>'<span class="pts">'+L("+"+num(p,0))+'</span>';
+const showPts=()=>!!(S.ui&&S.ui.pts);
+const ptsTag=p=>showPts()?'<span class="pts">'+L("+"+num(p,0))+'</span>':"";
 const MOB=()=>{try{return matchMedia("(max-width:700px)").matches}catch(e){return false}};
 const FOPEN=new Set();
 let DT0=null,ZOOM=false;
@@ -1343,7 +1381,7 @@ function tbarSync(){
   el.innerHTML='<b class="num">'+L(Math.round(p*100)+"%")+'</b><span class="tb"><i style="width:'+Math.round(p*100)+'%"></i></span><span class="num">'+L(num(sc.got,1)+" / "+num(sc.max,1))+'</span>';
   TB_IO=new IntersectionObserver(es=>{el.classList.toggle("on",!es[0].isIntersecting)});TB_IO.observe(sm);
 }
-const TAB_DEF=["today","memories","gym","nutri","habits","notes","goals","weight"];
+const TAB_DEF=["today","memories","gym","nutri","habits","notes","goals","weight","month"];
 let MORE_T=TAB_DEF.slice(4);
 const tabOrder=()=>{const o=S.ui&&Array.isArray(S.ui.tabs)?S.ui.tabs.filter(t=>TAB_DEF.includes(t)):[];TAB_DEF.forEach(t=>{if(!o.includes(t))o.push(t)});return o};
 function applyTabs(){const box=document.querySelector("nav.tabs .in"),mb=$("#tab-more");if(!box||!mb)return;const o=tabOrder();
@@ -1371,7 +1409,7 @@ function taskRow(x,k){
   if(isQ(x)){
     const v=rawV(x,k),has=entered(x,k),f=frac(x,k),e=earned(x,k);
     return '<div class="xrow"><div class="hrow qrow'+(on?" on":"")+(dim?" dim":"")+'" id="qr-'+x.id+'"><div class="qtop"><span class="nmw"><span class="nm">'+esc(x.name)+'</span>'+badges.join("")+'</span>'+
-      '<span class="pts" id="qp-'+x.id+'">'+L(num(e,0)+" / "+num(hPts(x,k),0))+'</span></div>'+
+      '<span class="pts" id="qp-'+x.id+'">'+(showPts()?L(num(e,0)+" / "+num(hPts(x,k),0)):"")+'</span></div>'+
       '<div class="qctl"><button class="iconbtn qb" data-act="qstep" data-id="'+x.id+'" data-n="-1" aria-label="إنقاص">−</button>'+
       '<input id="q-'+x.id+'" class="keep ltr qin" type="number" inputmode="decimal" min="0" step="any" value="'+(has?+v:"")+'" placeholder="0" aria-label="الكمية">'+
       '<button class="iconbtn qb" data-act="qstep" data-id="'+x.id+'" data-n="1" aria-label="زيادة">+</button>'+
@@ -3414,8 +3452,201 @@ function chalAct(a,b){
   return false;
 }
 
+/* ---------- months: a to-do list for each month, grouped by year ---------- */
+// S.mon = {"YYYY-MM": [{id, n: text, done: 0|1}]}, kept with the settings; each month is saved as its own field, so two devices
+// editing different months do not clash. Month tasks have no points and are not part of the comparison.
+S.mon={};S.monx={};S.mo={sel:"",open:{},comp:false,view:""};
+const monKey=d=>d.getFullYear()+"-"+pad(d.getMonth()+1);
+const monLbl=m=>"\u2066"+(+m.slice(5,7))+" / "+m.slice(0,4)+"\u2069"; // left to right, as "10 / 2026"
+const monOk=m=>/^\d{4}-(0[1-9]|1[0-2])$/.test(m||"");
+const monList=()=>Object.keys(S.mon||{}).filter(monOk).sort().reverse();
+const monTasks=m=>Array.isArray(S.mon[m])?S.mon[m]:[];
+const monOpen=m=>monTasks(m).filter(t=>t&&!t.done).length;
+const linkify=s=>esc(s).replace(/https?:\/\/[^\s<]+/g,u=>'<a href="'+u+'" target="_blank" rel="noopener">'+u+'</a>');
+function monSel(){if(S.mo.sel&&S.mon[S.mo.sel])return S.mo.sel;const cur=monKey(new Date()),ms=monList();return S.mon[cur]?cur:(ms[0]||"")}
+const saveMon=()=>saveConfig();
+function vMonth(){
+  const ms=monList(),sel=monSel(),cy=String(new Date().getFullYear()),cmp=S.mo.view==="cmp";S.mo.sel=sel;
+  let s='<section class="sec-h" style="flex-wrap:wrap"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الشهر</h2><div class="row" style="gap:8px">'+
+    '<label class="btn sm filebtn">استيراد ملف<input id="mon-file" type="file" accept=".txt,.json,text/plain,application/json"></label><button class="btn sm" data-act="monPaste">لصق مهام</button>'+
+    '<button class="btn sm" data-act="monExp">تصدير</button><button class="btn pri sm" data-act="monNew">شهر جديد</button></div></section>'+
+    '<div class="seg2" role="radiogroup" aria-label="العرض"><label><input type="radio" name="monview" value=""'+(cmp?"":" checked")+'><span>الأشهر</span></label><label><input type="radio" name="monview" value="cmp"'+(cmp?" checked":"")+'><span>المقارنة</span></label></div>';
+  if(cmp)return s+monCmpHTML();
+  if(!ms.length)return s+'<section class="panel empty"><p class="muted small" style="margin:0">لا أشهر بعد. أضف شهراً، أو استورد ملف أشهرك.</p></section>';
+  const years={};ms.forEach(m=>{const y=m.slice(0,4);(years[y]=years[y]||[]).push(m)});
+  s+='<div class="mon-wrap"><nav class="panel mon-side" aria-label="الأشهر">'+Object.keys(years).sort().reverse().map(y=>{
+    const open=S.mo.open[y]!==undefined?S.mo.open[y]:(y===cy||years[y].includes(sel));
+    return '<div class="mon-y"><button class="mon-yh" data-act="monY" data-y="'+y+'" aria-expanded="'+open+'"><b class="num">'+y+'</b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>'+
+      (open?'<div class="mon-ms">'+years[y].map(m=>'<button class="mon-m'+(m===sel?" on":"")+'" data-act="monGo" data-m="'+m+'"><span class="num">'+monLbl(m)+'</span><span class="num">'+monOpen(m)+'</span></button>').join("")+'</div>':"")+'</div>'}).join("")+'</nav>';
+  const ts=monTasks(sel),op=ts.filter(t=>t&&!t.done),dn=ts.filter(t=>t&&t.done),st=monStats(sel),x=S.monx[sel]||{};
+  s+='<section class="panel mon-main"><div class="sec-h"><h2 class="num">'+monLbl(sel)+'</h2><button class="chip-link" data-act="monEdit" data-m="'+sel+'">خيارات الشهر</button></div>'+
+    monKV(st)+
+    '<form id="mon-add" class="row" autocomplete="off" style="gap:8px;flex-wrap:nowrap"><input id="mon-new" class="keep" maxlength="500" placeholder="أضف مهمة" dir="auto" style="flex:1;min-width:0"><button class="btn pri sm" type="submit">إضافة</button></form>'+
+    (op.length?'<div class="mon-list">'+op.map(t=>monRow(sel,t)).join("")+'</div>':'<p class="muted small" style="margin:0">لا مهام مفتوحة في هذا الشهر.</p>')+
+    (dn.length?'<button class="chip-link mon-ct" data-act="monComp" aria-expanded="'+!!S.mo.comp+'">'+(S.mo.comp?"إخفاء":"عرض")+' المكتملة <span class="num">'+dn.length+'</span></button>'+(S.mo.comp?'<div class="mon-list">'+dn.map(t=>monRow(sel,t)).join("")+'</div>':""):"")+
+    '<form id="mon-rev" class="f mon-rev" autocomplete="off"><span class="lbl2">تقييم الشهر</span>'+
+      '<div class="mon-rate" role="radiogroup" aria-label="التقييم من 10">'+[1,2,3,4,5,6,7,8,9,10].map(v=>'<label><input type="radio" name="r" value="'+v+'"'+(+x.r===v?" checked":"")+'><span class="num">'+v+'</span></label>').join("")+'</div>'+
+      '<label class="lbl" for="mon-note">شنو صار هذا الشهر</label><textarea id="mon-note" name="t" class="keep" rows="4" maxlength="4000" dir="auto" placeholder="اكتب ما حدث، وما تعلمته، وما تريد تغييره.">'+esc(x.t||"")+'</textarea>'+
+      '<div class="row"><button class="btn pri sm" type="submit">حفظ التقييم</button>'+(x.r||x.t?'<button class="chip-link" type="button" data-act="monRevDel" data-m="'+sel+'">مسح التقييم</button>':"")+'<span class="lbl" id="mon-rev-msg">'+(S.mo.msg===sel?"حُفظ":"")+'</span></div></form>'+
+    '</section></div>';
+  return s;
+}
+// month figures from the daily log: mood, share of the scheduled points done, points earned, fixed and pending tasks done
+function monStats(m){
+  const t=todayK(),fk=firstLogKey(),y=+m.slice(0,4),mo=+m.slice(5,7),first=m+"-01",last=keyOf(new Date(y,mo,0)),end=last<t?last:t;
+  let pS=0,pN=0,got=0,done=0,lg=0;const hs=[];
+  for(let k=first;k<=end;k=addD(k,1)){
+    const h=getHappy(S.days[k]);if(Number.isFinite(h))hs.push(h);
+    if(!fk||k<fk)continue;lg++;
+    const sc=dayScore(k);if(k<t&&sc.max>0&&!isOff(k)){pS+=sc.got/sc.max;pN++}got+=sc.got;
+    S.habits.forEach(x=>{if(activeOn(x,k)&&isDone(x,k))done++});
+  }
+  let td=0;Object.values(S.todos).forEach(x=>{if(x&&x.doneAt&&x.doneAt.slice(0,7)===m)td++});
+  const lt=monTasks(m),x=S.monx[m]||{};
+  // a month before the log began has no task figures (shown as –), not zeros
+  return {pct:pN?pS/pN*100:NaN,pN:pN,got:lg?got:NaN,mood:hs.length?avg(hs):NaN,mN:hs.length,done:lg?done:NaN,td:lg||td?td:NaN,lt:lt.length,ld:lt.filter(z=>z&&z.done).length,r:+x.r>0?+x.r:NaN};
+}
+const moodTxt=v=>Number.isFinite(v)?L(signed(Math.round(v),0))+' <span class="lbl">'+hWord(v)+'</span>':"–";
+function monKV(st){
+  const c=(v,l)=>'<div><b class="num">'+v+'</b><span>'+l+'</span></div>';
+  return '<div class="kv mon-kv">'+c(Number.isFinite(st.pct)?L(Math.round(st.pct)+"%"):"–","متوسط الإنجاز")+c(Number.isFinite(st.got)?L(num(st.got,0)):"–","النقاط المنجزة")+c(Number.isFinite(st.done)?st.done:"–","مهام ثابتة منجزة")+c(Number.isFinite(st.td)?st.td:"–","معلّقة منجزة")+c(moodTxt(st.mood),"المزاج")+c(st.lt?L(st.ld+" / "+st.lt):"–","مهام الشهر")+c(Number.isFinite(st.r)?L(st.r+" / 10"):"–","تقييمك")+'</div>';
+}
+function monAllKeys(){ // every month that has a list, a review, or something logged
+  const set=new Set(monList().concat(Object.keys(S.monx||{}).filter(monOk)));const fk=firstLogKey();
+  Object.keys(S.days).forEach(k=>{if(dayHas(S.days[k])&&(!fk||k>=fk||Number.isFinite(getHappy(S.days[k]))))set.add(k.slice(0,7))});
+  Object.values(S.todos).forEach(x=>{if(x&&x.doneAt)set.add(x.doneAt.slice(0,7))});
+  return Array.from(set).filter(m=>monOk(m)&&m<=monKey(new Date())).sort().reverse();
+}
+function monYear(rows){ // weighted by days, so a short month counts less
+  const a={pS:0,pN:0,got:0,mS:0,mN:0,done:0,td:0,lt:0,ld:0,rs:[]};
+  rows.forEach(r=>{if(Number.isFinite(r.pct)){a.pS+=r.pct*r.pN;a.pN+=r.pN}if(Number.isFinite(r.got)){a.got+=r.got;a.hg=1}if(Number.isFinite(r.mood)){a.mS+=r.mood*r.mN;a.mN+=r.mN}if(Number.isFinite(r.done))a.done+=r.done;if(Number.isFinite(r.td)){a.td+=r.td;a.ht=1}a.lt+=r.lt;a.ld+=r.ld;if(Number.isFinite(r.r))a.rs.push(r.r)});
+  return {pct:a.pN?a.pS/a.pN:NaN,got:a.hg?a.got:NaN,mood:a.mN?a.mS/a.mN:NaN,done:a.hg?a.done:NaN,td:a.ht?a.td:NaN,lt:a.lt,ld:a.ld,r:a.rs.length?avg(a.rs):NaN};
+}
+function monTable(head,rows){ // rows: [label, stats, data-m or ""]; the best value of each column is marked
+  const cols=[["الإنجاز",r=>r.pct,r=>Number.isFinite(r.pct)?Math.round(r.pct)+"%":"–"],["النقاط",r=>r.got,r=>Number.isFinite(r.got)?num(r.got,0):"–"],["ثابتة",r=>r.done,r=>Number.isFinite(r.done)?String(r.done):"–"],["معلّقة",r=>r.td,r=>Number.isFinite(r.td)?String(r.td):"–"],
+    ["المزاج",r=>r.mood,r=>Number.isFinite(r.mood)?signed(Math.round(r.mood),0):"–"],["مهام الشهر",r=>r.lt?r.ld/r.lt:NaN,r=>r.lt?r.ld+"/"+r.lt:"–"],["التقييم",r=>r.r,r=>Number.isFinite(r.r)?num(r.r,0)+"/10":"–"]];
+  const best=cols.map(c=>{const vs=rows.map(r=>c[1](r[1])).filter(v=>Number.isFinite(v));if(vs.length<2)return null;const mx=Math.max.apply(null,vs);return vs.filter(v=>v===mx).length===1?mx:null});
+  return '<div class="mtbl-w"><table class="mtbl"><thead><tr><th>'+head+'</th>'+cols.map(c=>'<th>'+c[0]+'</th>').join("")+'</tr></thead><tbody>'+
+    rows.map(r=>'<tr><th>'+(r[2]?'<button class="chip-link num" data-act="monGo" data-m="'+r[2]+'" data-v="1">'+r[0]+'</button>':'<span class="num">'+r[0]+'</span>')+'</th>'+
+      cols.map((c,i)=>{const v=c[1](r[1]);return '<td class="num'+(best[i]!==null&&v===best[i]?" best":"")+'">'+L(c[2](r[1]))+'</td>'}).join("")+'</tr>').join("")+'</tbody></table></div>';
+}
+function monCmpHTML(){
+  const ks=monAllKeys();if(!ks.length)return '<section class="panel"><p class="muted small" style="margin:0">لا بيانات للمقارنة بعد.</p></section>';
+  const rows=ks.map(m=>[monLbl(m),monStats(m),m]),cur=monKey(new Date());
+  const yrs={};rows.forEach(r=>{const y=r[2].slice(0,4);(yrs[y]=yrs[y]||[]).push(r[1])});
+  const last=rows.slice(0,12).reverse();
+  let s='<section class="panel sec" style="display:flex;flex-direction:column;gap:10px"><div class="sec-h"><h2>الأشهر</h2><span class="lbl">آخر '+last.length+' أشهر</span></div>'+
+    (last.some(r=>Number.isFinite(r[1].pct))?'<span class="lbl2">متوسط الإنجاز اليومي</span>'+chart(W=>barChart({w:W,h:170,vals:last.map(r=>({v:Number.isFinite(r[1].pct)?r[1].pct/100:NaN,label:(+r[2].slice(5,7))+"/"+r[2].slice(2,4),cur:r[2]===cur})),label:"متوسط الإنجاز لكل شهر"})):"")+
+    (last.some(r=>Number.isFinite(r[1].mood))?'<span class="lbl2">متوسط المزاج</span>'+chart(W=>barChart({w:W,h:150,vals:last.map(r=>({v:Number.isFinite(r[1].mood)?(r[1].mood+100)/200:NaN,label:(+r[2].slice(5,7))+"/"+r[2].slice(2,4),cur:r[2]===cur})),yLab:v=>signed(Math.round(v*200-100),0),label:"متوسط المزاج لكل شهر"})):"")+
+    monTable("الشهر",rows)+'</section>';
+  const ys=Object.keys(yrs).sort().reverse();
+  s+='<section class="panel sec" style="display:flex;flex-direction:column;gap:10px"><div class="sec-h"><h2>السنوات</h2></div>'+monTable("السنة",ys.map(y=>[y,monYear(yrs[y]),""]))+
+    '<p class="lbl" style="margin:0">الإنجاز: متوسط نسبة النقاط المنجزة من نقاط اليوم، للأيام المنتهية غير المعذورة. النقاط: مجموع ما أنجزته من المهام الثابتة والمعلّقة. ثابتة: عدد مرات إكمال مهمة ثابتة. معلّقة: المعلّقة التي أُنجزت في الشهر. المزاج: متوسط مزاجك المسجل، من −100 إلى +100. السنة تُحسب بوزن عدد الأيام. الأعلى في كل عمود مُعلَّم.</p></section>';
+  return s;
+}
+function openMonPaste(){
+  const sel=monSel()||monKey(new Date());
+  openSheet('<h2>لصق مهام</h2><form class="f" autocomplete="off"><div class="fld"><label for="mp-m">الشهر</label><input id="mp-m" name="m" class="ltr datein" type="month" value="'+sel+'"></div>'+
+    '<div class="fld"><label for="mp-t">المهام، كل مهمة في سطر</label><textarea id="mp-t" name="t" rows="9" dir="auto" required placeholder="الصق هنا"></textarea>'+
+    '<span class="lbl">علامات القوائم والمربعات في أول السطر تُحذف. ضع [x] أول السطر لمهمة مكتملة. إن احتوى النص على عناوين مثل # 10/2026 تُوزّع المهام على أشهرها.</span></div>'+
+    '<p class="err" id="mp-err" hidden></p><div class="row"><button class="btn pri" type="submit">متابعة</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{
+    const m=String(fd.get("m")||""),txt=String(fd.get("t")||""),err=$("#mp-err");
+    let p=monParse(txt);if(!Object.keys(p.t).length&&!Object.keys(p.x).length){if(!monOk(m)){err.textContent="اختر شهراً.";err.hidden=false;return}p=monParse("# "+m+"\n"+txt)}
+    MON_IMP=monImportPlan(p);card.innerHTML=monImportHTML(MON_IMP);sheetSubmit=null});
+}
+function monExport(){ // the same text format the import reads, with the review of each month
+  const ks=Array.from(new Set(monList().concat(Object.keys(S.monx||{}).filter(monOk)))).sort().reverse();
+  let s="// أشهر دفتر التطور، صُدّرت "+todayK()+"\n// # الشهر، ثم @تقييم و @ملاحظة إن وُجدا، ثم المهام. [x] = مكتملة.\n";
+  ks.forEach(m=>{const x=S.monx[m]||{};s+="\n# "+(+m.slice(5,7))+"/"+m.slice(0,4)+"\n";if(+x.r>0)s+="@تقييم "+x.r+"\n";
+    if(x.t)String(x.t).split(/\r?\n/).forEach(l=>{s+="@ملاحظة "+l+"\n"});monTasks(m).forEach(t=>{s+=(t.done?"[x] ":"")+t.n.replace(/\r?\n/g," ")+"\n"})});
+  try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([s],{type:"text/plain;charset=utf-8"}));a.download="daftar-months-"+todayK()+".txt";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}catch(e){}
+}
+function monRow(m,t){return '<div class="mon-row'+(t.done?" on":"")+'"><button class="mon-box" data-act="monTog" data-m="'+m+'" data-id="'+esc(t.id)+'" aria-pressed="'+!!t.done+'" aria-label="'+(t.done?"إلغاء الإنجاز":"إنجاز")+'">'+ICON.check+'</button><span class="mon-t" dir="auto">'+linkify(t.n)+'</span><button class="iconbtn mon-ed" data-act="monTask" data-m="'+m+'" data-id="'+esc(t.id)+'" aria-label="تعديل المهمة">'+ICON.edit+'</button></div>'}
+const monFind=(m,id)=>monTasks(m).find(t=>t&&t.id===id);
+function monAdd(m,txt){const n=String(txt||"").trim().slice(0,500);if(!n||!monOk(m))return false;if(!Array.isArray(S.mon[m]))S.mon[m]=[];S.mon[m].unshift({id:uid(),n:n,done:0});saveMon();return true}
+function monMoveAll(from,to){if(from===to||!monOk(to))return;const a=monTasks(from);S.mon[to]=a.concat(monTasks(to));delete S.mon[from];if(S.monx[from]){if(!S.monx[to])S.monx[to]=S.monx[from];delete S.monx[from]}S.mo.sel=to;S.mo.open[to.slice(0,4)]=true;saveMon()}
+function openMonNew(){
+  const ms=monList(),cur=monKey(new Date());
+  openSheet('<h2>شهر جديد</h2><form class="f" autocomplete="off"><div class="fld"><label for="mn-m">الشهر</label><input id="mn-m" name="m" class="ltr datein" type="month" required value="'+cur+'"></div>'+
+    '<p class="err" id="mn-err" hidden></p><div class="row"><button class="btn pri" type="submit">إضافة</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{
+    const m=String(fd.get("m")||"");if(!monOk(m)){const e=$("#mn-err");e.textContent="اختر شهراً.";e.hidden=false;return}
+    if(!Array.isArray(S.mon[m])){S.mon[m]=[];saveMon()}S.mo.sel=m;S.mo.open[m.slice(0,4)]=true;closeSheet();render(true)});
+  void ms;
+}
+function openMonEdit(m){
+  const n=monTasks(m).length;
+  openSheet('<h2>خيارات <span class="num">'+monLbl(m)+'</span></h2><form class="f" autocomplete="off"><div class="fld"><label for="me-m">نقل إلى شهر آخر</label><input id="me-m" name="m" class="ltr datein" type="month" required value="'+m+'"><span class="lbl">إذا كان الشهر الآخر موجوداً تُضاف مهام هذا الشهر إليه.</span></div>'+
+    '<div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div>'+
+    '<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn sm danger" type="button" data-act="monDel" data-m="'+m+'">حذف الشهر'+(n?" ومهامه ("+n+")":"")+'</button></div></form>',fd=>{
+    const to=String(fd.get("m")||"");if(monOk(to)&&to!==m)monMoveAll(m,to);closeSheet();render(true)});
+}
+function openMonTask(m,id){
+  const t=monFind(m,id);if(!t)return;
+  openSheet('<h2>تعديل المهمة</h2><form class="f" autocomplete="off"><div class="fld"><label for="mt-n">المهمة</label><textarea id="mt-n" name="n" rows="3" maxlength="500" dir="auto" required>'+esc(t.n)+'</textarea></div>'+
+    '<div class="fld"><label for="mt-m">الشهر</label><select id="mt-m" name="m" class="sel">'+monList().map(x=>'<option value="'+x+'"'+(x===m?" selected":"")+'>'+monLbl(x)+'</option>').join("")+'</select></div>'+
+    '<div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div>'+
+    '<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn sm danger" type="button" data-act="monTaskDel" data-m="'+m+'" data-id="'+esc(id)+'">حذف المهمة</button></div></form>',fd=>{
+    const cur=monFind(m,id);if(!cur){closeSheet();render(true);return}
+    const n=String(fd.get("n")||"").trim().slice(0,500),to=String(fd.get("m")||m);if(n)cur.n=n;
+    if(monOk(to)&&to!==m&&Array.isArray(S.mon[to])){S.mon[m]=monTasks(m).filter(x=>x.id!==id);S.mon[to].unshift(cur)}
+    saveMon();closeSheet();render(true)});
+}
+// import: a text file ("# 10/2026" or "# 2026-10" starts a month, one task per line, "[x]" in front marks it done,
+// lines starting with // are ignored) or a JSON file {"2026-10": ["task", ...]} or a backup that holds "mon"
+const monNorm=s=>{s=hkDig(String(s||"")).trim();let m=s.match(/^(\d{4})\s*[-/]\s*(\d{1,2})$/),y,mo;if(m){y=m[1];mo=m[2]}else{m=s.match(/^(\d{1,2})\s*[-/]\s*(\d{4})$/);if(m){y=m[2];mo=m[1]}}
+  if(!y)return null;const k=y+"-"+pad(+mo);return monOk(k)?k:null};
+function monParse(txt){ // -> {t: {month: [{n, done}]}, x: {month: {r, t}}}
+  const out={t:{},x:{}};let o=null;try{o=JSON.parse(txt)}catch(e){}
+  if(o&&typeof o==="object"&&!Array.isArray(o)){const src=o.mon&&typeof o.mon==="object"?o.mon:o;
+    Object.keys(src).forEach(m=>{const k=monNorm(m);if(!k||!Array.isArray(src[m]))return;
+      out.t[k]=src[m].map(t=>typeof t==="string"?{n:t.trim(),done:0}:{n:String(t&&t.n||"").trim(),done:t&&t.done?1:0}).filter(t=>t.n)});
+    if(o.monx&&typeof o.monx==="object")Object.keys(o.monx).forEach(m=>{const k=monNorm(m),v=o.monx[m];if(k&&v&&typeof v==="object")out.x[k]={r:+v.r>=1&&+v.r<=10?Math.round(+v.r):0,t:String(v.t||"").slice(0,4000)}});
+    return out}
+  let cur=null;String(txt||"").split(/\r?\n/).forEach(line=>{const l=line.trim();if(!l||l.startsWith("//"))return;
+    if(l.startsWith("#")){const k=monNorm(l.replace(/^#+/,""));if(k){cur=k;out.t[k]=out.t[k]||[]}return}
+    if(!cur)return;
+    const rv=l.match(/^@تقييم\s*(\d+)/);if(rv){const r=+rv[1];if(r>=1&&r<=10)(out.x[cur]=out.x[cur]||{r:0,t:""}).r=r;return}
+    const nv=line.match(/^\s*@ملاحظة ?(.*)$/);if(nv){const x=out.x[cur]=out.x[cur]||{r:0,t:""};x.t=(x.t?x.t+"\n":"")+nv[1];return}
+    let n=l.replace(/^([-*•●▪■□☐☑✓✔]|\d+[.)])\s*/,""),done=0;const x=n.match(/^\[(x|X|\s)\]\s*/);if(x){done=x[1].toLowerCase()==="x"?1:0;n=n.slice(x[0].length)}
+    n=n.trim().slice(0,500);if(n)out.t[cur].push({n:n,done:done})});
+  return out;
+}
+let MON_IMP=null;
+function monImportPlan(p){ // tasks already in that month (same text) are skipped; a review is added only to a month that has none
+  const ms=Array.from(new Set(Object.keys(p.t).concat(Object.keys(p.x)))).sort().reverse();
+  return ms.map(m=>{const have=new Set(monTasks(m).map(t=>t.n.trim())),src=p.t[m]||[],add=src.filter(t=>!have.has(t.n)&&(have.add(t.n),true)),xv=p.x[m],cx=S.monx[m];
+    return {m:m,isNew:!Array.isArray(S.mon[m]),add:add,skip:src.length-add.length,x:xv&&(xv.r||xv.t)&&!(cx&&(cx.r||cx.t))?xv:null}});
+}
+function monImportHTML(plan){
+  const any=plan.some(x=>x.add.length||x.isNew||x.x);
+  return '<h2>استيراد الأشهر</h2><div class="f">'+(plan.length?'<div class="entries" style="max-height:none">'+plan.map(x=>'<div><span class="num">'+monLbl(x.m)+(x.isNew?' <span class="lbl">شهر جديد</span>':"")+'</span><span class="small">'+x.add.length+' مهمة'+(x.add.some(t=>t.done)?' <span class="lbl">(منها '+x.add.filter(t=>t.done).length+' مكتملة)</span>':"")+(x.skip?' <span class="lbl">('+x.skip+' موجودة مسبقاً)</span>':"")+(x.x?' <span class="lbl">+ تقييم</span>':"")+'</span></div>').join("")+'</div>':'<p class="muted small" style="margin:0">لم أجد أشهراً في النص.</p>')+
+    '<p class="lbl" style="margin:0">يُضاف ما ليس عندك فقط. المهمة الموجودة بنفس النص في نفس الشهر لا تتكرر، وتقييم الشهر لا يُستبدل.</p>'+
+    '<div class="row">'+(any?'<button class="btn pri" data-act="monImpGo">استيراد</button>':"")+'<button class="btn" data-act="closeSheet">إغلاق</button></div></div>';
+}
+function monImportApply(plan){plan.forEach(x=>{if(!Array.isArray(S.mon[x.m]))S.mon[x.m]=[];x.add.forEach(t=>S.mon[x.m].push({id:uid(),n:t.n,done:t.done?1:0}));if(x.x)S.monx[x.m]={r:x.x.r||0,t:x.x.t||""}});
+  if(plan.length){const top=plan[0].m;S.mo.sel=S.mo.sel&&S.mon[S.mo.sel]?S.mo.sel:top;S.mo.open[top.slice(0,4)]=true;S.mo.view=""}saveMon()}
+function monAct(a,b){
+  const m=b.dataset.m,id=b.dataset.id;
+  if(a==="monY"){const y=b.dataset.y;S.mo.open[y]=b.getAttribute("aria-expanded")!=="true";render(true);return true}
+  if(a==="monGo"){S.mo.sel=m;S.mo.comp=false;if(b.dataset.v){S.mo.view="";S.mo.open[m.slice(0,4)]=true;render(true);window.scrollTo(0,0);return true}render(true);if(MOB()){const el=$(".mon-main");if(el&&el.scrollIntoView)el.scrollIntoView({block:"start",behavior:"smooth"})}return true}
+  if(a==="monComp"){S.mo.comp=!S.mo.comp;render(true);return true}
+  if(a==="monTog"){const t=monFind(m,id);if(t){t.done=t.done?0:1;saveMon();render(true)}return true}
+  if(a==="monTask"){openMonTask(m,id);return true}
+  if(a==="monEdit"){openMonEdit(m);return true}
+  if(a==="monNew"){openMonNew();return true}
+  if(a==="monPaste"){openMonPaste();return true}
+  if(a==="monExp"){monExport();return true}
+  if(a==="monRevDel"){if(confirmArm[a+m]){delete confirmArm[a+m];delete S.monx[m];saveMon();render(true)}else{confirmArm[a+m]=1;b.textContent="اضغط مرة أخرى للمسح";setTimeout(()=>{delete confirmArm[a+m];if(b.isConnected)b.textContent="مسح التقييم"},4000)}return true}
+  if(a==="monImpGo"){if(MON_IMP){monImportApply(MON_IMP);MON_IMP=null}closeSheet();render(true);return true}
+  if(a==="monTaskDel"){if(confirmArm[a+id]){delete confirmArm[a+id];S.mon[m]=monTasks(m).filter(t=>t.id!==id);saveMon();closeSheet();render(true)}
+    else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى للحذف";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف المهمة"},4000)}return true}
+  if(a==="monDel"){if(confirmArm[a+m]){delete confirmArm[a+m];delete S.mon[m];delete S.monx[m];if(S.mo.sel===m)S.mo.sel="";saveMon();closeSheet();render(true)}
+    else{confirmArm[a+m]=1;const t0=b.textContent;b.textContent="اضغط مرة أخرى لحذف الشهر";setTimeout(()=>{delete confirmArm[a+m];if(b.isConnected)b.textContent=t0},4000)}return true}
+  return false;
+}
+
 /* ---------- appearance ---------- */
-S.ui={pal:"",thm:""};try{const u=JSON.parse(localStorage.getItem("dt-ui")||"{}");S.ui={pal:u.pal==="pink"?"pink":"",thm:u.thm==="light"||u.thm==="dark"?u.thm:""}}catch(e){}
+S.ui={pal:"",thm:""};try{const u=JSON.parse(localStorage.getItem("dt-ui")||"{}");S.ui={pal:u.pal==="pink"?"pink":"",thm:u.thm==="light"||u.thm==="dark"?u.thm:"",pts:!!u.pts}}catch(e){}
 function saveUiLocal(){try{localStorage.setItem("dt-ui",JSON.stringify(S.ui))}catch(e){}}
 function applyTheme(){
   const r=document.documentElement,u=S.ui||{};
@@ -3496,7 +3727,7 @@ function render(force){
   let h="";
   if(bannerMsg)h+='<div class="banner">'+esc(bannerMsg)+' <button class="chip-link" data-act="bannerX">إخفاء</button></div>';
   if(S.mode==="local"&&S.tab==="today")h+='<div class="banner">بياناتك محفوظة على هذا الجهاز فقط. لتزامنها مع أجهزتك الأخرى افتح الإعدادات من زر الترس.</div>';
-  h+=S.tab==="nutri"?vNut():S.tab==="gym"?vGym():S.tab==="notes"?vNotes():S.tab==="habits"?vHabits():S.tab==="goals"?vGoals():S.tab==="weight"?vWeight():S.tab==="memories"?vMem():vToday();
+  h+=S.tab==="month"?vMonth():S.tab==="nutri"?vNut():S.tab==="gym"?vGym():S.tab==="notes"?vNotes():S.tab==="habits"?vHabits():S.tab==="goals"?vGoals():S.tab==="weight"?vWeight():S.tab==="memories"?vMem():vToday();
   v.innerHTML=h;
   // read every chart's width first, then draw them all: alternating reads and writes forced a full layout per chart
   {const els=Array.from(v.querySelectorAll("[data-ch]")),ws=els.map(el=>Math.max(240,Math.floor(el.clientWidth)));els.forEach((el,i)=>{const f=CH[+el.dataset.ch];if(f)el.innerHTML=f(ws[i])})}
@@ -3537,7 +3768,7 @@ function setQ(id,k,v){
 }
 function updateQRow(id,k){
   const h=S.habits.find(x=>x.id===id);if(!h)return;const f=frac(h,k);
-  const p=$("#qp-"+id);if(p)p.innerHTML=L(num(earned(h,k),0)+" / "+num(hPts(h,k),0));
+  const p=$("#qp-"+id);if(p)p.innerHTML=showPts()?L(num(earned(h,k),0)+" / "+num(hPts(h,k),0)):"";
   const b=$("#qb-"+id);if(b)b.style.width=Math.round(f*100)+"%";
   const r=$("#qr-"+id);if(r)r.classList.toggle("on",f>=1);
   const sc=dayScore(k),big=document.querySelector(".summary .big");if(big)big.innerHTML='<span class="num">'+num(sc.got,1)+'</span> <span class="small muted" style="font-family:var(--f-body)">نقطة من</span> <span class="num">'+num(sc.max,1)+'</span>';
@@ -3696,7 +3927,7 @@ function openLog(g){
 /* ---------- export ---------- */
 function doExport(){
   const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos,nutri:S.nutri,nut:S.nut,
-    chal:S.chal,chalNo:S.chalNo,dfix:S.dfix,cmp:S.cmp,cmpS:S.cmpS,ui:S.ui},null,1);
+    chal:S.chal,chalNo:S.chalNo,dfix:S.dfix,cmp:S.cmp,cmpS:S.cmpS,ui:S.ui,mon:S.mon,monx:S.monx},null,1);
   try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download="daftar-backup-"+todayK()+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}catch(e){}
   S.lastBackup=new Date().toISOString();saveConfig();render();
 }
@@ -3707,6 +3938,7 @@ function settingsHTML(){
       :S.mode==="local"?'<div class="fld"><span class="lbl2">المزامنة</span><span class="small">البيانات محفوظة على هذا الجهاز فقط.</span><div class="row"><button class="btn sm" data-act="syncSetup">إعداد المزامنة</button></div></div>':"")+
     '<div class="fld"><span class="lbl2">المظهر</span><div class="seg2" role="radiogroup" aria-label="الألوان"><label><input type="radio" name="pal" value=""'+(S.ui.pal!=="pink"?" checked":"")+'><span>الألوان الأصلية</span></label><label><input type="radio" name="pal" value="pink"'+(S.ui.pal==="pink"?" checked":"")+'><span>وردي</span></label></div>'+
       '<div class="seg2" role="radiogroup" aria-label="الإضاءة"><label><input type="radio" name="thm" value=""'+(!S.ui.thm?" checked":"")+'><span>حسب الجهاز</span></label><label><input type="radio" name="thm" value="light"'+(S.ui.thm==="light"?" checked":"")+'><span>فاتح</span></label><label><input type="radio" name="thm" value="dark"'+(S.ui.thm==="dark"?" checked":"")+'><span>داكن</span></label></div>'+
+      '<label class="chk"><input type="checkbox" name="uipts"'+(showPts()?" checked":"")+'><span>إظهار نقاط المهام في القوائم</span></label>'+
       '<span class="lbl">يُحفظ مع حسابك فيظهر بنفس الشكل على كل أجهزتك.</span></div>'+
     '<div class="fld"><span class="lbl2">ترتيب الأقسام</span><div class="tord">'+tabOrder().map((t,i,a)=>{const b=$("#tab-"+t);return (i===4?'<div class="tsep">في «المزيد»</div>':"")+'<div class="tor"><span class="tico">'+(b&&b.querySelector("svg")?b.querySelector("svg").outerHTML:"")+'</span><span class="tnm">'+esc(b?b.textContent.trim():t)+'</span><button class="iconbtn sm2" type="button" data-act="tabMv" data-t="'+t+'" data-n="-1" aria-label="للأعلى"'+(i===0?" disabled":"")+'>▲</button><button class="iconbtn sm2" type="button" data-act="tabMv" data-t="'+t+'" data-n="1" aria-label="للأسفل"'+(i===a.length-1?" disabled":"")+'>▼</button></div>'}).join("")+'</div><span class="lbl">أول أربعة تظهر في شريط الهاتف، والباقي في «المزيد». يُحفظ مع حسابك.</span></div>'+
     '<div class="fld"><span class="lbl2">شريط الأقسام على الهاتف</span><div class="seg2" role="radiogroup" aria-label="مكان شريط الأقسام"><label><input type="radio" name="navpos" value=""'+(navTop()?"":" checked")+'><span>أسفل الشاشة</span></label><label><input type="radio" name="navpos" value="top"'+(navTop()?" checked":"")+'><span>أعلى الشاشة</span></label></div><span class="lbl">يُحفظ على هذا الجهاز فقط. على الكمبيوتر الشريط دائماً في الأعلى.</span></div>'+
@@ -3740,13 +3972,15 @@ async function applyImport(o){
   if(isO(o.nut)){const N=NUT(),inc=clone(o.nut);["foods","recipes","meals","units"].forEach(k=>{if(isO(inc[k]))Object.keys(inc[k]).forEach(id=>{if(!N[k][id])N[k][id]=inc[k][id]})});
     if(!nProf()&&inc.prof)["prof","rate","pkg","fpct","tmode","gmet"].forEach(k=>{if(inc[k]!==undefined)N[k]=inc[k]})}
   // challenges, finished weeks, friends and the look: added only when missing here
+  if(isO(o.mon))Object.keys(o.mon).forEach(m=>{if(!monOk(m)||!Array.isArray(o.mon[m]))return;if(!Array.isArray(S.mon[m]))S.mon[m]=[];addById(S.mon[m],o.mon[m].filter(t=>t&&t.id&&typeof t.n==="string"))});
+  if(isO(o.monx))Object.keys(o.monx).forEach(m=>{const v=o.monx[m];if(monOk(m)&&isO(v)&&!S.monx[m])S.monx[m]={r:+v.r>=1&&+v.r<=10?Math.round(+v.r):0,t:String(v.t||"").slice(0,4000)}});
   if(Array.isArray(o.chal))addById(S.chal,o.chal.filter(c=>c&&c.log!==undefined));
   if(Array.isArray(o.chalNo))o.chalNo.map(String).forEach(id=>{if(!S.chalNo.includes(id))S.chalNo.push(id)});
   if(isO(o.dfix)){S.dfix=S.dfix||{};Object.keys(o.dfix).forEach(w=>{if(/^\d{4}-\d{2}-\d{2}$/.test(w)&&isO(o.dfix[w])&&!S.dfix[w])S.dfix[w]=clone(o.dfix[w])})}
   let frAdded=false;
   if(Array.isArray(o.cmp))o.cmp.forEach(c=>{const u=c&&String(c.uid||"");if(!/^[A-Za-z0-9]{20,64}$/.test(u)||(DB&&u===DB.uid)||S.cmp.some(x=>x.uid===u)||S.cmp.length>=4)return;S.cmp.push({uid:u,name:String(c.name||"صديق").slice(0,24)});frAdded=true});
   if(isO(o.cmpS)&&!S.cmpS)S.cmpS={g:o.cmpS.g!==false,gym:!!o.cmpS.gym,st:!!o.cmpS.st};
-  if(isO(o.ui)&&!S.ui.pal&&!S.ui.thm&&!S.ui.tabs){S.ui={pal:o.ui.pal==="pink"?"pink":"",thm:o.ui.thm==="light"||o.ui.thm==="dark"?o.ui.thm:""};if(Array.isArray(o.ui.tabs))S.ui.tabs=o.ui.tabs.map(String);saveUiLocal();applyTheme();applyTabs()}
+  if(isO(o.ui)&&!S.ui.pal&&!S.ui.thm&&!S.ui.tabs){S.ui={pal:o.ui.pal==="pink"?"pink":"",thm:o.ui.thm==="light"||o.ui.thm==="dark"?o.ui.thm:"",pts:!!o.ui.pts};if(Array.isArray(o.ui.tabs))S.ui.tabs=o.ui.tabs.map(String);saveUiLocal();applyTheme();applyTabs()}
   ops.push({path:"app/config",data:cfgDoc()});
   if(isO(o.days))Object.keys(o.days).forEach(k=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(k)||!isO(o.days[k])||S.days[k])return;S.days[k]=Object.assign(clone(o.days[k]),{d:k});ops.push({path:"days/"+k,data:S.days[k]})});
   const addDocs=(inc,mine,col,ok)=>{if(!isO(inc))return;Object.keys(inc).forEach(id=>{if(mine[id]||!isO(inc[id])||(ok&&!ok(inc[id],id)))return;mine[id]=clone(inc[id]);ops.push({path:col+"/"+id,data:mine[id]})})};
@@ -3916,6 +4150,7 @@ document.addEventListener("click",e=>{
     case "cmpCopy":{const u=DB&&DB.uid;if(!u)break;const done=()=>{b.textContent="نُسخ ✓";setTimeout(()=>{if(b.isConnected)b.textContent="نسخ"},2000)};
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done).catch(()=>{const c=card.querySelector("code");if(c){const r=document.createRange();r.selectNodeContents(c);const sl=getSelection();sl.removeAllRanges();sl.addRange(r)}});else done();break}
     case "hkOn":case "hkNew":case "hkOff":case "hkCopy":hkAct(a,b);break;
+    case "monY":case "monGo":case "monComp":case "monTog":case "monTask":case "monEdit":case "monNew":case "monImpGo":case "monTaskDel":case "monDel":case "monPaste":case "monExp":case "monRevDel":monAct(a,b);break;
     case "cmpDel":{const u=b.dataset.u;if(confirmArm[a+u]){S.cmp=S.cmp.filter(c=>c.uid!==u);saveConfig();SH_LAST="";queueShare();watchFriends();delete confirmArm[a+u];refreshSettings();render()}else{confirmArm[a+u]=1;b.textContent="اضغط مرة أخرى";setTimeout(()=>{delete confirmArm[a+u];if(b.isConnected)b.textContent="إزالة"},4000)}break}
     case "nView":S.nu.view=b.dataset.v||"";S.nu.msg="";render(true);window.scrollTo(0,0);break;
     case "nDay":{let k=addD(S.nu.cur,+b.dataset.n);if(k>todayK())k=todayK();S.nu.cur=k;render();break}
@@ -3967,6 +4202,9 @@ document.addEventListener("submit",e=>{
   if(e.target.id==="setup-form"){e.preventDefault();const c=parseCfg($("#su-cfg").value);
     if(!c){S.setupErr="لم أجد apiKey و projectId و appId في النص. انسخ الكتلة كاملة.";render(true);return}
     try{localStorage.setItem("dt-fbcfg",JSON.stringify(c))}catch(er){}location.reload();return}
+  if(e.target.id==="mon-rev"){e.preventDefault();const m=S.mo.sel;if(!monOk(m))return;const fd=new FormData(e.target),r=parseInt(fd.get("r"),10),t=String(fd.get("t")||"").trim().slice(0,4000);
+    if((r>=1&&r<=10)||t)S.monx[m]={r:r>=1&&r<=10?r:0,t:t};else delete S.monx[m];saveMon();lastKeep=0;S.mo.msg=m;render(true);setTimeout(()=>{if(S.mo.msg===m){S.mo.msg="";const el=$("#mon-rev-msg");if(el)el.textContent=""}},3000);return}
+  if(e.target.id==="mon-add"){e.preventDefault();const el=$("#mon-new");if(el&&monAdd(S.mo.sel,el.value)){render(true);const n2=$("#mon-new");if(n2)n2.focus()}return}
   if(e.target.id==="xadd"){e.preventDefault();
     const nm=$("#xa-name"),pt=$("#xa-pts"),err=$("#xa-err"),name=(nm.value||"").trim(),p=pt.value===""?0:Math.round(parseFloat(pt.value)*100)/100;
     if(!name){err.textContent="اكتب اسم المهمة.";err.hidden=false;nm.focus();return}
@@ -4018,10 +4256,13 @@ document.addEventListener("change",e=>{
   if(e.target.name==="basis"&&e.target.closest("#cf-form")){const bx=$("#cf-svbox");if(bx)bx.hidden=e.target.value!=="sv";return}
   if(e.target.name==="cmpadj"){S.cmpV.adj=e.target.value==="1";try{localStorage.setItem("dt-cmpadj",S.cmpV.adj?"1":"0")}catch(er){}render();return}
   if(e.target.name==="navpos"&&e.target.closest("#sheet")){try{localStorage.setItem("dt-navpos",e.target.value)}catch(er){}document.documentElement.classList.toggle("navtop",e.target.value==="top");navH();return}
+  if(e.target.name==="monview"){S.mo.view=e.target.value;render(true);return}
+  if(e.target.name==="uipts"&&e.target.closest("#sheet")){S.ui.pts=e.target.checked;saveUiLocal();saveConfig();render(true);return}
   if((e.target.name==="pal"||e.target.name==="thm")&&e.target.closest("#sheet")){S.ui[e.target.name]=e.target.value;saveUiLocal();applyTheme();saveConfig();return}
+  if(e.target.id==="mon-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const p=monParse(String(r.result||""));MON_IMP=monImportPlan(p);openSheet(monImportHTML(MON_IMP),null)};r.readAsText(f);e.target.value="";return}
   if(e.target.id==="imp-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
     r.onload=()=>{let o=null;try{o=JSON.parse(r.result)}catch(er){}
-      if(!o||typeof o!=="object"||!(o.days||o.habits||o.habitPatch||o.notes||o.gym||o.wos||o.todos||o.goals||o.nutri||o.nut||o.chal||o.dfix)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
+      if(!o||typeof o!=="object"||!(o.days||o.habits||o.habitPatch||o.notes||o.gym||o.wos||o.todos||o.goals||o.nutri||o.nut||o.chal||o.dfix||o.mon||o.monx)){const er=$("#imp-err");if(er){er.textContent="هذا الملف ليس نسخة احتياطية من دفتر التطور.";er.hidden=false}return}
       IMP=o;card.innerHTML=importSummary(o)};r.readAsText(f);return}
   if(e.target.name==="kind"&&e.target.closest("#habit-form")){const bx=$("#hf-qbox");if(bx)bx.hidden=e.target.value!=="q";return}
   if(e.target.name==="fr"&&e.target.closest("#habit-form")){const v=e.target.value;$("#hf-daysbox").hidden=v!=="days";$("#hf-wkbox").hidden=v!=="wk";$("#hf-flbox").hidden=v!=="fl";return}
