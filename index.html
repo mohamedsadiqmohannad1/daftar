@@ -1310,10 +1310,23 @@ const L=v=>'<bdi class="ltr">'+v+'</bdi>'; // keep signed numbers and units in r
 const signed=(v,dp)=>(v>0?"+":"")+num(v,dp);
 
 /* ---------- views ---------- */
+/* ---------- automatic tasks: the day's memory, and the review of last month ---------- */
+// each one gives AUTO_PTS on the day it is done, counted like a finished pending task, so it adds to a day and never lowers it.
+// memory: a day whose "what happened" note is written. review: the day a month's note was first saved (monx[m].at).
+const AUTO_PTS=5;
+const prevMon=m=>{const y=+m.slice(0,4),mo=+m.slice(5,7);return mo===1?(y-1)+"-12":y+"-"+pad(mo-1)};
+const memDone=k=>{const d=S.days[k];return !!(d&&typeof d.note==="string"&&d.note.trim())};
+const revHas=m=>{const x=S.monx&&S.monx[m];return !!(x&&x.t&&String(x.t).trim())};
+function autoOn(k){
+  const o=[];if(memDone(k))o.push({id:"mem",pts:AUTO_PTS});
+  Object.keys(S.monx||{}).forEach(m=>{if(revHas(m)&&S.monx[m].at===k)o.push({id:"rev:"+m,pts:AUTO_PTS})});
+  return o;
+}
 function dayScore(k){
   const s=scoreOf(S.habits,k);let got=s.got,max=s.max;
   const d=S.days[k];((d&&d.x)||[]).forEach(t=>{const p=+t.pts||0;max+=p;if(t.done)got+=p});
   Object.values(S.todos).forEach(t=>{if(t.doneAt===k){const p=+t.pts||0;got+=p;max+=p}});
+  autoOn(k).forEach(t=>{got+=t.pts;max+=t.pts});
   return {got:Math.round(got*10)/10,max:Math.round(max*10)/10};
 }
 function ring(p){
@@ -1465,6 +1478,13 @@ function openTodo(t){
     const c=S.todos[t.id];if(c){c.name=n;c.pts=p;c.doneAt=dr||null;saveTodo(c.id)}closeSheet();render();
   });
 }
+function autoRow(on,name,sub,act,m){return '<div class="xrow"><button class="hrow'+(on?" on":"")+'" data-act="'+act+'"'+(m?' data-m="'+m+'"':"")+' aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+name+'</span><span class="st">'+sub+'</span></span>'+ptsTag(AUTO_PTS)+'</button></div>'}
+function autoPanel(k){
+  const pm=prevMon(k.slice(0,7)),md=memDone(k),rows=[autoRow(md,"تسجيل ذكرى اليوم",md?"كُتبت ذكرى هذا اليوم":"اكتب ماذا حدث في هذا اليوم في قسم الذكريات","toMem","")];
+  if(!revHas(pm))rows.push(autoRow(false,"تسجيل شنو صار في شهر <bdi>"+monLbl(pm)+"</bdi>","اكتبه في قسم الشهر، في خانة تقييم الشهر","autoRev",pm));
+  Object.keys(S.monx||{}).sort().forEach(m=>{if(revHas(m)&&S.monx[m].at===k)rows.push(autoRow(true,"تسجيل شنو صار في شهر <bdi>"+monLbl(m)+"</bdi>","سُجّل في هذا اليوم","autoRev",m))});
+  return '<section class="sec"><div class="sec-h"><h2>مهام تلقائية</h2><span class="lbl">تُنجز وحدها عند الكتابة</span></div><div class="hlist">'+rows.join("")+'</div></section>';
+}
 function todoPanel(k){
   const all=Object.values(S.todos),byC=(a,b)=>(a.created||"")<(b.created||"")?-1:1;
   const pend=all.filter(t=>!t.doneAt).sort(byC),here=all.filter(t=>t.doneAt===k).sort(byC),older=all.filter(t=>t.doneAt&&t.doneAt!==k).sort((a,b)=>a.doneAt<b.doneAt?1:-1);
@@ -1514,7 +1534,7 @@ function vToday(){
     main=summary+ms+'<section class="sec"><div class="sec-h" style="flex-wrap:wrap"><h2>المهام الثابتة</h2><div class="row" style="gap:16px"><button class="chip-link" data-act="hideDone" aria-pressed="'+HIDE_DONE+'">'+(HIDE_DONE?"إظهار المنجز"+(nHidden?" ("+nHidden+")":""):"إخفاء المنجز")+'</button><button class="chip-link" data-act="newGroup">مجموعة جديدة</button><button class="chip-link" data-act="newHabit">مهمة ثابتة</button></div></div><div class="tl">'+blocks+'</div>'+
       (anyOff&&!off?'<p class="lbl" style="margin:0">المهام الباهتة غير مجدولة لهذا اليوم، ونقاطها تُضاف إن أنجزتها.</p>':"")+'<p class="lbl mob-only" style="margin:0">لتعديل مهمة أو حذفها اضغط عليها ضغطة مطوّلة. المجموعة المكتملة تنطوي، واضغط اسمها لفتحها.</p></section>';
   }
-  const side=todoPanel(k)+actHTML(k);
+  const side=autoPanel(k)+todoPanel(k)+actHTML(k);
   return head+'<div class="tg"><div class="tg-main">'+main+'</div><div class="tg-side">'+side+'</div></div>';
 }
 function heat(h){
@@ -1751,7 +1771,7 @@ function memEditorHTML(){
     '<div class="row"><input id="me-num" class="keep ltr numin" type="number" min="-100" max="100" step="1" inputmode="numeric" placeholder="من -100 إلى 100" value="'+(Number.isFinite(v)?Math.round(v):"")+'" aria-label="قيمة المزاج بالأرقام">'+
       '<button class="btn sm" data-act="memClearVal"'+(Number.isFinite(v)?"":" hidden")+'>مسح القيمة</button></div>'+
     '<div class="fld"><label for="me-note">ماذا حدث في هذا اليوم؟</label><textarea id="me-note" class="keep" rows="7" placeholder="اكتب ما تريد تذكّره عن هذا اليوم">'+esc(d.note||"")+'</textarea></div>'+
-    '<div class="row" style="justify-content:space-between"><span class="lbl">يُحفظ تلقائياً أثناء الكتابة</span>'+'<button class="btn sm danger" data-act="memDel"'+((Number.isFinite(v)||d.note)?"":" hidden")+'>حذف ذكرى هذا اليوم</button></div>'+
+    '<div class="row" style="justify-content:space-between"><span class="lbl">يُحفظ تلقائياً أثناء الكتابة، وكتابة ذكرى اليوم تضيف '+AUTO_PTS+' نقاط لهذا اليوم</span>'+'<button class="btn sm danger" data-act="memDel"'+((Number.isFinite(v)||d.note)?"":" hidden")+'>حذف ذكرى هذا اليوم</button></div>'+
   '</section>';
 }
 function vMem(){
@@ -3038,6 +3058,7 @@ function fairDayLive(k){
   S.habits.forEach(h=>{if(!activeOn(h,k))return;if(typeof isFl==="function"&&isFl(h,k)){tp+=Math.min(PT_CAP,hPts(h,k))*frac(h,k);return}if(!isSched(h,k))return;max+=hPts(h,k);got+=earned(h,k);n++});
   if(!(max>0))return null;
   Object.values(S.todos).forEach(t=>{if(t.doneAt===k)tp+=Math.min(PT_CAP,+t.pts||0)});
+  autoOn(k).forEach(t=>{tp+=Math.min(PT_CAP,t.pts)});
   const tc=Math.min(tp,max*TODO_CAP);got+=tc;max+=tc;
   return {p:Math.min(100,Math.round(got/max*1000)/10),n:n,m:Math.round(max*10)/10,t:Math.round(tc*10)/10};
 }
@@ -3492,7 +3513,7 @@ function vMonth(){
     (dn.length?'<button class="chip-link mon-ct" data-act="monComp" aria-expanded="'+!!S.mo.comp+'">'+(S.mo.comp?"إخفاء":"عرض")+' المكتملة <span class="num">'+dn.length+'</span></button>'+(S.mo.comp?'<div class="mon-list">'+dn.map(t=>monRow(sel,t)).join("")+'</div>':""):"")+
     '<form id="mon-rev" class="f mon-rev" autocomplete="off"><span class="lbl2">تقييم الشهر</span>'+
       '<div class="mon-rate" role="radiogroup" aria-label="التقييم من 10">'+[1,2,3,4,5,6,7,8,9,10].map(v=>'<label><input type="radio" name="r" value="'+v+'"'+(+x.r===v?" checked":"")+'><span class="num">'+v+'</span></label>').join("")+'</div>'+
-      '<label class="lbl" for="mon-note">شنو صار هذا الشهر</label><textarea id="mon-note" name="t" class="keep" rows="4" maxlength="4000" dir="auto" placeholder="اكتب ما حدث، وما تعلمته، وما تريد تغييره.">'+esc(x.t||"")+'</textarea>'+
+      '<label class="lbl" for="mon-note">شنو صار هذا الشهر <span class="lbl">(كتابته تضيف '+AUTO_PTS+' نقاط لليوم الذي تكتبه فيه، مرة واحدة لكل شهر)</span></label><textarea id="mon-note" name="t" class="keep" rows="4" maxlength="4000" dir="auto" placeholder="اكتب ما حدث، وما تعلمته، وما تريد تغييره.">'+esc(x.t||"")+'</textarea>'+
       '<div class="row"><button class="btn pri sm" type="submit">حفظ التقييم</button>'+(x.r||x.t?'<button class="chip-link" type="button" data-act="monRevDel" data-m="'+sel+'">مسح التقييم</button>':"")+'<span class="lbl" id="mon-rev-msg">'+(S.mo.msg===sel?"حُفظ":"")+'</span></div></form>'+
     '</section></div>';
   return s;
@@ -3542,13 +3563,22 @@ function monCmpHTML(){
   const yrs={};rows.forEach(r=>{const y=r[2].slice(0,4);(yrs[y]=yrs[y]||[]).push(r[1])});
   const last=rows.slice(0,12).reverse();
   let s='<section class="panel sec" style="display:flex;flex-direction:column;gap:10px"><div class="sec-h"><h2>الأشهر</h2><span class="lbl">آخر '+last.length+' أشهر</span></div>'+
-    (last.some(r=>Number.isFinite(r[1].pct))?'<span class="lbl2">متوسط الإنجاز اليومي</span>'+chart(W=>barChart({w:W,h:170,vals:last.map(r=>({v:Number.isFinite(r[1].pct)?r[1].pct/100:NaN,label:(+r[2].slice(5,7))+"/"+r[2].slice(2,4),cur:r[2]===cur})),label:"متوسط الإنجاز لكل شهر"})):"")+
-    (last.some(r=>Number.isFinite(r[1].mood))?'<span class="lbl2">متوسط المزاج</span>'+chart(W=>barChart({w:W,h:150,vals:last.map(r=>({v:Number.isFinite(r[1].mood)?(r[1].mood+100)/200:NaN,label:(+r[2].slice(5,7))+"/"+r[2].slice(2,4),cur:r[2]===cur})),yLab:v=>signed(Math.round(v*200-100),0),label:"متوسط المزاج لكل شهر"})):"")+
+    monLine(last,r=>r.pct,"متوسط الإنجاز اليومي",{y0:0,y1:100,ticks:[[0,"0%"],[50,"50%"],[100,"100%"]]})+
+    monLine(last,r=>r.got,"النقاط المنجزة",{y0:0})+
+    monLine(last,r=>r.mood,"متوسط المزاج",{y0:-100,y1:100,ticks:[[-100,"−100"],[0,"0"],[100,"+100"]],zero:true})+
     monTable("الشهر",rows)+'</section>';
   const ys=Object.keys(yrs).sort().reverse();
   s+='<section class="panel sec" style="display:flex;flex-direction:column;gap:10px"><div class="sec-h"><h2>السنوات</h2></div>'+monTable("السنة",ys.map(y=>[y,monYear(yrs[y]),""]))+
     '<p class="lbl" style="margin:0">الإنجاز: متوسط نسبة النقاط المنجزة من نقاط اليوم، للأيام المنتهية غير المعذورة. النقاط: مجموع ما أنجزته من المهام الثابتة والمعلّقة. ثابتة: عدد مرات إكمال مهمة ثابتة. معلّقة: المعلّقة التي أُنجزت في الشهر. المزاج: متوسط مزاجك المسجل، من −100 إلى +100. السنة تُحسب بوزن عدد الأيام. الأعلى في كل عمود مُعلَّم.</p></section>';
   return s;
+}
+function monLine(rows,f,title,o){ // one point per month, oldest on the left; a month without a value breaks the line
+  const pts=[];rows.forEach((r,i)=>{const v=f(r[1]);if(Number.isFinite(v))pts.push([i,v])});if(!pts.length)return "";
+  const n=rows.length,lab=i=>(+rows[i][2].slice(5,7))+"/"+rows[i][2].slice(2,4),vs=pts.map(p=>p[1]);
+  let mn=o.y0!=null?Math.min(o.y0,...vs):Math.min(...vs),mx=o.y1!=null?Math.max(o.y1,...vs):Math.max(...vs);if(mx===mn)mx=mn+1;
+  const h=Math.floor((n-1)/2),xt=n===1?[[0,lab(0)]]:n===2?[[0,lab(0)],[1,lab(1)]]:[[0,lab(0)],[h,lab(h)],[n-1,lab(n-1)]];
+  return '<span class="lbl2">'+title+'</span>'+chart(W=>lineChart({w:W,h:160,xMin:0,xMax:Math.max(1,n-1),yMin:mn,yMax:mx,gap:1,series:[{pts:pts,cls:"a"}],
+    hlines:o.zero?[{y:0,cls:"faint"}]:[],yTicks:o.ticks||niceTicks(mn,mx),xTicks:xt,label:title+" لكل شهر"}));
 }
 function openMonPaste(){
   const sel=monSel()||monKey(new Date());
@@ -3562,8 +3592,8 @@ function openMonPaste(){
 }
 function monExport(){ // the same text format the import reads, with the review of each month
   const ks=Array.from(new Set(monList().concat(Object.keys(S.monx||{}).filter(monOk)))).sort().reverse();
-  let s="// أشهر دفتر التطور، صُدّرت "+todayK()+"\n// # الشهر، ثم @تقييم و @ملاحظة إن وُجدا، ثم المهام. [x] = مكتملة.\n";
-  ks.forEach(m=>{const x=S.monx[m]||{};s+="\n# "+(+m.slice(5,7))+"/"+m.slice(0,4)+"\n";if(+x.r>0)s+="@تقييم "+x.r+"\n";
+  let s="// أشهر دفتر التطور، صُدّرت "+todayK()+"\n// # الشهر، ثم @تقييم و @سُجّل (يوم كتابة المراجعة) و @ملاحظة إن وُجدت، ثم المهام. [x] = مكتملة.\n";
+  ks.forEach(m=>{const x=S.monx[m]||{};s+="\n# "+(+m.slice(5,7))+"/"+m.slice(0,4)+"\n";if(+x.r>0)s+="@تقييم "+x.r+"\n";if(x.at&&x.t)s+="@سُجّل "+x.at+"\n";
     if(x.t)String(x.t).split(/\r?\n/).forEach(l=>{s+="@ملاحظة "+l+"\n"});monTasks(m).forEach(t=>{s+=(t.done?"[x] ":"")+t.n.replace(/\r?\n/g," ")+"\n"})});
   try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([s],{type:"text/plain;charset=utf-8"}));a.download="daftar-months-"+todayK()+".txt";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}catch(e){}
 }
@@ -3606,11 +3636,12 @@ function monParse(txt){ // -> {t: {month: [{n, done}]}, x: {month: {r, t}}}
   if(o&&typeof o==="object"&&!Array.isArray(o)){const src=o.mon&&typeof o.mon==="object"?o.mon:o;
     Object.keys(src).forEach(m=>{const k=monNorm(m);if(!k||!Array.isArray(src[m]))return;
       out.t[k]=src[m].map(t=>typeof t==="string"?{n:t.trim(),done:0}:{n:String(t&&t.n||"").trim(),done:t&&t.done?1:0}).filter(t=>t.n)});
-    if(o.monx&&typeof o.monx==="object")Object.keys(o.monx).forEach(m=>{const k=monNorm(m),v=o.monx[m];if(k&&v&&typeof v==="object")out.x[k]={r:+v.r>=1&&+v.r<=10?Math.round(+v.r):0,t:String(v.t||"").slice(0,4000)}});
+    if(o.monx&&typeof o.monx==="object")Object.keys(o.monx).forEach(m=>{const k=monNorm(m),v=o.monx[m];if(k&&v&&typeof v==="object")out.x[k]={r:+v.r>=1&&+v.r<=10?Math.round(+v.r):0,t:String(v.t||"").slice(0,4000),at:/^\d{4}-\d{2}-\d{2}$/.test(v.at||"")?v.at:""}});
     return out}
   let cur=null;String(txt||"").split(/\r?\n/).forEach(line=>{const l=line.trim();if(!l||l.startsWith("//"))return;
     if(l.startsWith("#")){const k=monNorm(l.replace(/^#+/,""));if(k){cur=k;out.t[k]=out.t[k]||[]}return}
     if(!cur)return;
+    const av=l.match(/^@سُجّل\s*(\d{4}-\d{2}-\d{2})/);if(av){(out.x[cur]=out.x[cur]||{r:0,t:""}).at=av[1];return}
     const rv=l.match(/^@تقييم\s*(\d+)/);if(rv){const r=+rv[1];if(r>=1&&r<=10)(out.x[cur]=out.x[cur]||{r:0,t:""}).r=r;return}
     const nv=line.match(/^\s*@ملاحظة ?(.*)$/);if(nv){const x=out.x[cur]=out.x[cur]||{r:0,t:""};x.t=(x.t?x.t+"\n":"")+nv[1];return}
     let n=l.replace(/^([-*•●▪■□☐☑✓✔]|\d+[.)])\s*/,""),done=0;const x=n.match(/^\[(x|X|\s)\]\s*/);if(x){done=x[1].toLowerCase()==="x"?1:0;n=n.slice(x[0].length)}
@@ -3630,7 +3661,7 @@ function monImportHTML(plan){
     '<p class="lbl" style="margin:0">يُضاف ما ليس عندك فقط. المهمة الموجودة بنفس النص في نفس الشهر لا تتكرر، وتقييم الشهر لا يُستبدل.</p>'+
     '<div class="row">'+(any?'<button class="btn pri" data-act="monImpGo">استيراد</button>':"")+'<button class="btn" data-act="closeSheet">إغلاق</button></div></div>';
 }
-function monImportApply(plan){plan.forEach(x=>{if(!Array.isArray(S.mon[x.m]))S.mon[x.m]=[];x.add.forEach(t=>S.mon[x.m].push({id:uid(),n:t.n,done:t.done?1:0}));if(x.x)S.monx[x.m]={r:x.x.r||0,t:x.x.t||""}});
+function monImportApply(plan){plan.forEach(x=>{if(!Array.isArray(S.mon[x.m]))S.mon[x.m]=[];x.add.forEach(t=>S.mon[x.m].push({id:uid(),n:t.n,done:t.done?1:0}));if(x.x){S.monx[x.m]={r:x.x.r||0,t:x.x.t||""};if(x.x.at&&x.x.t)S.monx[x.m].at=x.x.at}});
   if(plan.length){const top=plan[0].m;S.mo.sel=S.mo.sel&&S.mon[S.mo.sel]?S.mo.sel:top;S.mo.open[top.slice(0,4)]=true;S.mo.view=""}saveMon()}
 function monAct(a,b){
   const m=b.dataset.m,id=b.dataset.id;
@@ -3980,7 +4011,7 @@ async function applyImport(o){
     if(!nProf()&&inc.prof)["prof","rate","pkg","fpct","tmode","gmet"].forEach(k=>{if(inc[k]!==undefined)N[k]=inc[k]})}
   // challenges, finished weeks, friends and the look: added only when missing here
   if(isO(o.mon))Object.keys(o.mon).forEach(m=>{if(!monOk(m)||!Array.isArray(o.mon[m]))return;if(!Array.isArray(S.mon[m]))S.mon[m]=[];addById(S.mon[m],o.mon[m].filter(t=>t&&t.id&&typeof t.n==="string"))});
-  if(isO(o.monx))Object.keys(o.monx).forEach(m=>{const v=o.monx[m];if(monOk(m)&&isO(v)&&!S.monx[m])S.monx[m]={r:+v.r>=1&&+v.r<=10?Math.round(+v.r):0,t:String(v.t||"").slice(0,4000)}});
+  if(isO(o.monx))Object.keys(o.monx).forEach(m=>{const v=o.monx[m];if(monOk(m)&&isO(v)&&!S.monx[m]){S.monx[m]={r:+v.r>=1&&+v.r<=10?Math.round(+v.r):0,t:String(v.t||"").slice(0,4000)};if(/^\d{4}-\d{2}-\d{2}$/.test(v.at||"")&&S.monx[m].t)S.monx[m].at=v.at}});
   if(Array.isArray(o.chal))addById(S.chal,o.chal.filter(c=>c&&c.log!==undefined));
   if(Array.isArray(o.chalNo))o.chalNo.map(String).forEach(id=>{if(!S.chalNo.includes(id))S.chalNo.push(id)});
   if(isO(o.dfix)){S.dfix=S.dfix||{};Object.keys(o.dfix).forEach(w=>{if(/^\d{4}-\d{2}-\d{2}$/.test(w)&&isO(o.dfix[w])&&!S.dfix[w])S.dfix[w]=clone(o.dfix[w])})}
@@ -4142,6 +4173,7 @@ document.addEventListener("click",e=>{
     case "wall":S.wt.all=!S.wt.all;render();break;
     case "wpick":S.wt.sel=b.dataset.k;S.wt.msg="";render();break;
     case "wdel":{const k=b.dataset.k;if(confirmArm[a+k]){const d=ensureDay(k);delete d.w;saveDay(k);delete confirmArm[a+k];render()}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف قراءة هذا اليوم"},4000)}break}
+    case "autoRev":{const m=b.dataset.m;if(!monOk(m))break;if(!Array.isArray(S.mon[m])){S.mon[m]=[];saveMon()}S.mo.sel=m;S.mo.view="";S.mo.open[m.slice(0,4)]=true;S.tab="month";try{localStorage.setItem("dt-tab",S.tab)}catch(er){}render(true);setTimeout(()=>{const el=$("#mon-note");if(el){el.scrollIntoView({block:"center"});el.focus()}},60);break}
     case "toMem":S.mem.sel=S.cur;if(S.cur<memRangeStart())S.mem.range="all";S.tab="memories";try{localStorage.setItem("dt-tab",S.tab)}catch(er){}render(true);window.scrollTo(0,0);break;
     case "memRange":S.mem.range=b.dataset.r;render(true);break;
     case "memPick":{const k=b.dataset.k;const out=k<memRangeStart();S.mem.sel=k;if(out){S.mem.range="all";render(true)}else refreshMemEditor();const ed=$("#mem-ed");if(ed)ed.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});break}
@@ -4210,7 +4242,8 @@ document.addEventListener("submit",e=>{
     if(!c){S.setupErr="لم أجد apiKey و projectId و appId في النص. انسخ الكتلة كاملة.";render(true);return}
     try{localStorage.setItem("dt-fbcfg",JSON.stringify(c))}catch(er){}location.reload();return}
   if(e.target.id==="mon-rev"){e.preventDefault();const m=S.mo.sel;if(!monOk(m))return;const fd=new FormData(e.target),r=parseInt(fd.get("r"),10),t=String(fd.get("t")||"").trim().slice(0,4000);
-    if((r>=1&&r<=10)||t)S.monx[m]={r:r>=1&&r<=10?r:0,t:t};else delete S.monx[m];saveMon();lastKeep=0;S.mo.msg=m;render(true);setTimeout(()=>{if(S.mo.msg===m){S.mo.msg="";const el=$("#mon-rev-msg");if(el)el.textContent=""}},3000);return}
+    const old=S.monx[m],at=t?(old&&old.at&&old.t?old.at:todayK()):"";
+    if((r>=1&&r<=10)||t){S.monx[m]={r:r>=1&&r<=10?r:0,t:t};if(at)S.monx[m].at=at}else delete S.monx[m];saveMon();lastKeep=0;S.mo.msg=m;render(true);setTimeout(()=>{if(S.mo.msg===m){S.mo.msg="";const el=$("#mon-rev-msg");if(el)el.textContent=""}},3000);return}
   if(e.target.id==="mon-add"){e.preventDefault();const el=$("#mon-new");if(el&&monAdd(S.mo.sel,el.value)){render(true);const n2=$("#mon-new");if(n2)n2.focus()}return}
   if(e.target.id==="xadd"){e.preventDefault();
     const nm=$("#xa-name"),pt=$("#xa-pts"),err=$("#xa-err"),name=(nm.value||"").trim(),p=pt.value===""?0:Math.round(parseFloat(pt.value)*100)/100;
