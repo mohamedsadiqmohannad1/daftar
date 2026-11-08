@@ -220,6 +220,8 @@ h3 .pts{vertical-align:middle;margin-inline-start:4px}
 .xrow{display:flex;gap:6px;align-items:stretch}
 .xrow .hrow{flex:1;min-width:0}
 .xrow .xdel{height:auto;align-self:stretch;width:44px;font-size:18px;color:var(--muted)}
+.xrow .adel{height:auto;align-self:stretch;width:44px;color:var(--muted)}
+.xrow .adel.armed{color:var(--bad,#c0392b);border-color:currentColor}
 .xrow .xdel svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8}
 .xadd{display:flex;flex-direction:column;gap:10px}
 .xadd input,.wform input:not(.datein){border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px;width:100%;box-sizing:border-box}
@@ -905,7 +907,8 @@ const ICON={
   prev:'<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>',
   next:'<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>',
   check:'<svg viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></svg>',
-  edit:'<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>'
+  edit:'<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>'
 };
 
 /* ---------- state ---------- */
@@ -986,12 +989,12 @@ window.addEventListener("pagehide",flushAll);
 let localTimer=null;
 function persistLocal(){
   clearTimeout(localTimer);
-  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos,nutri:S.nutri,nut:S.nut,ui:S.ui,mon:S.mon,monx:S.monx}))}catch(e){}},250);
+  localTimer=setTimeout(()=>{try{localStorage.setItem("dt-data",JSON.stringify({habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,lastBackup:S.lastBackup,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos,nutri:S.nutri,nut:S.nut,ui:S.ui,mon:S.mon,monx:S.monx,auto:S.auto}))}catch(e){}},250);
 }
 function loadLocal(){
-  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.ggroups=o.ggroups||[];S.todos=o.todos||{};S.gym=o.gym&&Array.isArray(o.gym.groups)?o.gym:{groups:[],rest:90};S.wos=o.wos||{};S.nutri=o.nutri||{};S.nut=o.nut||null;S.mon=o.mon&&typeof o.mon==="object"?o.mon:{};S.monx=o.monx&&typeof o.monx==="object"?o.monx:{};if(o.ui){S.ui=o.ui;applyTheme()}}}catch(e){}
+  try{const raw=localStorage.getItem("dt-data");if(raw){const o=JSON.parse(raw);S.habits=o.habits||[];S.groups=o.groups||[];S.days=o.days||{};S.goals=o.goals||{};S.notes=o.notes||{};S.wgoal=o.wgoal||null;S.lastBackup=o.lastBackup||null;S.ngroups=o.ngroups||[];S.ggroups=o.ggroups||[];S.todos=o.todos||{};S.gym=o.gym&&Array.isArray(o.gym.groups)?o.gym:{groups:[],rest:90};S.wos=o.wos||{};S.nutri=o.nutri||{};S.nut=o.nut||null;S.mon=o.mon&&typeof o.mon==="object"?o.mon:{};S.monx=o.monx&&typeof o.monx==="object"?o.monx:{};S.auto=o.auto&&typeof o.auto==="object"?o.auto:{};if(o.ui){S.ui=o.ui;applyTheme()}}}catch(e){}
 }
-const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.cmp&&S.cmp.length)o.cmp=S.cmp;if(S.cmpS)o.cmpS=S.cmpS;if(S.chal&&S.chal.length)o.chal=S.chal;if(S.dfix&&Object.keys(S.dfix).length)o.dfix=S.dfix;if(S.mon&&Object.keys(S.mon).length)o.mon=S.mon;if(S.monx&&Object.keys(S.monx).length)o.monx=S.monx;if(S.chalNo&&S.chalNo.length)o.chalNo=S.chalNo.slice(-200);if(S.ui&&(S.ui.pal||S.ui.thm||S.ui.tabs||S.ui.pts===false))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
+const cfgDoc=()=>{const o={habits:S.habits,groups:S.groups,v:2};if(S.ngroups.length)o.ngroups=S.ngroups;if(S.ggroups.length)o.ggroups=S.ggroups;if(S.gym.groups.length||S.gym.rest!==90)o.gym=S.gym;if(+S.wgoal>0)o.wgoal=+S.wgoal;if(S.lastBackup)o.lastBackup=S.lastBackup;if(S.nut)o.nut=S.nut;if(S.cmp&&S.cmp.length)o.cmp=S.cmp;if(S.cmpS)o.cmpS=S.cmpS;if(S.chal&&S.chal.length)o.chal=S.chal;if(S.dfix&&Object.keys(S.dfix).length)o.dfix=S.dfix;if(S.mon&&Object.keys(S.mon).length)o.mon=S.mon;if(S.auto&&Object.keys(S.auto).length)o.auto=S.auto;if(S.monx&&Object.keys(S.monx).length)o.monx=S.monx;if(S.chalNo&&S.chalNo.length)o.chalNo=S.chalNo.slice(-200);if(S.ui&&(S.ui.pal||S.ui.thm||S.ui.tabs||S.ui.pts===false))o.ui=S.ui;return JSON.parse(JSON.stringify(o))};
 const saveConfig=()=>queueWrite("app/config",cfgDoc());
 const saveNote=id=>queueWrite("notes/"+id,S.notes[id]||null);
 const saveTodoX=0;const saveTodo=id=>queueWrite("todos/"+id,S.todos[id]||null);
@@ -1045,7 +1048,7 @@ function startDB(db){
   const onErr=e=>{if(S.mode==="loading")S.mode="db";showBanner(e&&e.code==="permission-denied"?"قاعدة البيانات رفضت الوصول. تحقق من قواعد الأمان في الخطوة الثالثة من الإعداد.":"انقطع الاتصال بقاعدة البيانات. أعد فتح الصفحة.");setSync()};
   unsubs.push(DB.doc("app/config").onSnapshot(snap=>{
     const j=snap.exists?stab(snap.data()):"";if(got.c&&j===cfgJ){syncMark("c",snap.fromCache);return}
-    if(!isDirty("app/config")){cfgJ=j;const d=snap.exists?snap.data():null;seenDoc("app/config",d);S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.dfix=d&&d.dfix&&typeof d.dfix==="object"?JSON.parse(JSON.stringify(d.dfix)):{};S.mon=d&&d.mon&&typeof d.mon==="object"&&!Array.isArray(d.mon)?JSON.parse(JSON.stringify(d.mon)):{};S.monx=d&&d.monx&&typeof d.monx==="object"&&!Array.isArray(d.monx)?JSON.parse(JSON.stringify(d.monx)):{};S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||"",pts:d.ui.pts!==false};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
+    if(!isDirty("app/config")){cfgJ=j;const d=snap.exists?snap.data():null;seenDoc("app/config",d);S.habits=d&&Array.isArray(d.habits)?JSON.parse(JSON.stringify(d.habits)):[];S.groups=d&&Array.isArray(d.groups)?JSON.parse(JSON.stringify(d.groups)):[];S.wgoal=d&&+d.wgoal>0?+d.wgoal:null;S.lastBackup=d&&d.lastBackup||null;S.ngroups=d&&Array.isArray(d.ngroups)?JSON.parse(JSON.stringify(d.ngroups)):[];S.ggroups=d&&Array.isArray(d.ggroups)?JSON.parse(JSON.stringify(d.ggroups)):[];S.gym=d&&d.gym&&Array.isArray(d.gym.groups)?JSON.parse(JSON.stringify(d.gym)):{groups:[],rest:90};if(!(+S.gym.rest>0))S.gym.rest=90;S.nut=d&&d.nut&&typeof d.nut==="object"?JSON.parse(JSON.stringify(d.nut)):null;S.cmp=d&&Array.isArray(d.cmp)?d.cmp.filter(c=>c&&c.uid).map(c=>({uid:String(c.uid),name:String(c.name||"صديق")})):[];S.dfix=d&&d.dfix&&typeof d.dfix==="object"?JSON.parse(JSON.stringify(d.dfix)):{};S.mon=d&&d.mon&&typeof d.mon==="object"&&!Array.isArray(d.mon)?JSON.parse(JSON.stringify(d.mon)):{};S.monx=d&&d.monx&&typeof d.monx==="object"&&!Array.isArray(d.monx)?JSON.parse(JSON.stringify(d.monx)):{};S.auto=d&&d.auto&&typeof d.auto==="object"?{...(/^\d{4}-\d{2}-\d{2}$/.test(d.auto.mem||"")?{mem:d.auto.mem}:{}),...(/^\d{4}-\d{2}-\d{2}$/.test(d.auto.rev||"")?{rev:d.auto.rev}:{})}:{};S.chal=d&&Array.isArray(d.chal)?d.chal.filter(c=>c&&c.id&&c.log!==undefined).map(c=>JSON.parse(JSON.stringify(c))):[];S.chalNo=d&&Array.isArray(d.chalNo)?d.chalNo.map(String):[];S.cmpS=d&&d.cmpS&&typeof d.cmpS==="object"?{g:d.cmpS.g!==false,gym:!!d.cmpS.gym,st:!!d.cmpS.st}:null;setTimeout(()=>{watchFriends();watchHK()},0);if(d&&d.ui&&typeof d.ui==="object"){S.ui={pal:d.ui.pal||"",thm:d.ui.thm||"",pts:d.ui.pts!==false};if(Array.isArray(d.ui.tabs))S.ui.tabs=d.ui.tabs.map(String);applyTabs();saveUiLocal();applyTheme()}}
     got.c=true;ready();syncMark("c",snap.fromCache);
   },onErr));
   unsubs.push(DB.collection("days").orderBy("d","desc").limit(1000).onSnapshot(snap=>{
@@ -1091,7 +1094,7 @@ function startDB(db){
     S.notes=nn;got.n=true;ready();syncMark("n",snap.fromCache);
   },onErr));
 }
-function resetState(){BASE.clear();LIVE={};SRV_ONCE=false;S.dfix={};S.mon={};S.monx={};S.chal=[];S.chalNo=[];stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
+function resetState(){BASE.clear();LIVE={};SRV_ONCE=false;S.dfix={};S.mon={};S.monx={};S.auto={};S.chal=[];S.chalNo=[];stopFriends();stopHK();S.cmp=[];SH_LAST="";S.nutri={};S.nut=null;S.gym={groups:[],rest:90};S.wos={};S.ngroups=[];S.ggroups=[];S.todos={};S.wgoal=null;S.lastBackup=null;S.habits=[];S.groups=[];S.days={};S.goals={};S.notes={};dirty.clear();pendingN=0}
 
 async function init(){
   if(window.__MOCKDB){userEmail="test@example.com";startDB(window.__MOCKDB);return}
@@ -1314,12 +1317,14 @@ const signed=(v,dp)=>(v>0?"+":"")+num(v,dp);
 // each one gives AUTO_PTS on the day it is done, counted like a finished pending task, so it adds to a day and never lowers it.
 // memory: a day whose "what happened" note is written. review: the day a month's note was first saved (monx[m].at).
 const AUTO_PTS=5;
+// S.auto = {mem: day, rev: day}: that kind was switched off from that day on (earlier days keep their points)
+S.auto={};const autoOff=(t,k)=>!!(S.auto&&S.auto[t]&&k>=S.auto[t]);
 const prevMon=m=>{const y=+m.slice(0,4),mo=+m.slice(5,7);return mo===1?(y-1)+"-12":y+"-"+pad(mo-1)};
 const memDone=k=>{const d=S.days[k];return !!(d&&typeof d.note==="string"&&d.note.trim())};
 const revHas=m=>{const x=S.monx&&S.monx[m];return !!(x&&x.t&&String(x.t).trim())};
 function autoOn(k){
-  const o=[];if(memDone(k))o.push({id:"mem",pts:AUTO_PTS});
-  Object.keys(S.monx||{}).forEach(m=>{if(revHas(m)&&S.monx[m].at===k)o.push({id:"rev:"+m,pts:AUTO_PTS})});
+  const o=[];if(memDone(k)&&!autoOff("mem",k))o.push({id:"mem",pts:AUTO_PTS});
+  if(!autoOff("rev",k))Object.keys(S.monx||{}).forEach(m=>{if(revHas(m)&&S.monx[m].at===k)o.push({id:"rev:"+m,pts:AUTO_PTS})});
   return o;
 }
 function dayScore(k){
@@ -1478,11 +1483,17 @@ function openTodo(t){
     const c=S.todos[t.id];if(c){c.name=n;c.pts=p;c.doneAt=dr||null;saveTodo(c.id)}closeSheet();render();
   });
 }
-function autoRow(on,name,sub,act,m){return '<div class="xrow"><button class="hrow'+(on?" on":"")+'" data-act="'+act+'"'+(m?' data-m="'+m+'"':"")+' aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+name+'</span><span class="st">'+sub+'</span></span>'+ptsTag(AUTO_PTS)+'</button></div>'}
+function autoRow(on,name,sub,act,m,t){return '<div class="xrow"><button class="hrow'+(on?" on":"")+'" data-act="'+act+'"'+(m?' data-m="'+m+'"':"")+' aria-pressed="'+on+'"><span class="box">'+ICON.check+'</span><span class="nmw"><span class="nm">'+name+'</span><span class="st">'+sub+'</span></span>'+ptsTag(AUTO_PTS)+'</button>'+
+  '<button class="iconbtn adel" data-act="autoDel" data-t="'+t+'" aria-label="حذف هذه المهمة التلقائية">'+ICON.x+'</button></div>'}
 function autoPanel(k){
-  const pm=prevMon(k.slice(0,7)),md=memDone(k),rows=[autoRow(md,"تسجيل ذكرى اليوم",md?"كُتبت ذكرى هذا اليوم":"اكتب ماذا حدث في هذا اليوم في قسم الذكريات","toMem","")];
-  if(!revHas(pm))rows.push(autoRow(false,"تسجيل شنو صار في شهر <bdi>"+monLbl(pm)+"</bdi>","اكتبه في قسم الشهر، في خانة تقييم الشهر","autoRev",pm));
-  Object.keys(S.monx||{}).sort().forEach(m=>{if(revHas(m)&&S.monx[m].at===k)rows.push(autoRow(true,"تسجيل شنو صار في شهر <bdi>"+monLbl(m)+"</bdi>","سُجّل في هذا اليوم","autoRev",m))});
+  // the month task is the review of the month the day is in: it shows from the 1st until that month's note is written
+  const m=k.slice(0,7),md=memDone(k),rows=[];
+  if(!autoOff("mem",k))rows.push(autoRow(md,"تسجيل ذكرى اليوم",md?"كُتبت ذكرى هذا اليوم":"اكتب ماذا حدث في هذا اليوم في قسم الذكريات","toMem","","mem"));
+  if(!autoOff("rev",k)){
+    if(!revHas(m))rows.push(autoRow(false,"تسجيل شنو صار في شهر <bdi>"+monLbl(m)+"</bdi>","اكتبه في قسم الشهر، في خانة تقييم الشهر","autoRev",m,"rev"));
+    Object.keys(S.monx||{}).sort().forEach(x=>{if(revHas(x)&&S.monx[x].at===k)rows.push(autoRow(true,"تسجيل شنو صار في شهر <bdi>"+monLbl(x)+"</bdi>","سُجّل في هذا اليوم","autoRev",x,"rev"))});
+  }
+  if(!rows.length)return "";
   return '<section class="sec"><div class="sec-h"><h2>مهام تلقائية</h2><span class="lbl">تُنجز وحدها عند الكتابة</span></div><div class="hlist">'+rows.join("")+'</div></section>';
 }
 function todoPanel(k){
@@ -3486,11 +3497,11 @@ S.mon={};S.monx={};S.mo={sel:"",open:{},comp:false,view:""};
 const monKey=d=>d.getFullYear()+"-"+pad(d.getMonth()+1);
 const monLbl=m=>"\u2066"+(+m.slice(5,7))+" / "+m.slice(0,4)+"\u2069"; // left to right, as "10 / 2026"
 const monOk=m=>/^\d{4}-(0[1-9]|1[0-2])$/.test(m||"");
-const monList=()=>Object.keys(S.mon||{}).filter(monOk).sort().reverse();
+const monList=()=>Array.from(new Set(Object.keys(S.mon||{}).filter(monOk).concat([monKey(new Date())]))).sort().reverse(); // the current month is always there
 const monTasks=m=>Array.isArray(S.mon[m])?S.mon[m]:[];
 const monOpen=m=>monTasks(m).filter(t=>t&&!t.done).length;
 const linkify=s=>esc(s).replace(/https?:\/\/[^\s<]+/g,u=>'<a href="'+u+'" target="_blank" rel="noopener">'+u+'</a>');
-function monSel(){if(S.mo.sel&&S.mon[S.mo.sel])return S.mo.sel;const cur=monKey(new Date()),ms=monList();return S.mon[cur]?cur:(ms[0]||"")}
+function monSel(){const ms=monList();if(S.mo.sel&&ms.includes(S.mo.sel))return S.mo.sel;return monKey(new Date())}
 const saveMon=()=>saveConfig();
 function vMonth(){
   const ms=monList(),sel=monSel(),cy=String(new Date().getFullYear()),cmp=S.mo.view==="cmp";S.mo.sel=sel;
@@ -3624,7 +3635,7 @@ function openMonTask(m,id){
     '<div class="row" style="border-top:1px solid var(--line);padding-top:14px"><button class="btn sm danger" type="button" data-act="monTaskDel" data-m="'+m+'" data-id="'+esc(id)+'">حذف المهمة</button></div></form>',fd=>{
     const cur=monFind(m,id);if(!cur){closeSheet();render(true);return}
     const n=String(fd.get("n")||"").trim().slice(0,500),to=String(fd.get("m")||m);if(n)cur.n=n;
-    if(monOk(to)&&to!==m&&Array.isArray(S.mon[to])){S.mon[m]=monTasks(m).filter(x=>x.id!==id);S.mon[to].unshift(cur)}
+    if(monOk(to)&&to!==m){if(!Array.isArray(S.mon[to]))S.mon[to]=[];S.mon[m]=monTasks(m).filter(x=>x.id!==id);S.mon[to].unshift(cur)}
     saveMon();closeSheet();render(true)});
 }
 // import: a text file ("# 10/2026" or "# 2026-10" starts a month, one task per line, "[x]" in front marks it done,
@@ -3965,7 +3976,7 @@ function openLog(g){
 /* ---------- export ---------- */
 function doExport(){
   const data=JSON.stringify({exported:new Date().toISOString(),habits:S.habits,groups:S.groups,days:S.days,goals:S.goals,notes:S.notes,wgoal:S.wgoal,ngroups:S.ngroups,ggroups:S.ggroups,todos:S.todos,gym:S.gym,wos:S.wos,nutri:S.nutri,nut:S.nut,
-    chal:S.chal,chalNo:S.chalNo,dfix:S.dfix,cmp:S.cmp,cmpS:S.cmpS,ui:S.ui,mon:S.mon,monx:S.monx},null,1);
+    chal:S.chal,chalNo:S.chalNo,dfix:S.dfix,cmp:S.cmp,cmpS:S.cmpS,ui:S.ui,mon:S.mon,monx:S.monx,auto:S.auto},null,1);
   try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download="daftar-backup-"+todayK()+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}catch(e){}
   S.lastBackup=new Date().toISOString();saveConfig();render();
 }
@@ -3977,6 +3988,10 @@ function settingsHTML(){
     '<div class="fld"><span class="lbl2">المظهر</span><div class="seg2" role="radiogroup" aria-label="الألوان"><label><input type="radio" name="pal" value=""'+(S.ui.pal!=="pink"?" checked":"")+'><span>الألوان الأصلية</span></label><label><input type="radio" name="pal" value="pink"'+(S.ui.pal==="pink"?" checked":"")+'><span>وردي</span></label></div>'+
       '<div class="seg2" role="radiogroup" aria-label="الإضاءة"><label><input type="radio" name="thm" value=""'+(!S.ui.thm?" checked":"")+'><span>حسب الجهاز</span></label><label><input type="radio" name="thm" value="light"'+(S.ui.thm==="light"?" checked":"")+'><span>فاتح</span></label><label><input type="radio" name="thm" value="dark"'+(S.ui.thm==="dark"?" checked":"")+'><span>داكن</span></label></div>'+
       '<label class="chk"><input type="checkbox" name="uipts"'+(showPts()?" checked":"")+'><span>إظهار نقاط المهام في القوائم</span></label>'+
+      '<span class="lbl2" style="margin-top:6px">المهام التلقائية</span>'+
+      '<label class="chk"><input type="checkbox" name="automem"'+(autoOff("mem",todayK())?"":" checked")+'><span>تسجيل ذكرى اليوم ('+AUTO_PTS+' نقاط)</span></label>'+
+      '<label class="chk"><input type="checkbox" name="autorev"'+(autoOff("rev",todayK())?"":" checked")+'><span>تسجيل شنو صار في الشهر ('+AUTO_PTS+' نقاط)</span></label>'+
+      '<span class="lbl">إيقاف مهمة يسري من اليوم، والأيام السابقة تبقى بنقاطها.</span>'+
       '<span class="lbl">يُحفظ مع حسابك فيظهر بنفس الشكل على كل أجهزتك.</span></div>'+
     '<div class="fld"><span class="lbl2">ترتيب الأقسام</span><div class="tord">'+tabOrder().map((t,i,a)=>{const b=$("#tab-"+t);return (i===4?'<div class="tsep">في «المزيد»</div>':"")+'<div class="tor"><span class="tico">'+(b&&b.querySelector("svg")?b.querySelector("svg").outerHTML:"")+'</span><span class="tnm">'+esc(b?b.textContent.trim():t)+'</span><button class="iconbtn sm2" type="button" data-act="tabMv" data-t="'+t+'" data-n="-1" aria-label="للأعلى"'+(i===0?" disabled":"")+'>▲</button><button class="iconbtn sm2" type="button" data-act="tabMv" data-t="'+t+'" data-n="1" aria-label="للأسفل"'+(i===a.length-1?" disabled":"")+'>▼</button></div>'}).join("")+'</div><span class="lbl">أول أربعة تظهر في شريط الهاتف، والباقي في «المزيد». يُحفظ مع حسابك.</span></div>'+
     '<div class="fld"><span class="lbl2">شريط الأقسام على الهاتف</span><div class="seg2" role="radiogroup" aria-label="مكان شريط الأقسام"><label><input type="radio" name="navpos" value=""'+(navTop()?"":" checked")+'><span>أسفل الشاشة</span></label><label><input type="radio" name="navpos" value="top"'+(navTop()?" checked":"")+'><span>أعلى الشاشة</span></label></div><span class="lbl">يُحفظ على هذا الجهاز فقط. على الكمبيوتر الشريط دائماً في الأعلى.</span></div>'+
@@ -4011,6 +4026,7 @@ async function applyImport(o){
     if(!nProf()&&inc.prof)["prof","rate","pkg","fpct","tmode","gmet"].forEach(k=>{if(inc[k]!==undefined)N[k]=inc[k]})}
   // challenges, finished weeks, friends and the look: added only when missing here
   if(isO(o.mon))Object.keys(o.mon).forEach(m=>{if(!monOk(m)||!Array.isArray(o.mon[m]))return;if(!Array.isArray(S.mon[m]))S.mon[m]=[];addById(S.mon[m],o.mon[m].filter(t=>t&&t.id&&typeof t.n==="string"))});
+  if(isO(o.auto)&&!Object.keys(S.auto||{}).length){const A={};["mem","rev"].forEach(t=>{if(/^\d{4}-\d{2}-\d{2}$/.test(o.auto[t]||""))A[t]=o.auto[t]});S.auto=A}
   if(isO(o.monx))Object.keys(o.monx).forEach(m=>{const v=o.monx[m];if(monOk(m)&&isO(v)&&!S.monx[m]){S.monx[m]={r:+v.r>=1&&+v.r<=10?Math.round(+v.r):0,t:String(v.t||"").slice(0,4000)};if(/^\d{4}-\d{2}-\d{2}$/.test(v.at||"")&&S.monx[m].t)S.monx[m].at=v.at}});
   if(Array.isArray(o.chal))addById(S.chal,o.chal.filter(c=>c&&c.log!==undefined));
   if(Array.isArray(o.chalNo))o.chalNo.map(String).forEach(id=>{if(!S.chalNo.includes(id))S.chalNo.push(id)});
@@ -4174,6 +4190,9 @@ document.addEventListener("click",e=>{
     case "wpick":S.wt.sel=b.dataset.k;S.wt.msg="";render();break;
     case "wdel":{const k=b.dataset.k;if(confirmArm[a+k]){const d=ensureDay(k);delete d.w;saveDay(k);delete confirmArm[a+k];render()}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف قراءة هذا اليوم"},4000)}break}
     case "autoRev":{const m=b.dataset.m;if(!monOk(m))break;if(!Array.isArray(S.mon[m])){S.mon[m]=[];saveMon()}S.mo.sel=m;S.mo.view="";S.mo.open[m.slice(0,4)]=true;S.tab="month";try{localStorage.setItem("dt-tab",S.tab)}catch(er){}render(true);setTimeout(()=>{const el=$("#mon-note");if(el){el.scrollIntoView({block:"center"});el.focus()}},60);break}
+    case "autoDel":{const t=b.dataset.t;if(t!=="mem"&&t!=="rev")break;if(confirmArm[a+t]){delete confirmArm[a+t];S.auto=Object.assign({},S.auto,{[t]:todayK()});saveConfig();render(true);break}
+      confirmArm[a+t]=1;b.classList.add("armed");b.setAttribute("aria-label","اضغط مرة أخرى للحذف");const row=b.closest(".xrow"),st=row&&row.querySelector(".st");if(st){st.dataset.o=st.textContent;st.textContent="اضغط الحذف مرة أخرى لإيقافها. تعيدها من الإعدادات."}
+      setTimeout(()=>{delete confirmArm[a+t];if(b.isConnected){b.classList.remove("armed");if(st&&st.dataset.o)st.textContent=st.dataset.o}},4000);break}
     case "toMem":S.mem.sel=S.cur;if(S.cur<memRangeStart())S.mem.range="all";S.tab="memories";try{localStorage.setItem("dt-tab",S.tab)}catch(er){}render(true);window.scrollTo(0,0);break;
     case "memRange":S.mem.range=b.dataset.r;render(true);break;
     case "memPick":{const k=b.dataset.k;const out=k<memRangeStart();S.mem.sel=k;if(out){S.mem.range="all";render(true)}else refreshMemEditor();const ed=$("#mem-ed");if(ed)ed.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});break}
@@ -4297,6 +4316,7 @@ document.addEventListener("change",e=>{
   if(e.target.name==="cmpadj"){S.cmpV.adj=e.target.value==="1";try{localStorage.setItem("dt-cmpadj",S.cmpV.adj?"1":"0")}catch(er){}render();return}
   if(e.target.name==="navpos"&&e.target.closest("#sheet")){try{localStorage.setItem("dt-navpos",e.target.value)}catch(er){}document.documentElement.classList.toggle("navtop",e.target.value==="top");navH();return}
   if(e.target.name==="monview"){S.mo.view=e.target.value;render(true);return}
+  if((e.target.name==="automem"||e.target.name==="autorev")&&e.target.closest("#sheet")){const t=e.target.name.slice(4);const o=Object.assign({},S.auto);if(e.target.checked)delete o[t];else o[t]=todayK();S.auto=o;saveConfig();render(true);return}
   if(e.target.name==="uipts"&&e.target.closest("#sheet")){S.ui.pts=e.target.checked;saveUiLocal();saveConfig();render(true);return}
   if((e.target.name==="pal"||e.target.name==="thm")&&e.target.closest("#sheet")){S.ui[e.target.name]=e.target.value;saveUiLocal();applyTheme();saveConfig();return}
   if(e.target.id==="mon-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const p=monParse(String(r.result||""));MON_IMP=monImportPlan(p);openSheet(monImportHTML(MON_IMP),null)};r.readAsText(f);e.target.value="";return}
