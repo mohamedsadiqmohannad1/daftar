@@ -53,6 +53,13 @@ button{cursor:pointer}
 .view{display:flex;flex-direction:column;gap:18px}
 .sec{display:flex;flex-direction:column;gap:10px}
 .sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.pipbody{margin:0!important;padding:0!important;background:var(--bg);min-height:100vh}
+.pip{display:grid;gap:6px;padding:8px}
+.pip-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 8px 6px 10px}
+.pip-row.on{border-color:var(--accent);background:var(--accent-soft)}
+.pip-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.pip-row b{font-size:17px;direction:ltr}
+.pip-e{color:var(--muted);font-size:13px;text-align:center;margin:16px 8px}
 .sec-h h2{font-size:16px;font-weight:600}
 .lbl{font-size:12px;color:var(--muted);letter-spacing:.02em}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
@@ -1628,7 +1635,7 @@ function tmD(g){const tm=g.tm||{},o={d:Object.assign({},tm.d||{})};if(tm.run)gtA
 function gtStop(g){if(!(g.tm&&g.tm.run))return;gtAdd(g,+new Date(g.tm.run),gtEnd(g));delete g.tm.run}
 function gtCap(){ // stops forgotten timers; waits for the database copy so a stale device does not stop a timer already handled elsewhere
   if(typeof srvNow!=="function"||!srvNow())return;const names=[];let chCh=false;
-  Object.keys(S.goals).forEach(id=>{const g=S.goals[id];if(g&&g.tm&&g.tm.run&&Date.now()-new Date(g.tm.run)>GT_MAX){gtStop(g);saveGoal(id);names.push(g.name||"هدف")}});
+  Object.keys(S.goals).forEach(id=>{const g=S.goals[id];if(g&&g.tm&&g.tm.run&&Date.now()-new Date(g.tm.run)>GT_MAX){gtStop(g);saveGoal(id);names.push(g.title||"هدف")}});
   (S.chal||[]).forEach(c=>{if(c.tm&&c.tm.run&&Date.now()-new Date(c.tm.run)>GT_MAX){gtStop(c);chSync(c);chCh=true;names.push(c.n||"تحدٍّ")}});
   if(chCh){saveConfig();SH_LAST="";queueShare()}
   if(names.length)showBanner("أوقفنا مؤقت «"+names.join("»، «")+"» تلقائياً بعد 4 ساعات متواصلة، وحُسبت 4 ساعات فقط. إن كان الوقت أقل فاحذف ذلك اليوم من «تعديل الوقت» في الهدف، أو من «إضافة دقائق» في تحدي الدقائق، ثم أضف الوقت الصحيح.");
@@ -1642,11 +1649,43 @@ function gTimerHTML(g,kind){kind=kind||"g";const on=!!(g.tm&&g.tm.run),key=kind+
     (kind==="c"&&isTq(g)?"":'<button class="chip-link" type="button" data-act="gtLog" data-g="'+key+'" style="grid-column:1;justify-self:start">تعديل الوقت</button>')+'</div>'}
 // days of a goal's (or a non-timer challenge's) work time, each can be removed; a running session is stopped first
 function gtLogHTML(key){const g=gtObj(key);if(!g)return "";const d=(g.tm&&g.tm.d)||{},ks=Object.keys(d).filter(k=>+d[k]>0).sort().reverse();
-  return '<h2>تعديل الوقت: <bdi>'+esc(key[0]==="c"?g.n:g.name||"")+'</bdi></h2><div class="f">'+(g.tm&&g.tm.run?'<p class="small" style="margin:0">المؤقت يعمل الآن. أوقفه أولاً ليظهر وقت هذه الجلسة هنا.</p>':"")+
+  return '<h2>تعديل الوقت: <bdi>'+esc(key[0]==="c"?g.n:g.title||"")+'</bdi></h2><div class="f">'+(g.tm&&g.tm.run?'<p class="small" style="margin:0">المؤقت يعمل الآن. أوقفه أولاً ليظهر وقت هذه الجلسة هنا.</p>':"")+
   (ks.length?'<div class="entries" style="max-height:none">'+ks.map(k=>'<div><span>'+esc(fShort(k))+' <b class="num">'+L(fmtDur(+d[k]))+'</b></span><button class="chip-link" type="button" data-act="gtDel" data-g="'+key+'" data-k="'+k+'">حذف</button></div>').join("")+'</div>':'<p class="muted small" style="margin:0">لا وقت مسجّل بعد.</p>')+
   '<div class="row"><button class="btn" data-act="closeSheet">إغلاق</button></div></div>'}
 function gtSave(key,g){if(key[0]==="c"){if(chSync(g)){SH_LAST="";queueShare()}saveConfig()}else saveGoal(g.id)}
-setInterval(()=>{gtCap();document.querySelectorAll("[data-gt]").forEach(el=>{const g=gtObj(el.dataset.gt);if(g)el.textContent=fmtDur(gtToday(g))});document.querySelectorAll("[data-gw]").forEach(el=>{const g=gtObj(el.dataset.gw);if(g)el.textContent="هذا الأسبوع "+fmtDur(gtWeek(g))})},1000);
+setInterval(()=>{gtCap();gtTitle();pipDraw();document.querySelectorAll("[data-gt]").forEach(el=>{const g=gtObj(el.dataset.gt);if(g)el.textContent=fmtDur(gtToday(g))});document.querySelectorAll("[data-gw]").forEach(el=>{const g=gtObj(el.dataset.gw);if(g)el.textContent="هذا الأسبوع "+fmtDur(gtWeek(g))})},1000);
+function gtToggle(kind,id){const ch=kind==="c",g=ch?S.chal.find(x=>x.id===id):S.goals[id];if(!g)return;g.tm=g.tm||{};if(g.tm.run)gtStop(g);else g.tm.run=new Date().toISOString();if(ch){if(chSync(g)){SH_LAST="";queueShare()}saveConfig()}else saveGoal(id);render()}
+// everything with a work timer: all goals and the challenges still open; running ones first
+function gtList(){const a=Object.values(S.goals).sort((x,y)=>(x.created||"")<(y.created||"")?-1:1).map(g=>({k:"g:"+g.id,n:g.title||"هدف",g:g}));
+  (S.chal||[]).forEach(c=>{if(!chalState(c).done)a.push({k:"c:"+c.id,n:c.n||"تحدٍّ",g:c})});
+  const on=x=>x.g.tm&&x.g.tm.run?1:0;return a.filter(on).concat(a.filter(x=>!on(x)))}
+// the tab title shows the running timer, so it is visible on the taskbar and in the tab strip
+function gtTitle(){let r=null;Object.values(S.goals).forEach(g=>{if(!r&&g.tm&&g.tm.run)r={n:g.title||"هدف",g:g}});
+  if(!r)(S.chal||[]).forEach(c=>{if(!r&&c.tm&&c.tm.run)r={n:c.n||"تحدٍّ",g:c}});
+  const t=r?"⏱ "+fmtDur(gtToday(r.g))+" · "+r.n:"دفتر التطور";if(document.title!==t)document.title=t}
+/* ---------- floating timer window ----------
+   Chrome, Edge and Brave on a computer can open a small always-on-top window (Document Picture-in-Picture).
+   It lives as long as the app's tab: closing or reloading the tab closes it. Its clock runs on the floating
+   window's own timer, which the browser keeps running while that window is on screen. */
+let PIP=null,PIP_SIG="";
+const pipOk=()=>"documentPictureInPicture" in window;
+function pipDraw(){if(!PIP)return;const d=PIP.document,r=document.documentElement,l=gtList();
+  ["data-theme","data-pal"].forEach(a=>{const v=r.getAttribute(a);if(v==null)d.documentElement.removeAttribute(a);else if(d.documentElement.getAttribute(a)!==v)d.documentElement.setAttribute(a,v)});
+  const on=x=>!!(x.g.tm&&x.g.tm.run),sig=l.map(x=>x.k+(on(x)?1:0)+x.n).join("|");
+  if(sig!==PIP_SIG){PIP_SIG=sig;d.body.innerHTML='<div class="pip">'+(l.length?l.map(x=>'<div class="pip-row'+(on(x)?" on":"")+'"><span class="pip-n" title="'+esc(x.n)+'">'+esc(x.n)+'</span><b class="num" data-pt="'+x.k+'"></b><button class="btn sm'+(on(x)?" danger":" pri")+'" type="button" data-pk="'+x.k+'">'+(on(x)?"إيقاف":"ابدأ")+'</button></div>').join(""):'<p class="pip-e">لا أهداف بعد. أضف هدفاً من صفحة الأهداف.</p>')+'</div>'}
+  d.querySelectorAll("[data-pt]").forEach(el=>{const g=gtObj(el.dataset.pt);if(g){const t=fmtDur(gtToday(g));if(el.textContent!==t)el.textContent=t}});
+  gtTitle()}
+async function pipOpen(){
+  if(PIP){try{PIP.focus()}catch(e){}return}
+  if(!pipOk()){showBanner("المتصفح لا يدعم النافذة العائمة. تعمل على كروم أو إيدج أو بريف في الكمبيوتر.");return}
+  let w;try{w=await documentPictureInPicture.requestWindow({width:300,height:Math.min(440,64+gtList().length*52)})}catch(e){showBanner("تعذّر فتح النافذة العائمة. اضغط الزر مرة أخرى.");return}
+  PIP=w;PIP_SIG="";const d=w.document;d.documentElement.lang="ar";d.documentElement.dir="rtl";
+  document.querySelectorAll('head style, head link[rel="stylesheet"]').forEach(n=>d.head.appendChild(n.cloneNode(true)));
+  const t=d.createElement("title");t.textContent="مؤقت الأهداف";d.head.appendChild(t);d.body.className="pipbody";
+  d.addEventListener("click",e=>{const b=e.target.closest("[data-pk]");if(!b)return;const k=b.dataset.pk;gtToggle(k[0],k.slice(2));pipDraw()});
+  w.setInterval(pipDraw,1000);
+  w.addEventListener("pagehide",()=>{if(PIP===w){PIP=null;render()}});
+  pipDraw();render()}
 function vGoals(){let s=vGoals0();const i=s.indexOf('</section>');if(i>=0)s=s.slice(0,i+10)+chalHTML()+s.slice(i+10);
   const cc=chalCards(S.gl.g);if(!cc)return s;const j=s.indexOf('<div class="cols">');
   if(j>=0)return s.slice(0,j+18)+cc+s.slice(j+18);
@@ -1655,7 +1694,7 @@ function vGoals(){let s=vGoals0();const i=s.indexOf('</section>');if(i>=0)s=s.sl
 function vGoals0(){
   const fg=S.gl.g,all=Object.values(S.goals).sort((a,b)=>(a.created||"")<(b.created||"")?-1:1);
   const gs=all.filter(x=>!fg||(fg==="_none"?!ggName(x.g):x.g===fg));
-  let s='<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الأهداف</h2><button class="btn pri sm" data-act="newGoal">هدف جديد</button></section>';
+  let s='<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الأهداف</h2><div class="row" style="gap:6px">'+(pipOk()?'<button class="btn sm" data-act="pipOpen">'+(PIP?"النافذة العائمة مفتوحة":"مؤقت عائم")+'</button>':'')+'<button class="btn pri sm" data-act="newGoal">هدف جديد</button></div></section>';
   s+=groupChips("g");
   if(all.length&&!gs.length)return s+'<p class="muted small">لا أهداف في هذه المجموعة.</p>';
   if(!gs.length)return s+'<section class="panel empty"><h2>هدف قابل للقياس</h2><p class="muted small" style="margin:0">حدّد قيمة البداية والقيمة المستهدفة والموعد، مثل الوزن أو عدد الصفحات أو ساعات الدراسة. كل قراءة تسجّلها تُحدّث نسبة الإنجاز والمعدل المطلوب أسبوعياً، وتقارنه بمعدلك الفعلي في آخر 28 يوماً.</p><div class="row"><button class="btn pri" data-act="newGoal">إضافة أول هدف</button></div></section>';
@@ -4200,7 +4239,8 @@ document.addEventListener("click",e=>{
     case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
     case "chNew":case "chAcc":case "chNo":case "chEnd":case "chLog":case "chLogDel":case "chDel":case "chEdit":chalAct(a,b);break;
-    case "gtTog":{const ch=b.dataset.k==="c",g=ch?S.chal.find(x=>x.id===id):S.goals[id];if(!g)break;g.tm=g.tm||{};if(g.tm.run)gtStop(g);else g.tm.run=new Date().toISOString();if(ch){if(chSync(g)){SH_LAST="";queueShare()}saveConfig()}else saveGoal(id);render();break}
+    case "gtTog":gtToggle(b.dataset.k,id);break;
+    case "pipOpen":pipOpen();break;
     case "goCmp":S.tab="habits";CMP_ON=true;try{localStorage.setItem("dt-tab","habits");localStorage.setItem("dt-cmp","1")}catch(er){}render(true);setTimeout(()=>{const x=$(".cmpbox");if(x)x.scrollIntoView({block:"start"})},50);break;
     case "cmpR":S.cmpV.r=b.dataset.r||"7";S.cmpV.wk=0;render();break;
     case "cmpWk":{const n=+b.dataset.n;S.cmpV.wk=n===0?0:Math.max(0,(+S.cmpV.wk||0)+n);render();break}
