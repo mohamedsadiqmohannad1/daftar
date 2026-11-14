@@ -526,6 +526,11 @@ nav.tabs button{font-size:11px}
 .selln{stroke:var(--warm);stroke-width:1;stroke-dasharray:3 3}
 .selring{fill:none;stroke:var(--warm);stroke-width:2}
 .notedot{fill:var(--surface);stroke:var(--accent);stroke-width:2.4}
+.stardot{fill:var(--warm);stroke:var(--surface);stroke-width:1.6}
+.legend i.lg-star{width:10px;height:10px;border-radius:50%;background:var(--warm)}
+.mstar{color:var(--warm)}
+.btn.star-on{color:var(--warm);border-color:var(--warm)}
+.mtabs{display:flex;gap:6px;flex-wrap:wrap}
 .legend i.lg-note{width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--accent);background:var(--surface)}
 .tip{position:absolute;z-index:3;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 10px;font-size:12px;width:max-content;max-width:240px;display:flex;flex-direction:column;gap:2px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .tip .th{display:flex;gap:12px;justify-content:space-between;font-family:var(--f-num)}
@@ -1247,7 +1252,7 @@ function weakDay(h){ // weekday with the lowest completion over the last 8 weeks
   return worst&&worst.r<0.8?worst:null;
 }
 // a day counts as logged only if it holds something; an empty day (left by opening a date) does not move the start of the log
-const dayHas=d=>!!d&&Object.keys(d).some(x=>{if(x==="d")return false;const v=d[x];return v!==null&&v!==undefined&&v!==""&&!(typeof v==="object"&&!Object.keys(v).length)});
+const dayHas=d=>!!d&&Object.keys(d).some(x=>{if(x==="d"||x==="star")return false;const v=d[x];return v!==null&&v!==undefined&&v!==""&&!(typeof v==="object"&&!Object.keys(v).length)});
 function firstLogKey(){
   let f=null;S.habits.forEach(h=>{if(h.created&&(!f||h.created<f))f=h.created});
   Object.keys(S.days).forEach(k=>{if((!f||k<f)&&dayHas(S.days[k]))f=k});return f;
@@ -1741,7 +1746,7 @@ function curve(box,o){
   }
   if(o.avg&&o.avg.length>1)s+='<polyline class="ln w" points="'+o.avg.map(p=>X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join(" ")+'"/>';
   const r=n>200?2:n>100?2.6:3.2;
-  pts.forEach(p=>{if(p.mark)s+='<circle class="notedot" cx="'+X(p.i).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+(r+2.2)+'"/>';else s+='<circle class="dot a" cx="'+X(p.i).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+r+'"/>'});
+  pts.forEach(p=>{if(p.star)s+='<circle class="stardot" cx="'+X(p.i).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+(r+2.6)+'"/>';else if(p.mark)s+='<circle class="notedot" cx="'+X(p.i).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+(r+2.2)+'"/>';else s+='<circle class="dot a" cx="'+X(p.i).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+r+'"/>'});
   const sp=pts.find(p=>p.k===o.sel);if(sp)s+='<circle class="selring" cx="'+X(sp.i).toFixed(1)+'" cy="'+Y(sp.v).toFixed(1)+'" r="'+(r+6)+'"/>';
   s+='</svg>';
   box.innerHTML='<div class="mem-svg">'+s+'<div class="tip" hidden></div>'+(pts.length?"":'<div class="mem-empty">'+esc(o.empty||"لا توجد بيانات في هذه الفترة.")+'</div>')+'</div>';
@@ -1778,14 +1783,14 @@ const hWord=v=>v<=-60?"سيئ جداً":v<-20?"سيئ":v<=20?"عادي":v<60?"ج
 const hLabel=v=>Number.isFinite(v)?L(signed(Math.round(v),0))+" · "+hWord(v):"لم يُسجّل";
 const F_LIST=mkFmt({weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const fList=k=>fLong(k);
-S.mem={sel:todayK(),range:defRange(),q:""};
+S.mem={sel:todayK(),range:defRange(),q:"",f:"all"};
 const memRangeStart=()=>rangeStartFor(S.mem.range,d=>Number.isFinite(getHappy(d))||!!(d&&d.note));
 function setHappy(k,v){const d=ensureDay(k);if(v===null)delete d.happy;else d.happy=Math.max(-100,Math.min(100,Math.round(v)));delete d.mood;saveDay(k)}
 function setNote(k,txt){const d=ensureDay(k);if(txt.trim())d.note=txt;else delete d.note;saveDay(k)}
 function drawMemChart(){
   const box=$("#mem-chart");if(!box)return;
   const t=todayK(),st=memRangeStart(),n=diffD(st,t),pts=[];
-  for(let i=0;i<=n;i++){const k=addD(st,i),d=S.days[k],v=getHappy(d);if(Number.isFinite(v))pts.push({i:i,k:k,v:v,mark:!!(d&&d.note)})}
+  for(let i=0;i<=n;i++){const k=addD(st,i),d=S.days[k],v=getHappy(d);if(Number.isFinite(v))pts.push({i:i,k:k,v:v,mark:!!(d&&d.note),star:!!(d&&d.star)})}
   curve(box,{st:st,n:n,pts:pts,yMin:-100,yMax:100,yTicks:[[-100,"-100"],[-50,"-50"],[0,"0"],[50,"+50"],[100,"+100"]],zero:0,area:0,sel:S.mem.sel,label:"منحني المزاج اليومي",
     empty:"لا توجد قيم في هذه الفترة. حدّد مزاج أي يوم من المحرر أدناه.",
     tip:p=>{const d=S.days[p.k]||{};return tipHead(p.k,L(signed(p.v,0)))+(d.note?'<span class="ex" dir="rtl">'+esc(d.note.length>90?d.note.slice(0,90)+"…":d.note)+'</span>':"")},
@@ -1799,15 +1804,16 @@ function refreshMemEditor(){
 function drawMemList(){
   const box=$("#mem-list");if(!box)return;
   const q=S.mem.q.trim(),t=todayK();
-  const ks=Object.keys(S.days).filter(k=>k<=t&&S.days[k].note&&(!q||S.days[k].note.includes(q))).sort().reverse();
-  box.innerHTML=ks.length?ks.slice(0,200).map(k=>{const d=S.days[k],v=getHappy(d);
-    return '<button class="mitem'+(k===S.mem.sel?" sel":"")+'" data-act="memPick" data-k="'+k+'"><span class="mh"><span class="md">'+esc(fList(k))+'</span><span class="pill '+(!Number.isFinite(v)?"nodata":v>20?"ok":v<-20?"behind":"nodata")+'">'+(Number.isFinite(v)?L(signed(v,0)):"–")+'</span></span><span class="mt">'+esc(d.note)+'</span></button>'}).join("")
-    :'<p class="muted small" style="margin:0">'+(q?"لا توجد ذكرى تحتوي هذا النص.":"لم تكتب أي ذكرى بعد. اختر يوماً من المنحني واكتب ما حدث فيه.")+'</p>';
+  const st=S.mem.f==="star",ks=Object.keys(S.days).filter(k=>{const d=S.days[k];return k<=t&&(st?d.star:d.note)&&(!q||(d.note||"").includes(q))}).sort().reverse();
+  const nb=$("#mem-nstar");if(nb)nb.textContent=Object.keys(S.days).filter(k=>k<=t&&S.days[k].star).length;
+  box.innerHTML=ks.length?ks.slice(0,st?1000:200).map(k=>{const d=S.days[k],v=getHappy(d);
+    return '<button class="mitem'+(k===S.mem.sel?" sel":"")+'" data-act="memPick" data-k="'+k+'"><span class="mh"><span class="md">'+(d.star?'<span class="mstar" aria-label="يوم مميز">★ </span>':"")+esc(fList(k))+'</span><span class="pill '+(!Number.isFinite(v)?"nodata":v>20?"ok":v<-20?"behind":"nodata")+'">'+(Number.isFinite(v)?L(signed(v,0)):"–")+'</span></span><span class="mt">'+(d.note?esc(d.note):'<span class="muted">بلا ذكرى مكتوبة</span>')+'</span></button>'}).join("")
+    :'<p class="muted small" style="margin:0">'+(q?(st?"لا يوجد يوم مميز ذكراه تحتوي هذا النص.":"لا توجد ذكرى تحتوي هذا النص."):st?"لم تحدّد أي يوم مميز بعد. افتح أي يوم واضغط «يوم مميز».":"لم تكتب أي ذكرى بعد. اختر يوماً من المنحني واكتب ما حدث فيه.")+'</p>';
 }
 function syncMemEditor(){
   const d=S.days[S.mem.sel]||{},v=getHappy(d);
   const cb=document.querySelector("[data-act=memClearVal]");if(cb)cb.hidden=!Number.isFinite(v);
-  const db=document.querySelector("[data-act=memDel]");if(db)db.hidden=!(Number.isFinite(v)||d.note);
+  const db=document.querySelector("[data-act=memDel]");if(db)db.hidden=!(Number.isFinite(v)||d.note||d.star);
   const lab=$("#me-val");if(lab)lab.innerHTML=hLabel(v);
   const rg=$("#me-range");if(rg){rg.classList.toggle("unset",!Number.isFinite(v));if(document.activeElement!==rg)rg.value=Number.isFinite(v)?v:0}
   const nm=$("#me-num");if(nm&&document.activeElement!==nm)nm.value=Number.isFinite(v)?Math.round(v):"";
@@ -1815,21 +1821,21 @@ function syncMemEditor(){
 function memEditorHTML(){
   const k=S.mem.sel,d=S.days[k]||{},v=getHappy(d),t=todayK();
   return '<section class="panel sec mem-ed" id="mem-ed">'+
-    '<div class="sec-h" style="flex-wrap:wrap"><div><h2 style="font-family:var(--f-display);font-weight:500;font-size:19px">'+esc(fLong(k))+'</h2><div class="lbl">'+(k===t?"اليوم":(diffD(k,t)===1?"أمس":esc(fFull(k))))+'</div></div><input id="me-pick" class="keep ltr datein" type="date" max="'+t+'" value="'+k+'" aria-label="اختر يوماً"></div>'+
+    '<div class="sec-h" style="flex-wrap:wrap"><div><h2 style="font-family:var(--f-display);font-weight:500;font-size:19px">'+esc(fLong(k))+'</h2><div class="lbl">'+(k===t?"اليوم":(diffD(k,t)===1?"أمس":esc(fFull(k))))+'</div></div><div class="row" style="gap:6px"><button class="btn sm'+(d.star?" star-on":"")+'" data-act="memStar" aria-pressed="'+(d.star?"true":"false")+'">'+(d.star?"★ يوم مميز":"☆ اجعله يوماً مميزاً")+'</button><input id="me-pick" class="keep ltr datein" type="date" max="'+t+'" value="'+k+'" aria-label="اختر يوماً"></div></div>'+
     '<div class="hv"><label for="me-range">مزاج هذا اليوم</label><span id="me-val" class="hvv">'+hLabel(v)+'</span></div>'+
     '<input id="me-range" class="keep happy'+(Number.isFinite(v)?"":" unset")+'" type="range" min="-100" max="100" step="1" dir="ltr" value="'+(Number.isFinite(v)?v:0)+'">'+
     '<div class="scale" dir="ltr"><span>-100</span><span>0</span><span>+100</span></div>'+
     '<div class="row"><input id="me-num" class="keep ltr numin" type="number" min="-100" max="100" step="1" inputmode="numeric" placeholder="من -100 إلى 100" value="'+(Number.isFinite(v)?Math.round(v):"")+'" aria-label="قيمة المزاج بالأرقام">'+
       '<button class="btn sm" data-act="memClearVal"'+(Number.isFinite(v)?"":" hidden")+'>مسح القيمة</button></div>'+
     '<div class="fld"><label for="me-note">ماذا حدث في هذا اليوم؟</label><textarea id="me-note" class="keep" rows="7" placeholder="اكتب ما تريد تذكّره عن هذا اليوم">'+esc(d.note||"")+'</textarea></div>'+
-    '<div class="row" style="justify-content:space-between"><span class="lbl">يُحفظ تلقائياً أثناء الكتابة، وكتابة ذكرى اليوم تضيف '+AUTO_PTS+' نقاط لهذا اليوم</span>'+'<button class="btn sm danger" data-act="memDel"'+((Number.isFinite(v)||d.note)?"":" hidden")+'>حذف ذكرى هذا اليوم</button></div>'+
+    '<div class="row" style="justify-content:space-between"><span class="lbl">يُحفظ تلقائياً أثناء الكتابة، وكتابة ذكرى اليوم تضيف '+AUTO_PTS+' نقاط لهذا اليوم</span>'+'<button class="btn sm danger" data-act="memDel"'+((Number.isFinite(v)||d.note||d.star)?"":" hidden")+'>حذف ذكرى هذا اليوم</button></div>'+
   '</section>';
 }
 function vMem(){
   return '<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الذكريات</h2></section>'+
   '<section class="panel sec"><div class="sec-h" style="flex-wrap:wrap">'+rangeChips("memRange",S.mem.range)+'<span class="lbl">اضغط على أي يوم لتحديده</span></div>'+
-  '<div id="mem-chart" class="chart"></div><div class="legend"><span><i class="lg-note"></i>يوم فيه ذكرى مكتوبة</span><span><i style="background:var(--muted)"></i>الصفر</span></div></section>'+yearHTML()+
-  '<div class="cols">'+memEditorHTML()+'<section class="sec"><div class="sec-h"><h2>الذكريات المكتوبة</h2></div><input id="mem-q" class="keep search" type="search" placeholder="ابحث في ذكرياتك" value="'+esc(S.mem.q)+'" aria-label="بحث"><div id="mem-list" class="mlist"></div></section></div>';
+  '<div id="mem-chart" class="chart"></div><div class="legend"><span><i class="lg-note"></i>يوم فيه ذكرى مكتوبة</span><span><i class="lg-star"></i>يوم مميز</span><span><i style="background:var(--muted)"></i>الصفر</span></div></section>'+yearHTML()+
+  '<div class="cols">'+memEditorHTML()+'<section class="sec"><div class="sec-h"><div class="mtabs" role="group" aria-label="القائمة"><button class="btn sm'+(S.mem.f!=="star"?" pri":"")+'" data-act="memF" data-f="all">الذكريات المكتوبة</button><button class="btn sm'+(S.mem.f==="star"?" pri":"")+'" data-act="memF" data-f="star">★ الأيام المميزة (<span id="mem-nstar" class="num">0</span>)</button></div></div><input id="mem-q" class="keep search" type="search" placeholder="ابحث في ذكرياتك" value="'+esc(S.mem.q)+'" aria-label="بحث"><div id="mem-list" class="mlist"></div></section></div>';
 }
 
 /* ---------- weight ---------- */
@@ -4276,9 +4282,11 @@ document.addEventListener("click",e=>{
       setTimeout(()=>{delete confirmArm[a+t];if(b.isConnected){b.classList.remove("armed");if(st&&st.dataset.o)st.textContent=st.dataset.o}},4000);break}
     case "toMem":S.mem.sel=S.cur;if(S.cur<memRangeStart())S.mem.range="all";S.tab="memories";try{localStorage.setItem("dt-tab",S.tab)}catch(er){}render(true);window.scrollTo(0,0);break;
     case "memRange":S.mem.range=b.dataset.r;render(true);break;
+    case "memStar":{const k=S.mem.sel;if(k>todayK())break;const d=ensureDay(k);if(d.star)delete d.star;else d.star=1;saveDay(k);refreshMemEditor();break}
+    case "memF":S.mem.f=b.dataset.f==="star"?"star":"all";render(true);break;
     case "memPick":{const k=b.dataset.k;const out=k<memRangeStart();S.mem.sel=k;if(out){S.mem.range="all";render(true)}else refreshMemEditor();const ed=$("#mem-ed");if(ed)ed.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});break}
     case "memClearVal":setHappy(S.mem.sel,null);render(true);break;
-    case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
+    case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;delete d.star;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
     case "chNew":case "chAcc":case "chNo":case "chEnd":case "chLog":case "chLogDel":case "chDel":case "chEdit":chalAct(a,b);break;
     case "gtTog":gtToggle(b.dataset.k,id);break;
