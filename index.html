@@ -2021,20 +2021,25 @@ function drawYear(){
       const k=keyOf(dt);let st="",cls="";
       if(k>t)cls="f";
       else if(S.yr.mode==="mood"){const v=getHappy(S.days[k]);if(Number.isFinite(v))st=v>=0?"background:color-mix(in srgb,var(--accent) "+Math.round(18+82*v/100)+"%,var(--miss))":"background:color-mix(in srgb,var(--bad) "+Math.round(18+82*(-v)/100)+"%,var(--miss))";else cls="nd"}
-      else{const sc=dayScore(k);if(sc.max>0)st="background:color-mix(in srgb,var(--accent) "+Math.round(12+88*Math.min(1,sc.got/sc.max))+"%,var(--miss))";else cls="nd"}
+      else{const sc=dayScore(k);if(sc.max>0)st="background:"+ptsCol(sc.got/sc.max);else cls="nd"}
       s+='<i class="'+cls+(k===S.mem.sel?" ysel":"")+'" style="'+st+'" data-act="ypick" data-k="'+k+'" title="'+esc(fShort(k))+'"></i>';
     }
   }
   box.innerHTML=s+'</div>';
 }
+// points: five steps in different colours. A straight scale made every day one shade, because most days land between 55% and 85%
+const PTS_BIN=[[.5,"var(--bad)",75,"أقل من 50%"],[.65,"var(--warm)",70,"50–64%"],[.8,"var(--accent)",42,"65–79%"],[.95,"var(--accent)",72,"80–94%"],[1.01,"var(--accent)",100,"95% فأكثر"]];
+function ptsCol(p){p=+p||0;const b=PTS_BIN.find(x=>p<x[0])||PTS_BIN[PTS_BIN.length-1];return "color-mix(in srgb,"+b[1]+" "+b[2]+"%,var(--miss))"}
 function yearHTML(){
-  const ys=new Set([new Date().getFullYear()]);Object.keys(S.days).forEach(k=>ys.add(+k.slice(0,4)));
+  // only years with a mood or a logged day: imported memories alone do not add a year here
+  const ys=new Set([new Date().getFullYear()]);Object.keys(S.days).forEach(k=>{const d=S.days[k];if(dayHas(d)||Number.isFinite(getHappy(d)))ys.add(+k.slice(0,4))});
+  if(!ys.has(S.yr.year))S.yr.year=new Date().getFullYear();
   const yl=Array.from(ys).sort();
   return '<section class="panel sec"><div class="sec-h" style="flex-wrap:wrap"><h2>السنة بالألوان</h2><div class="row">'+
     '<div class="rng" role="group" aria-label="المقياس"><button data-act="ypMode" data-r="mood" class="'+(S.yr.mode==="mood"?"on":"")+'">المزاج</button><button data-act="ypMode" data-r="pts" class="'+(S.yr.mode==="pts"?"on":"")+'">النقاط</button></div>'+
     (yl.length>1?'<div class="rng" role="group" aria-label="السنة">'+yl.map(y=>'<button data-act="ypYear" data-r="'+y+'" class="'+(S.yr.year===y?"on":"")+'">'+y+'</button>').join("")+'</div>':"")+'</div></div>'+
     '<div id="yp" class="chart"></div>'+
-    '<div class="legend">'+(S.yr.mode==="mood"?'<span><i class="lgsq" style="background:var(--bad)"></i>سيئ</span><span><i class="lgsq" style="background:color-mix(in srgb,var(--accent) 18%,var(--miss))"></i>عادي</span><span><i class="lgsq" style="background:var(--accent)"></i>جيد</span>':'<span><i class="lgsq" style="background:color-mix(in srgb,var(--accent) 12%,var(--miss))"></i>نقاط قليلة</span><span><i class="lgsq" style="background:var(--accent)"></i>كل النقاط</span>')+
+    '<div class="legend">'+(S.yr.mode==="mood"?'<span><i class="lgsq" style="background:var(--bad)"></i>سيئ</span><span><i class="lgsq" style="background:color-mix(in srgb,var(--accent) 18%,var(--miss))"></i>عادي</span><span><i class="lgsq" style="background:var(--accent)"></i>جيد</span>':PTS_BIN.map(x=>'<span><i class="lgsq" style="background:'+ptsCol(x[0]-.001)+'"></i>'+x[3].replace(/[\d–%]*\d[\d–%]*/g,m=>L(m))+'</span>').join(""))+
     '<span><i class="lgsq" style="background:var(--off);box-shadow:inset 0 0 0 1px var(--line)"></i>بلا تسجيل</span><span>كل صف شهر، وكل عمود يوم من الشهر. اضغط يوماً لفتحه.</span></div></section>';
 }
 
