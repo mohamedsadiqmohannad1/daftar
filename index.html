@@ -1252,7 +1252,7 @@ function weakDay(h){ // weekday with the lowest completion over the last 8 weeks
   return worst&&worst.r<0.8?worst:null;
 }
 // a day counts as logged only if it holds something; an empty day (left by opening a date) does not move the start of the log
-const dayHas=d=>!!d&&Object.keys(d).some(x=>{if(x==="d"||x==="star")return false;const v=d[x];return v!==null&&v!==undefined&&v!==""&&!(typeof v==="object"&&!Object.keys(v).length)});
+const dayHas=d=>!!d&&Object.keys(d).some(x=>{if(x==="d"||x==="star"||x==="nimp"||(x==="note"&&d.nimp))return false;const v=d[x];return v!==null&&v!==undefined&&v!==""&&!(typeof v==="object"&&!Object.keys(v).length)});
 function firstLogKey(){
   let f=null;S.habits.forEach(h=>{if(h.created&&(!f||h.created<f))f=h.created});
   Object.keys(S.days).forEach(k=>{if((!f||k<f)&&dayHas(S.days[k]))f=k});return f;
@@ -1333,7 +1333,7 @@ const AUTO_PTS=5;
 // S.auto = {mem: day, rev: day}: that kind was switched off from that day on (earlier days keep their points)
 S.auto={};const autoOff=(t,k)=>!!(S.auto&&S.auto[t]&&k>=S.auto[t]);
 const prevMon=m=>{const y=+m.slice(0,4),mo=+m.slice(5,7);return mo===1?(y-1)+"-12":y+"-"+pad(mo-1)};
-const memDone=k=>{const d=S.days[k];return !!(d&&typeof d.note==="string"&&d.note.trim())};
+const memDone=k=>{const d=S.days[k];return !!(d&&!d.nimp&&typeof d.note==="string"&&d.note.trim())}; // an imported memory earns no points
 const revHas=m=>{const x=S.monx&&S.monx[m];return !!(x&&x.t&&String(x.t).trim())};
 function autoOn(k){
   const o=[];if(memDone(k)&&!autoOff("mem",k))o.push({id:"mem",pts:AUTO_PTS});
@@ -1783,10 +1783,10 @@ const hWord=v=>v<=-60?"سيئ جداً":v<-20?"سيئ":v<=20?"عادي":v<60?"ج
 const hLabel=v=>Number.isFinite(v)?L(signed(Math.round(v),0))+" · "+hWord(v):"لم يُسجّل";
 const F_LIST=mkFmt({weekday:"long",day:"numeric",month:"long",year:"numeric"});
 const fList=k=>fLong(k);
-S.mem={sel:todayK(),range:defRange(),q:"",f:"all"};
+S.mem={sel:todayK(),range:defRange(),q:"",f:"all",y:""};
 const memRangeStart=()=>rangeStartFor(S.mem.range,d=>Number.isFinite(getHappy(d))||!!(d&&d.note));
 function setHappy(k,v){const d=ensureDay(k);if(v===null)delete d.happy;else d.happy=Math.max(-100,Math.min(100,Math.round(v)));delete d.mood;saveDay(k)}
-function setNote(k,txt){const d=ensureDay(k);if(txt.trim())d.note=txt;else delete d.note;saveDay(k)}
+function setNote(k,txt){const d=ensureDay(k);if(txt.trim())d.note=txt;else{delete d.note;delete d.nimp}saveDay(k)}
 function drawMemChart(){
   const box=$("#mem-chart");if(!box)return;
   const t=todayK(),st=memRangeStart(),n=diffD(st,t),pts=[];
@@ -1804,11 +1804,16 @@ function refreshMemEditor(){
 function drawMemList(){
   const box=$("#mem-list");if(!box)return;
   const q=S.mem.q.trim(),t=todayK();
-  const st=S.mem.f==="star",ks=Object.keys(S.days).filter(k=>{const d=S.days[k];return k<=t&&(st?d.star:d.note)&&(!q||(d.note||"").includes(q))}).sort().reverse();
+  const st=S.mem.f==="star",all=Object.keys(S.days).filter(k=>{const d=S.days[k];return k<=t&&(st?d.star:d.note)&&(!q||(d.note||"").includes(q))});
+  // one year at a time; a search looks through every year
+  const yc={};all.forEach(k=>{const y=k.slice(0,4);yc[y]=(yc[y]||0)+1});const ys=Object.keys(yc).sort().reverse();
+  if(!yc[S.mem.y])S.mem.y=yc[t.slice(0,4)]?t.slice(0,4):(ys[0]||"");
+  const byY=!q&&ys.length>1,ks=(byY?all.filter(k=>k.slice(0,4)===S.mem.y):all).sort().reverse();
+  const chips=byY?'<div class="mtabs" style="margin-bottom:6px" role="group" aria-label="السنة">'+ys.map(y=>'<button class="btn sm'+(y===S.mem.y?" pri":"")+'" data-act="memY" data-y="'+y+'">'+L(y)+' <span class="num" style="opacity:.7">'+yc[y]+'</span></button>').join("")+'</div>':"";
   const nb=$("#mem-nstar");if(nb)nb.textContent=Object.keys(S.days).filter(k=>k<=t&&S.days[k].star).length;
-  box.innerHTML=ks.length?ks.slice(0,st?1000:200).map(k=>{const d=S.days[k],v=getHappy(d);
+  box.innerHTML=chips+(ks.length?ks.slice(0,1000).map(k=>{const d=S.days[k],v=getHappy(d);
     return '<button class="mitem'+(k===S.mem.sel?" sel":"")+'" data-act="memPick" data-k="'+k+'"><span class="mh"><span class="md">'+(d.star?'<span class="mstar" aria-label="يوم مميز">★ </span>':"")+esc(fList(k))+'</span><span class="pill '+(!Number.isFinite(v)?"nodata":v>20?"ok":v<-20?"behind":"nodata")+'">'+(Number.isFinite(v)?L(signed(v,0)):"–")+'</span></span><span class="mt">'+(d.note?esc(d.note):'<span class="muted">بلا ذكرى مكتوبة</span>')+'</span></button>'}).join("")
-    :'<p class="muted small" style="margin:0">'+(q?(st?"لا يوجد يوم مميز ذكراه تحتوي هذا النص.":"لا توجد ذكرى تحتوي هذا النص."):st?"لم تحدّد أي يوم مميز بعد. افتح أي يوم واضغط «يوم مميز».":"لم تكتب أي ذكرى بعد. اختر يوماً من المنحني واكتب ما حدث فيه.")+'</p>';
+    :'<p class="muted small" style="margin:0">'+(q?(st?"لا يوجد يوم مميز ذكراه تحتوي هذا النص.":"لا توجد ذكرى تحتوي هذا النص."):st?"لم تحدّد أي يوم مميز بعد. افتح أي يوم واضغط «يوم مميز».":"لم تكتب أي ذكرى بعد. اختر يوماً من المنحني واكتب ما حدث فيه.")+'</p>');
 }
 function syncMemEditor(){
   const d=S.days[S.mem.sel]||{},v=getHappy(d);
@@ -1828,14 +1833,118 @@ function memEditorHTML(){
     '<div class="row"><input id="me-num" class="keep ltr numin" type="number" min="-100" max="100" step="1" inputmode="numeric" placeholder="من -100 إلى 100" value="'+(Number.isFinite(v)?Math.round(v):"")+'" aria-label="قيمة المزاج بالأرقام">'+
       '<button class="btn sm" data-act="memClearVal"'+(Number.isFinite(v)?"":" hidden")+'>مسح القيمة</button></div>'+
     '<div class="fld"><label for="me-note">ماذا حدث في هذا اليوم؟</label><textarea id="me-note" class="keep" rows="7" placeholder="اكتب ما تريد تذكّره عن هذا اليوم">'+esc(d.note||"")+'</textarea></div>'+
-    '<div class="row" style="justify-content:space-between"><span class="lbl">يُحفظ تلقائياً أثناء الكتابة، وكتابة ذكرى اليوم تضيف '+AUTO_PTS+' نقاط لهذا اليوم</span>'+'<button class="btn sm danger" data-act="memDel"'+((Number.isFinite(v)||d.note||d.star)?"":" hidden")+'>حذف ذكرى هذا اليوم</button></div>'+
+    '<div class="row" style="justify-content:space-between"><span class="lbl">'+(d.nimp?"ذكرى مستوردة: تُحفظ تعديلاتك تلقائياً، ولا تضيف نقاطاً لهذا اليوم":"يُحفظ تلقائياً أثناء الكتابة، وكتابة ذكرى اليوم تضيف "+AUTO_PTS+" نقاط لهذا اليوم")+'</span>'+'<button class="btn sm danger" data-act="memDel"'+((Number.isFinite(v)||d.note||d.star)?"":" hidden")+'>حذف ذكرى هذا اليوم</button></div>'+
   '</section>';
 }
+/* ---------- memories import ----------
+   Text pasted or loaded on this device (for example copied out of a scanned PDF after text recognition).
+   Each memory starts with its date at the start or the end of a line: 12/3/2025, 12-3-25, 2025/3/12 or 2025-03-12,
+   in Western or Arabic digits. The lines after it, up to the next date, are that day's memory. */
+let MEM_IMP=null;
+const memDig=x=>String(x||"").replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)).replace(/[۰-۹]/g,c=>String(c.charCodeAt(0)-1776)).replace(/[‎‏‪-‮⁦-⁩﻿]/g,"");
+const MEM_DR="(\\d{4})[/\\-.](\\d{1,2})[/\\-.](\\d{1,2})|(\\d{1,2})[/\\-.](\\d{1,2})[/\\-.](\\d{4}|\\d{2})(?!\\d)";
+const MEM_RS=new RegExp("^[\\s•\\-*–—()\\[\\]]*(?:"+MEM_DR+")"),MEM_RE=new RegExp("(?:^|[^\\d/\\-.])(?:"+MEM_DR+")[\\s()\\[\\]:.\\-–—]*$");
+// a date at the start or the end of a line: {k, rest} for a real past date, {bad} for one that is not, null for none
+function memLD(line){const l=memDig(line).trim(),st=l.match(MEM_RS),en=st?null:l.match(MEM_RE),mm=st||en;if(!mm)return null;
+  const mk=(y,m,d)=>{y=+y;if(y<100)y+=2000;m=+m;d=+d;if(m<1||m>12||d<1||d>31||y<1950)return null;const dt=new Date(y,m-1,d);if(dt.getMonth()!==m-1)return null;return y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0")};
+  const g=mm.slice(1),k=g[0]?mk(g[0],g[1],g[2]):mk(g[5],g[4],g[3]);
+  if(!k||k>todayK())return {bad:mm[0].replace(/^[^\d]+/,"").trim()};
+  return {k:k,rest:(st?l.slice(st[0].length):l.slice(0,en.index+(en[0].match(/^[^\d]/)?1:0))).replace(/^[\s:،,.\-–—]+|[\s:،,.\-–—]+$/g,"")}}
+function memParse(txt){
+  const lines=memDig(txt).replace(/\r/g,"").split("\n");
+  const out={},bad=[];let cur=null,pre=0,n=0;
+  lines.forEach(raw=>{const l=raw.trim(),r=memLD(l);
+    if(r&&r.k){cur=r.k;n++;(out[cur]=out[cur]||[]).push(r.rest);return}
+    if(r)bad.push(r.bad);
+    if(cur){const a=out[cur];a[a.length-1]+="\n"+raw.replace(/\s+$/,"")}else if(l)pre++});
+  const days={};Object.keys(out).forEach(k=>{const v=out[k].map(x=>x.replace(/\n{3,}/g,"\n\n").trim()).filter(Boolean).join("\n\n");if(v)days[k]=v});
+  return {days:days,bad:bad,pre:pre,n:n}}
+/* Scanned PDF pages and photos are read on this device: PDF.js draws each page and Tesseract recognises the text,
+   both inside the browser. Only the programs and the language files are downloaded (once, then kept by the browser);
+   the pages never leave the device. Each page is read twice: in Arabic, which reads Arabic words best, and in English,
+   which reads the digits of the dates. A line takes its date from the English pass only when the Arabic pass found none. */
+const OCR_BASE=window.__OCR_BASE||"https://cdn.jsdelivr.net/npm/";
+const OCR={tess:OCR_BASE+"tesseract.js@5.1.1/dist/tesseract.min.js",worker:OCR_BASE+"tesseract.js@5.1.1/dist/worker.min.js",core:OCR_BASE+"tesseract.js-core@5.1.1",
+  lang:L=>OCR_BASE+"@tesseract.js-data/"+L+"@1.0.0/4.0.0_best_int",pdf:OCR_BASE+"pdfjs-dist@4.10.38/build/pdf.min.mjs",pdfw:OCR_BASE+"pdfjs-dist@4.10.38/build/pdf.worker.min.mjs"};
+let OCR_RUN=null;
+function ocrLib(){if(window.Tesseract)return Promise.resolve(window.Tesseract);
+  return new Promise((ok,no)=>{const sc=document.createElement("script");sc.src=OCR.tess;sc.onload=()=>window.Tesseract?ok(window.Tesseract):no(new Error("tesseract"));sc.onerror=()=>no(new Error("load"));document.head.appendChild(sc)})}
+async function pdfLib(){const m=await import(OCR.pdf);m.GlobalWorkerOptions.workerSrc=OCR.pdfw;return m}
+async function pdfImgW(pg,P){ // width in pixels of the largest picture on the page, 0 when there is none
+  try{const ops=await pg.getOperatorList(),O=P.OPS;let w=0;
+    for(let i=0;i<ops.fnArray.length;i++){const f=ops.fnArray[i];if(f!==O.paintImageXObject&&f!==O.paintInlineImageXObject&&f!==O.paintImageXObjectRepeat)continue;
+      const a=ops.argsArray[i];let im=null;
+      if(f===O.paintInlineImageXObject)im=a[0];
+      else{const id=a[0],st=String(id).startsWith("g_")?pg.commonObjs:pg.objs;im=await new Promise(r=>{const tm=setTimeout(()=>r(null),3000);try{st.get(id,o=>{clearTimeout(tm);r(o)})}catch(e){try{clearTimeout(tm);r(st.get(id))}catch(e2){r(null)}}})}
+      if(im&&im.width>w)w=im.width}
+    return w}catch(e){return 0}}
+async function pageCanvas(it){const c=document.createElement("canvas"),x=c.getContext("2d");
+  // a scanned page is drawn at the size of the scan inside it: enlarging it blurs the letters and the reading gets much worse
+  if(it.pdf){const pg=await it.pdf.getPage(it.i),v0=pg.getViewport({scale:1}),iw=await pdfImgW(pg,it.P),tw=iw?Math.min(iw,2400):1600,v=pg.getViewport({scale:Math.max(.5,Math.min(3,tw/v0.width))});c.width=Math.round(v.width);c.height=Math.round(v.height);
+    x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:x,viewport:v}).promise;return c}
+  const bm=await createImageBitmap(it.file),sc=Math.min(1,2600/Math.max(bm.width,bm.height));c.width=Math.round(bm.width*sc);c.height=Math.round(bm.height*sc);x.drawImage(bm,0,0,c.width,c.height);return c}
+function ocrLines(d){const a=[];(d.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.lines||[]).forEach(l=>{const t=(l.text||"").replace(/\s+$/,"");if(t.trim())a.push({t:t,y0:l.bbox.y0,y1:l.bbox.y1})})));return a}
+const dmy=k=>(+k.slice(8))+"/"+(+k.slice(5,7))+"/"+k.slice(0,4);
+function ocrMerge(A,E){const a=ocrLines(A),e=ocrLines(E),used=new Set(),out=[];
+  const ov=(p,q)=>Math.min(p.y1,q.y1)-Math.max(p.y0,q.y0);
+  // the Arabic pass misreads the digits of a date; the English pass reads them but not the Arabic words around them
+  const strip=t=>memDig(t).replace(/^[\s\d/\\\-.|\[\](){}:،,]+|[\s\d/\\\-.|\[\](){}:،,]+$/g,"");
+  a.forEach(l=>{let best=-1,bv=0;e.forEach((m,j)=>{const v=ov(l,m);if(v>bv){bv=v;best=j}});
+    const r=best>=0?memLD(e[best].t):null;if(best>=0)used.add(best);
+    if(r&&r.k&&!(memLD(l.t)||{}).k){const rest=strip(l.t);out.push({y:l.y0,t:dmy(r.k)+(rest?" "+rest:"")})}else out.push({y:l.y0,t:l.t})});
+  e.forEach((m,j)=>{if(!used.has(j)){const r=memLD(m.t);if(r&&r.k)out.push({y:m.y0,t:dmy(r.k)})}});
+  return out.sort((p,q)=>p.y-q.y).map(o=>o.t).join("\n")}
+async function memScan(files){
+  const run={stop:false,ws:[]};OCR_RUN=run;
+  const say=(m,stop)=>{const el=$("#mi-st");if(el){el.hidden=false;el.innerHTML=esc(m)+(stop?' <button class="btn sm" type="button" data-act="memScanStop">إيقاف</button>':"")}};
+  const end=()=>{run.ws.forEach(w=>{try{w.terminate()}catch(er){}});if(OCR_RUN===run)OCR_RUN=null};
+  try{
+    say("جارٍ تحميل أداة القراءة. أول مرة فقط، نحو 10 ميغابايت…",true);
+    const T=await ocrLib(),mk=async L=>{const w=await T.createWorker(L,1,{workerPath:OCR.worker,corePath:OCR.core,langPath:OCR.lang(L),logger:()=>{}});run.ws.push(w);return w};
+    const wA=await mk("ara"),wE=await mk("eng"),items=[];
+    for(const f of files){if(run.stop)break;if(f.type==="application/pdf"||/\.pdf$/i.test(f.name)){const P=await pdfLib(),pdf=await P.getDocument({data:await f.arrayBuffer()}).promise;for(let i=1;i<=pdf.numPages;i++)items.push({pdf:pdf,i:i,P:P})}else items.push({file:f})}
+    const out=[];
+    for(let n=0;n<items.length&&!run.stop;n++){say("قراءة صفحة "+(n+1)+" من "+items.length+"…",true);const c=await pageCanvas(items[n]);
+      const a=await wA.recognize(c,{},{blocks:true});if(run.stop)break;const b=await wE.recognize(c,{},{blocks:true});out.push(ocrMerge(a.data,b.data))}
+    end();
+    const ta=$("#mi-t");if(ta&&out.length)ta.value=(ta.value.trim()?ta.value.replace(/\s+$/,"")+"\n\n":"")+out.join("\n\n");
+    say(run.stop?"توقفت القراءة بعد "+out.length+" صفحة، والنص المقروء في الخانة.":"انتهت قراءة "+out.length+" صفحة. راجع النص وصحّح ما أخطأت فيه القراءة، خصوصاً التواريخ، ثم اضغط «معاينة».")
+  }catch(er){end();say("تعذّرت القراءة. أول مرة تحتاج اتصالاً بالإنترنت لتحميل الأداة. ("+(er&&er.message||er)+")")}}
+function memImpHTML(){
+  return '<h2>استيراد ذكريات</h2><form class="f" id="mi-form" autocomplete="off">'+
+    '<p class="lbl" style="margin:0">الصق النص هنا، أو اختر ملفاً نصياً. كل ذكرى تبدأ بتاريخها في أول السطر أو آخره، مثل 12/3/2025، والأسطر بعده إلى التاريخ التالي هي ذكرى ذلك اليوم. القراءة تتم على جهازك فقط.</p>'+
+    '<div class="row" style="gap:6px"><label class="btn sm filebtn">ملف PDF أو صور ممسوحة<input id="mi-scan" type="file" accept="application/pdf,.pdf,image/*" multiple></label><label class="btn sm filebtn">ملف نصي<input id="mi-file" type="file" accept=".txt,text/plain"></label></div>'+
+    '<p class="lbl" style="margin:0">الملف الممسوح يُقرأ على جهازك بالكامل ولا يُرسل لأي مكان. القراءة الآلية تخطئ أحياناً، فراجع النص قبل المعاينة.</p>'+
+    '<p class="small" id="mi-st" hidden></p>'+
+    '<div class="fld"><label for="mi-t">النص</label><textarea id="mi-t" class="keep" rows="10" placeholder="12/3/2025&#10;ما حدث في ذلك اليوم…">'+esc(MEM_IMP&&MEM_IMP.txt||"")+'</textarea></div>'+
+    '<p class="err" id="mi-err" hidden></p>'+
+    '<div class="row"><button class="btn pri" type="submit">معاينة</button><button class="btn" type="button" data-act="closeSheet">إغلاق</button></div></form>'}
+const dN=n=>n===1?"يوم واحد":n===2?"يومان":n<=10?L(n)+" أيام":L(n)+" يوماً",lN=n=>n===1?"سطر واحد":n===2?"سطران":n<=10?L(n)+" أسطر":L(n)+" سطراً";
+function memImpPlanHTML(){
+  const P=MEM_IMP.p,ks=Object.keys(P.days).sort(),t=ks.length;let add=0,same=0;
+  ks.forEach(k=>{const o=((S.days[k]||{}).note||"").trim();if(o&&o.includes(P.days[k]))same++;else if(o)add++});
+  return '<h2>معاينة الاستيراد</h2><div class="f">'+
+    '<p class="small" style="margin:0">'+(t?'وُجدت ذكريات '+dN(t)+'، من '+esc(fList(ks[0]))+' إلى '+esc(fList(ks[t-1]))+'.':'لم أجد أي تاريخ في أول سطر أو آخره.')+'</p>'+
+    (add?'<p class="small" style="margin:0">'+dN(add)+(add===1?' فيه':' فيها')+' ذكرى من قبل: يُضاف النص الجديد تحتها، ولا يُحذف شيء.</p>':'')+
+    (same?'<p class="small" style="margin:0">'+dN(same)+(same===1?' مستورد':' مستوردة')+' من قبل بنفس النص: تُترك كما هي.</p>':'')+
+    (P.pre?'<p class="small" style="margin:0">'+lN(P.pre)+' في أول النص قبل أي تاريخ: لن تُستورد.</p>':'')+
+    (P.bad.length?'<p class="err" style="margin:0">تواريخ غير صحيحة أو في المستقبل، بقيت نصاً داخل الذكرى التي قبلها: '+P.bad.slice(0,8).map(x=>L(esc(x))).join("، ")+(P.bad.length>8?"…":"")+'</p>':'')+
+    (t?'<p class="lbl" style="margin:0">الذكريات المستوردة لا تضيف نقاط «تسجيل ذكرى اليوم»، ولا تغيّر بداية السجل في المقارنة.</p>':'')+
+    (t?'<div class="mlist" style="max-height:46vh;overflow:auto">'+ks.map(k=>{const o=((S.days[k]||{}).note||"").trim(),tx=P.days[k];
+      return '<div class="mitem"><span class="mh"><span class="md">'+esc(fList(k))+'</span>'+(o&&o.includes(tx)?'<span class="pill nodata">موجودة</span>':o?'<span class="pill">تُضاف تحت الموجودة</span>':'')+'</span><span class="mt">'+esc(tx.length>160?tx.slice(0,160)+"…":tx)+'</span></div>'}).join("")+'</div>':'')+
+    '<div class="row">'+(t&&t>same?'<button class="btn pri" data-act="memImpGo">استيراد '+dN(t-same)+'</button>':'')+'<button class="btn" data-act="memImpBack">رجوع للنص</button><button class="btn" data-act="closeSheet">إغلاق</button></div></div>'}
+function memImpSubmit(){if(OCR_RUN){const el=$("#mi-err");el.textContent="انتظر حتى تنتهي القراءة، أو أوقفها.";el.hidden=false;return}const tx=$("#mi-t").value;if(!tx.trim()){const e=$("#mi-err");e.textContent="الصق النص أولاً، أو اختر ملفاً.";e.hidden=false;return}
+  MEM_IMP={txt:tx,p:memParse(tx)};card.innerHTML=memImpPlanHTML();sheetSubmit=null;card.scrollTop=0}
+function memImpGo(){const P=MEM_IMP&&MEM_IMP.p;if(!P)return;let n=0,first=null;
+  Object.keys(P.days).sort().forEach(k=>{const d=ensureDay(k),o=(d.note||"").trim(),tx=P.days[k];if(o&&o.includes(tx))return;
+    if(o)d.note=o+"\n\n"+tx;else{d.note=tx;d.nimp=1}saveDay(k);n++;if(!first)first=k});
+  MEM_IMP=null;closeSheet();if(first&&first<memRangeStart())S.mem.range="all";render(true);showBanner("استُوردت ذكريات "+dN(n).replace(/<[^>]+>/g,"")+".")}
+
 function vMem(){
   return '<section class="sec-h"><h2 style="font-family:var(--f-display);font-weight:500;font-size:22px">الذكريات</h2></section>'+
   '<section class="panel sec"><div class="sec-h" style="flex-wrap:wrap">'+rangeChips("memRange",S.mem.range)+'<span class="lbl">اضغط على أي يوم لتحديده</span></div>'+
   '<div id="mem-chart" class="chart"></div><div class="legend"><span><i class="lg-note"></i>يوم فيه ذكرى مكتوبة</span><span><i class="lg-star"></i>يوم مميز</span><span><i style="background:var(--muted)"></i>الصفر</span></div></section>'+yearHTML()+
-  '<div class="cols">'+memEditorHTML()+'<section class="sec"><div class="sec-h"><div class="mtabs" role="group" aria-label="القائمة"><button class="btn sm'+(S.mem.f!=="star"?" pri":"")+'" data-act="memF" data-f="all">الذكريات المكتوبة</button><button class="btn sm'+(S.mem.f==="star"?" pri":"")+'" data-act="memF" data-f="star">★ الأيام المميزة (<span id="mem-nstar" class="num">0</span>)</button></div></div><input id="mem-q" class="keep search" type="search" placeholder="ابحث في ذكرياتك" value="'+esc(S.mem.q)+'" aria-label="بحث"><div id="mem-list" class="mlist"></div></section></div>';
+  '<div class="cols">'+memEditorHTML()+'<section class="sec"><div class="sec-h"><div class="mtabs" role="group" aria-label="القائمة"><button class="btn sm'+(S.mem.f!=="star"?" pri":"")+'" data-act="memF" data-f="all">الذكريات المكتوبة</button><button class="btn sm'+(S.mem.f==="star"?" pri":"")+'" data-act="memF" data-f="star">★ الأيام المميزة (<span id="mem-nstar" class="num">0</span>)</button></div></div><div class="row" style="gap:6px;margin-bottom:6px"><button class="btn sm" data-act="memImp">استيراد ذكريات من نص</button></div><input id="mem-q" class="keep search" type="search" placeholder="ابحث في ذكرياتك" value="'+esc(S.mem.q)+'" aria-label="بحث"><div id="mem-list" class="mlist"></div></section></div>';
 }
 
 /* ---------- weight ---------- */
@@ -4282,11 +4391,16 @@ document.addEventListener("click",e=>{
       setTimeout(()=>{delete confirmArm[a+t];if(b.isConnected){b.classList.remove("armed");if(st&&st.dataset.o)st.textContent=st.dataset.o}},4000);break}
     case "toMem":S.mem.sel=S.cur;if(S.cur<memRangeStart())S.mem.range="all";S.tab="memories";try{localStorage.setItem("dt-tab",S.tab)}catch(er){}render(true);window.scrollTo(0,0);break;
     case "memRange":S.mem.range=b.dataset.r;render(true);break;
+    case "memImp":openSheet(memImpHTML(),memImpSubmit);break;
+    case "memImpBack":card.innerHTML=memImpHTML();sheetSubmit=memImpSubmit;break;
+    case "memImpGo":memImpGo();break;
+    case "memScanStop":if(OCR_RUN){OCR_RUN.stop=true;const el=$("#mi-st");if(el)el.textContent="جارٍ الإيقاف بعد الصفحة الحالية…"}break;
     case "memStar":{const k=S.mem.sel;if(k>todayK())break;const d=ensureDay(k);if(d.star)delete d.star;else d.star=1;saveDay(k);refreshMemEditor();break}
+    case "memY":S.mem.y=b.dataset.y;drawMemList();break;
     case "memF":S.mem.f=b.dataset.f==="star"?"star":"all";render(true);break;
     case "memPick":{const k=b.dataset.k;const out=k<memRangeStart();S.mem.sel=k;if(out){S.mem.range="all";render(true)}else refreshMemEditor();const ed=$("#mem-ed");if(ed)ed.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});break}
     case "memClearVal":setHappy(S.mem.sel,null);render(true);break;
-    case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;delete d.star;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
+    case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;delete d.star;delete d.nimp;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
     case "chNew":case "chAcc":case "chNo":case "chEnd":case "chLog":case "chLogDel":case "chDel":case "chEdit":chalAct(a,b);break;
     case "gtTog":gtToggle(b.dataset.k,id);break;
@@ -4409,6 +4523,8 @@ document.addEventListener("change",e=>{
   if((e.target.name==="automem"||e.target.name==="autorev")&&e.target.closest("#sheet")){const t=e.target.name.slice(4);const o=Object.assign({},S.auto);if(e.target.checked)delete o[t];else o[t]=todayK();S.auto=o;saveConfig();render(true);return}
   if(e.target.name==="uipts"&&e.target.closest("#sheet")){S.ui.pts=e.target.checked;saveUiLocal();saveConfig();render(true);return}
   if((e.target.name==="pal"||e.target.name==="thm")&&e.target.closest("#sheet")){S.ui[e.target.name]=e.target.value;saveUiLocal();applyTheme();saveConfig();return}
+  if(e.target.id==="mi-scan"){const fs=Array.from(e.target.files||[]);if(fs.length&&!OCR_RUN)memScan(fs);e.target.value="";return}
+  if(e.target.id==="mi-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const ta=$("#mi-t");if(ta)ta.value=String(r.result||"")};r.readAsText(f);return}
   if(e.target.id==="mon-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const p=monParse(String(r.result||""));MON_IMP=monImportPlan(p);openSheet(monImportHTML(MON_IMP),null)};r.readAsText(f);e.target.value="";return}
   if(e.target.id==="imp-file"){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();
     r.onload=()=>{let o=null;try{o=JSON.parse(r.result)}catch(er){}
