@@ -2904,13 +2904,13 @@ function fsHTML(){
   if(FS.view==="food")return fsFoodHTML();
   if(FS.view==="quick")return fsQuickHTML();
   if(FS.view==="recipe")return recipeHTML();
-  const title=FS.mode==="recipe"?"مكوّن للوصفة":"إضافة إلى "+MEALS[FS.m];
+  const title=FS.mode==="recipe"?"مكوّن للوصفة":FS.mode==="smeal"?"مكوّن للوجبة الجاهزة":"إضافة إلى "+MEALS[FS.m];
   return '<h2>'+title+'</h2><div class="f">'+(FS.mode==="log"?'<div class="lbl">'+esc(fLong(FS.k))+'</div>':"")+
     '<input id="fs-q" class="search" type="search" autocomplete="off" placeholder="chicken breast roasted, rice cooked" value="'+esc(FS.q)+'" aria-label="بحث عن طعام">'+
-    '<div class="row" style="gap:8px">'+(FS.mode==="log"?'<button class="btn sm" data-act="fsQuick">سعرات سريعة</button>':"")+'<button class="btn sm" data-act="cfNew">طعام جديد بالماكروز</button>'+(FS.mode==="log"?'<button class="btn sm" data-act="rcNew">وصفة جديدة</button>':"")+'</div>'+
+    '<div class="row" style="gap:8px">'+(FS.mode==="log"||FS.mode==="smeal"?'<button class="btn sm" data-act="fsQuick">سعرات سريعة</button>':"")+'<button class="btn sm" data-act="cfNew">طعام جديد بالماكروز</button>'+(FS.mode==="log"?'<button class="btn sm" data-act="rcNew">وصفة جديدة</button>':"")+'</div>'+
     (FS.added.length?'<div class="banner">أُضيف: '+FS.added.slice(-3).map(x=>'<bdi>'+esc(x)+'</bdi>').join("، ")+'</div>':"")+
     '<div id="fs-res" class="fsres" aria-live="polite"></div>'+
-    '<div class="row"><button class="btn'+(FS.mode==="log"?" pri":"")+'" data-act="'+(FS.mode==="recipe"?"rcBack":"closeSheet")+'">'+(FS.mode==="recipe"?"رجوع للوصفة":"تم")+'</button></div></div>';
+    '<div class="row"><button class="btn'+(FS.mode==="log"?" pri":"")+'" data-act="'+(FS.mode==="recipe"?"rcBack":FS.mode==="smeal"?"smBack":"closeSheet")+'">'+(FS.mode==="recipe"?"رجوع للوصفة":FS.mode==="smeal"?"رجوع للوجبة":"تم")+'</button></div></div>';
 }
 function fsItem(fid,extra){
   const f=food(fid);if(!f)return "";
@@ -2948,7 +2948,7 @@ function fsResults(){
 function fsFoodHTML(){
   const f=FS.f;if(!f)return "";
   const v=f.v,ed=FS.edit,units=[["غرام",1]].concat(f.u||[]),ui=Math.max(0,Math.min(units.length-1,FS.ui||0)),qty=FS.qty;
-  const recipe=FS.mode==="recipe";
+  const recipe=FS.mode==="recipe",sm=FS.mode==="smeal";
   return '<div class="f"><button class="chip-link" style="align-self:flex-start" data-act="'+(ed?"closeSheet":"fsBack")+'">'+(ed?"إغلاق":"رجوع للبحث")+'</button>'+
     '<h2 style="margin:0" dir="auto">'+esc(f.n)+'</h2><div class="lbl">'+esc(f.src)+(f.note?" · "+esc(f.note):"")+'</div>'+
     (f.nt?'<div class="fnote"><span class="lbl2">ملاحظاتك</span><p dir="auto">'+esc(f.nt)+'</p></div>':"")+
@@ -2957,9 +2957,9 @@ function fsFoodHTML(){
     '<form id="fs-amt" class="f" autocomplete="off"><div class="amt"><div class="fld"><label for="fs-n">الكمية</label><input id="fs-n" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(qty!=null?qty:"")+'" required></div>'+
       '<div class="fld"><label for="fs-u">الوحدة</label><select id="fs-u" class="sel">'+units.map((u,i)=>'<option value="'+i+'"'+(i===ui?" selected":"")+'>'+esc(u[0])+(i?" ("+num(+u[1],1)+" غ)":"")+'</option>').join("")+'</select></div></div>'+
       '<div class="ntot" id="fs-tot">'+fsTotHTML()+'</div>'+
-      (recipe?"":fsMealSeg(FS.m))+
+      (recipe||sm?"":fsMealSeg(FS.m))+
       '<p class="err" id="fs-err" hidden></p>'+
-      '<div class="row"><button class="btn pri" type="submit">'+(ed||(recipe&&FS.rEditI!=null)?"حفظ التعديل":recipe?"إضافة للوصفة":"إضافة")+'</button>'+(ed?'<button class="btn danger" type="button" data-act="nDelEntry">حذف من اليوم</button>':"")+'</div></form>'+
+      '<div class="row"><button class="btn pri" type="submit">'+(ed||(recipe&&FS.rEditI!=null)?"حفظ التعديل":recipe?"إضافة للوصفة":sm?"إضافة للوجبة":"إضافة")+'</button>'+(ed?'<button class="btn danger" type="button" data-act="nDelEntry">حذف من اليوم</button>':"")+'</div></form>'+
     '<details class="unitbox"><summary class="chip-link">إضافة وحدة خاصة لهذا الطعام</summary><form id="fs-unit" class="two" autocomplete="off" style="margin-top:8px"><div class="fld"><label for="fu-l">الاسم</label><input id="fu-l" maxlength="24" placeholder="مثال: صمونة"></div><div class="fld"><label for="fu-g">الوزن بالغرام</label><input id="fu-g" class="ltr" type="number" inputmode="decimal" min="0.1" step="any" placeholder="90"></div><button class="btn sm" type="submit">حفظ الوحدة</button></form>'+
       (userUnits(f.fid).length?'<div class="setl" style="margin-top:6px">'+userUnits(f.fid).map((u,i)=>'<span>'+esc(u[0])+' '+L(num(+u[1],1)+" غ")+' <button class="chip-link" data-act="fuDel" data-i="'+i+'">حذف</button></span>').join("")+'</div>':"")+'</details></div>';
 }
@@ -2978,7 +2978,7 @@ function openEntry(k,id){
 }
 function fsQuickHTML(){
   const e=FS.edit&&S.nutri[FS.k]?(S.nutri[FS.k].it||[]).find(x=>x.id===FS.edit):null,v=e?e.v:[];
-  return '<h2>'+(e?"تعديل إضافة سريعة":"إضافة سعرات سريعة")+'</h2><form id="fs-quick" class="f" autocomplete="off">'+
+  return '<h2>'+(e?"تعديل إضافة سريعة":FS.mode==="smeal"?"إضافة سريعة للوجبة الجاهزة":"إضافة سعرات سريعة")+'</h2><form id="fs-quick" class="f" autocomplete="off">'+
     '<div class="fld"><label for="fq-n">الوصف (اختياري)</label><input id="fq-n" name="n" maxlength="60" value="'+esc(e?e.n:"")+'" placeholder="مثال: عشاء مطعم"></div>'+
     '<div class="fld"><label for="fq-k">السعرات</label><input id="fq-k" name="k" class="ltr" type="number" inputmode="numeric" min="1" max="10000" step="any" value="'+(e&&!e.ka?Math.round(+v[0]):"")+'" placeholder="مثال: 650" style="font-size:20px"></div>'+
     '<details class="fqm"'+(e&&(+v[1]||+v[2]||+v[3])?" open":"")+'><summary>إضافة الماكروز (اختياري)</summary><div class="two" style="margin-top:8px">'+
@@ -2986,8 +2986,8 @@ function fsQuickHTML(){
     '<div class="fld"><label for="fq-c">الكربوهيدرات (غ)</label><input id="fq-c" name="c" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(e&&+v[2]?r1(+v[2]):"")+'"></div>'+
     '<div class="fld"><label for="fq-f">الدهون (غ)</label><input id="fq-f" name="f" class="ltr" type="number" inputmode="decimal" min="0" step="any" value="'+(e&&+v[3]?r1(+v[3]):"")+'"></div></div>'+
     '<div class="ntot" id="fq-calc">'+macroCalc(e?v[1]:0,e?v[2]:0,e?v[3]:0,e&&!e.ka?v[0]:null)+'</div><span class="lbl">إذا تركت السعرات فارغة تُحسب من الماكروز.</span></details>'+
-    fsMealSeg(e?e.m:FS.m)+'<p class="err" id="fq-err" hidden></p>'+
-    '<div class="row"><button class="btn pri" type="submit">'+(e?"حفظ":"إضافة")+'</button>'+(e?'<button class="btn danger" type="button" data-act="nDelEntry">حذف</button>':'<button class="btn" type="button" data-act="fsBack">رجوع</button>')+'</div>'+
+    (FS.mode==="smeal"?"":fsMealSeg(e?e.m:FS.m))+'<p class="err" id="fq-err" hidden></p>'+
+    '<div class="row"><button class="btn pri" type="submit">'+(e?"حفظ":"إضافة")+'</button>'+(e?'<button class="btn danger" type="button" data-act="nDelEntry">حذف</button>':'<button class="btn" type="button" data-act="'+(FS.mode==="smeal"?"smBack":"fsBack")+'">رجوع</button>')+'</div>'+
     '<p class="lbl" style="margin:0">للحالات التي لا تعرف فيها مكونات الأكل. الأدق دائماً أن تزن الأكل وتختاره من القائمة.</p></form>';
 }
 // Atwater general factors: 4 kcal per g of protein and carbohydrate, 9 per g of fat
@@ -2999,6 +2999,7 @@ function fsSubmit(fd,form){
   if(id==="fs-amt"){
     const g=fsGrams(),err=$("#fs-err");if(!(g>0)){err.textContent="أدخل كمية أكبر من صفر.";err.hidden=false;return}
     if(g>5000){err.textContent="الكمية كبيرة جداً، تأكد منها (أكثر من 5 كغم).";err.hidden=false;return}
+    if(FS.mode==="smeal"){if(SM)SM.it.push({f:FS.fid,n:FS.f.n,g:r1(g),v:FS.f.v.slice()});smBack();return}
     if(FS.mode==="recipe"){if(FS.rEditI!=null&&RD.it[FS.rEditI])RD.it[FS.rEditI].g=r1(g);else RD.it.push({f:FS.fid,n:FS.f.n,g:r1(g),v:FS.f.v.slice()});FS.rEditI=null;FS.view="recipe";fsShow();return}
     const m=+(fd.get("m")||FS.m)||0;
     if(FS.edit){const d=S.nutri[FS.k],e=d&&(d.it||[]).find(x=>x.id===FS.edit);if(e){e.g=r1(g);e.m=m;saveN(FS.k)}closeSheet();FS=null;render();return}
@@ -3009,6 +3010,7 @@ function fsSubmit(fd,form){
     const P=num2("p"),Cb=num2("c"),Ft=num2("f"),auto=kr==="",kc=auto?kcalOf(P,Cb,Ft):parseFloat(kr);
     if(!Number.isFinite(kc)||kc<=0||kc>10000){err.textContent=auto?"أدخل البروتين أو الكربوهيدرات أو الدهون، أو اكتب السعرات.":"أدخل السعرات رقماً بين 1 و 10000.";err.hidden=false;return}
     const v=[Math.round(kc*10)/10,P,Cb,Ft,0],n=String(fd.get("n")||"").trim()||"إضافة سريعة",m=+(fd.get("m")||0)||0;
+    if(FS.mode==="smeal"){if(SM)SM.it.push(Object.assign({f:"q",n:n,g:100,v:v},auto?{ka:1}:{}));smBack();return}
     if(FS.edit){const d=S.nutri[FS.k],e=d&&(d.it||[]).find(x=>x.id===FS.edit);if(e){e.v=v;e.n=n;e.m=m;if(auto)e.ka=1;else delete e.ka;saveN(FS.k)}closeSheet();FS=null;render();return}
     addEntry(FS.k,Object.assign({id:uid(),f:"q",n:n,g:100,m:m,v:v},auto?{ka:1}:{}));FS.added.push(n);FS.m=m;FS.view="list";fsShow();render();return;
   }
@@ -3091,18 +3093,25 @@ function openSaveMeal(k,m){
   const d=S.nutri[k],me=d?(d.it||[]).filter(e=>(+e.m||0)===m):[];if(!me.length)return;
   openSheet('<h2>حفظ كوجبة جاهزة</h2><form class="f" id="sm-form"><div class="fld"><label for="sm-n">الاسم</label><input id="sm-n" name="n" maxlength="50" required placeholder="مثال: فطوري المعتاد" value="'+esc(MEALS[m])+'"></div>'+
     '<p class="lbl" style="margin:0">'+me.length+' أصناف بأوزانها الحالية. تظهر في البحث فتضيفها كلها بضغطة.</p><div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>',fd=>{
-    const n=String(fd.get("n")||"").trim();if(!n)return;const id=uid();NUT().meals[id]={id:id,n:n,it:me.map(e=>({f:e.f,n:e.n,g:e.g,v:e.v}))};saveConfig();closeSheet();render();
+    const n=String(fd.get("n")||"").trim();if(!n)return;const id=uid();NUT().meals[id]={id:id,n:n,it:me.map(e=>Object.assign({f:e.f,n:e.n,g:e.g,v:e.v},e.ka?{ka:1}:{}))};saveConfig();closeSheet();render();
   });
 }
 let SM=null; // saved-meal draft while editing
-function openMealEdit(id){const m=NUT().meals[id];if(!m)return;SM=JSON.parse(JSON.stringify(m));openSheet(mealEditHTML(),(fd,form)=>{if(form.id!=="sme-form")return;smSync();const err=$("#sme-err");
+function openMealEdit(id){const m=NUT().meals[id];if(!m)return;SM=JSON.parse(JSON.stringify(m));openSheet(mealEditHTML(),smSubmit)}
+function smSubmit(fd,form){if(form.id!=="sme-form")return;smSync();const err=$("#sme-err");
   if(!SM.n.trim()){err.textContent="اكتب اسماً للوجبة.";err.hidden=false;return}if(!SM.it.length){err.textContent="الوجبة فارغة. احذفها بدل حفظها فارغة.";err.hidden=false;return}
-  if(SM.it.some(e=>!(+e.g>0&&+e.g<=5000))){err.textContent="كل وزن بين 0.1 و 5000 غ.";err.hidden=false;return}
-  NUT().meals[SM.id]=SM;saveConfig();SM=null;closeSheet();render()})}
+  if(SM.it.some(e=>e.f!=="q"&&!(+e.g>0&&+e.g<=5000))){err.textContent="كل وزن بين 0.1 و 5000 غ.";err.hidden=false;return}
+  NUT().meals[SM.id]=SM;saveConfig();SM=null;FS=null;closeSheet();render()}
+function smBack(){if(!SM)return;FS=null;card.innerHTML=mealEditHTML();sheetSubmit=smSubmit;card.scrollTop=card.scrollHeight}
+// adding to a saved meal goes through the same food search, in its own mode: picks go into the meal, not into a day
+function smOpenFS(view){if(!SM)return;smSync();FS={k:S.nu.cur,m:0,mode:"smeal",view:view,q:"",added:[],raw:false,edit:null};loadFDB();sheetSubmit=fsSubmit;fsShow();if(view==="list")fsResults();else{const q=$("#fq-k");if(q)q.focus()}}
 function smSync(){if(!SM)return;const n=$("#sme-n");if(n)SM.n=n.value;SM.it.forEach((e,i)=>{const el=$("#sme-g"+i);if(el){const v=parseFloat(el.value);if(Number.isFinite(v))e.g=r1(v)}})}
 function mealEditHTML(){const t=vSum(SM.it);
   return '<h2>تعديل الوجبة الجاهزة</h2><form id="sme-form" class="f" autocomplete="off"><div class="fld"><label for="sme-n">الاسم</label><input id="sme-n" maxlength="50" value="'+esc(SM.n)+'"></div>'+
-    '<div class="entries" style="max-height:none">'+SM.it.map((e,i)=>'<div><span dir="auto" style="flex:1;min-width:0">'+esc(eName(e))+'</span><span class="row" style="gap:6px;flex-wrap:nowrap"><input id="sme-g'+i+'" class="ltr qin" type="number" inputmode="decimal" min="0.1" step="any" value="'+e.g+'" aria-label="الوزن بالغرام"><span class="lbl">غ</span><button class="chip-link" type="button" data-act="smItDel" data-i="'+i+'">حذف</button></span></div>').join("")+'</div>'+
+    '<div class="entries" style="max-height:none">'+SM.it.map((e,i)=>'<div><span dir="auto" style="flex:1;min-width:0">'+esc(eName(e))+(e.f==="q"?' <span class="lbl">· إضافة سريعة</span>':"")+'</span><span class="row" style="gap:6px;flex-wrap:nowrap">'+
+      (e.f==="q"?'<span class="num">'+L(kc0(vOf(e.v,e.g)[0]))+'</span><span class="lbl">سعرة</span>':'<input id="sme-g'+i+'" class="ltr qin" type="number" inputmode="decimal" min="0.1" step="any" value="'+e.g+'" aria-label="الوزن بالغرام"><span class="lbl">غ</span>')+
+      '<button class="chip-link" type="button" data-act="smItDel" data-i="'+i+'">حذف</button></span></div>').join("")+'</div>'+
+    '<div class="row" style="gap:6px"><button class="btn sm" type="button" data-act="smAddF">إضافة مكوّن</button><button class="btn sm" type="button" data-act="smAddQ">إضافة سريعة</button></div>'+
     '<p class="lbl" style="margin:0">المجموع الحالي '+L(kc0(t[0]))+' سعرة.</p><p class="err" id="sme-err" hidden></p><div class="row"><button class="btn pri" type="submit">حفظ</button><button class="btn" type="button" data-act="closeSheet">إلغاء</button></div></form>';
 }
 function openAct(k){
@@ -4436,9 +4445,12 @@ document.addEventListener("click",e=>{
     case "fsBack":if(FS){FS.view=FS.mode==="recipe"&&(!FS.f||FS.rEditI!=null)?"recipe":"list";FS.rEditI=null;FS.edit=null;FS.f=null;fsShow()}break;
     case "rcEditIt":{if(!FS||!RD)break;rcSync();const i=+b.dataset.i,e2=RD.it[i];if(!e2)break;const f=food(e2.f)||foodOr(e2);Object.assign(FS,{view:"food",f:f,fid:e2.f,ui:0,qty:+e2.g,edit:null,rEditI:i});fsShow();break}
     case "smEdit":openMealEdit(id);break;
+    case "smAddF":smOpenFS("list");break;
+    case "smAddQ":smOpenFS("quick");break;
+    case "smBack":smBack();break;
     case "smItDel":if(SM){smSync();SM.it.splice(+b.dataset.i,1);card.innerHTML=mealEditHTML()}break;
     case "fsQuick":if(FS){FS.view="quick";FS.edit=null;fsShow()}break;
-    case "fsMeal":{const ml=NUT().meals[id];if(!FS||!ml)break;const d=nDay(FS.k);ml.it.forEach(e=>d.it.push({id:uid(),f:e.f,n:e.n,g:e.g,m:FS.m,v:e.v}));saveN(FS.k);FS.added.push(ml.n);fsShow();render();break}
+    case "fsMeal":{const ml=NUT().meals[id];if(!FS||!ml)break;const d=nDay(FS.k);ml.it.forEach(e=>d.it.push(Object.assign({id:uid(),f:e.f,n:e.n,g:e.g,m:FS.m,v:e.v},e.ka?{ka:1}:{})));saveN(FS.k);FS.added.push(ml.n);fsShow();render();break}
     case "nDelEntry":{if(!FS||!FS.edit)break;const d=S.nutri[FS.k];if(d){d.it=(d.it||[]).filter(e=>e.id!==FS.edit);saveN(FS.k)}closeSheet();FS=null;render();break}
     case "fuDel":{if(!FS)break;const g0=fsGrams(),N=NUT(),uk=ukey(FS.fid),list=(Array.isArray(N.units[uk])?N.units[uk]:[]).filter(x=>x&&x.l&&+x.g>0);list.splice(+b.dataset.i,1);if(list.length)N.units[uk]=list;else delete N.units[uk];saveConfig();const nf=food(FS.fid);FS.f=nf||Object.assign({},FS.f,{u:userUnits(FS.fid)});FS.ui=0;FS.qty=g0>0?r1(g0):FS.qty;fsShow();break}
     case "cfNew":openCustomFood(null,true);break;
