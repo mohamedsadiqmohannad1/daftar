@@ -1845,7 +1845,23 @@ const memDig=x=>String(x||"").replace(/[٠-٩]/g,c=>String(c.charCodeAt(0)-1632)
 const MEM_DR="(\\d{4})[/\\-.](\\d{1,2})[/\\-.](\\d{1,2})|(\\d{1,2})[/\\-.](\\d{1,2})[/\\-.](\\d{4}|\\d{2})(?!\\d)";
 const MEM_RS=new RegExp("^[\\s•\\-*–—()\\[\\]]*(?:"+MEM_DR+")"),MEM_RE=new RegExp("(?:^|[^\\d/\\-.])(?:"+MEM_DR+")[\\s()\\[\\]:.\\-–—]*$");
 // a date at the start or the end of a line: {k, rest} for a real past date, {bad} for one that is not, null for none
-function memLD(line){const l=memDig(line).trim(),st=l.match(MEM_RS),en=st?null:l.match(MEM_RE),mm=st||en;if(!mm)return null;
+// dates written with the month's name, as memory apps export them: "Saturday, 8 November 2025", "Nov 8, 2025",
+// "8 تشرين الثاني 2025", "8 نوفمبر 2025"
+const MEM_MON={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12,
+  jan:1,feb:2,mar:3,apr:4,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12,
+  "كانون الثاني":1,"شباط":2,"آذار":3,"اذار":3,"نيسان":4,"أيار":5,"ايار":5,"حزيران":6,"تموز":7,"آب":8,"اب":8,"أيلول":9,"ايلول":9,"تشرين الأول":10,"تشرين الاول":10,"تشرين الثاني":11,"كانون الأول":12,"كانون الاول":12,
+  "يناير":1,"فبراير":2,"مارس":3,"أبريل":4,"ابريل":4,"مايو":5,"يونيو":6,"يوليو":7,"أغسطس":8,"اغسطس":8,"سبتمبر":9,"أكتوبر":10,"اكتوبر":10,"نوفمبر":11,"ديسمبر":12};
+const MEM_MN=Object.keys(MEM_MON).sort((a,b)=>b.length-a.length).map(x=>x.replace(/ /g,"\\s+")).join("|");
+const MEM_WD="(?:(?:mon|tue|wed|thu|fri|sat|sun)[a-z]*\\.?|ال(?:سبت|أحد|احد|اثنين|إثنين|ثلاثاء|أربعاء|اربعاء|خميس|جمعة)|(?:يوم\\s+)?(?:السبت|الأحد|الاحد|الاثنين|الثلاثاء|الأربعاء|الاربعاء|الخميس|الجمعة))";
+const MEM_NA=new RegExp("^[\\s•\\-*–—()\\[\\]]*(?:"+MEM_WD+"[\\s,،]+)?(\\d{1,2})(?:st|nd|rd|th)?[\\s,،]+("+MEM_MN+")\\.?[\\s,،]+(\\d{4})(?!\\d)","i");
+const MEM_NB=new RegExp("^[\\s•\\-*–—()\\[\\]]*(?:"+MEM_WD+"[\\s,،]+)?("+MEM_MN+")\\.?[\\s,،]+(\\d{1,2})(?:st|nd|rd|th)?[\\s,،]+(\\d{4})(?!\\d)","i");
+function memNamed(l){let m=l.match(MEM_NA),d,mo,y;if(m){d=m[1];mo=m[2];y=m[3]}else{m=l.match(MEM_NB);if(!m)return null;mo=m[1];d=m[2];y=m[3]}
+  const M=MEM_MON[mo.toLowerCase().replace(/\s+/g," ")];if(!M)return null;return {m:m,y:+y,M:M,d:+d}}
+function memLD(line){const l0=memDig(line).trim(),nm=memNamed(l0);
+  if(nm){const dt=new Date(nm.y,nm.M-1,nm.d),k=nm.y+"-"+String(nm.M).padStart(2,"0")+"-"+String(nm.d).padStart(2,"0");
+    if(nm.y<1950||nm.d<1||dt.getMonth()!==nm.M-1||k>todayK())return {bad:nm.m[0].trim()};
+    return {k:k,rest:l0.slice(nm.m[0].length).replace(/^[\s:،,.\-–—]+|[\s:،,.\-–—]+$/g,"")}}
+  const l=l0,st=l.match(MEM_RS),en=st?null:l.match(MEM_RE),mm=st||en;if(!mm)return null;
   const mk=(y,m,d)=>{y=+y;if(y<100)y+=2000;m=+m;d=+d;if(m<1||m>12||d<1||d>31||y<1950)return null;const dt=new Date(y,m-1,d);if(dt.getMonth()!==m-1)return null;return y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0")};
   const g=mm.slice(1),k=g[0]?mk(g[0],g[1],g[2]):mk(g[5],g[4],g[3]);
   if(!k||k>todayK())return {bad:mm[0].replace(/^[^\d]+/,"").trim()};
@@ -1912,7 +1928,7 @@ async function memScan(files){
   }catch(er){end();say("تعذّرت القراءة. أول مرة تحتاج اتصالاً بالإنترنت لتحميل الأداة. ("+(er&&er.message||er)+")")}}
 function memImpHTML(){
   return '<h2>استيراد ذكريات</h2><form class="f" id="mi-form" autocomplete="off">'+
-    '<p class="lbl" style="margin:0">الصق النص هنا، أو اختر ملفاً نصياً. كل ذكرى تبدأ بتاريخها في أول السطر أو آخره، مثل 12/3/2025، والأسطر بعده إلى التاريخ التالي هي ذكرى ذلك اليوم. القراءة تتم على جهازك فقط.</p>'+
+    '<p class="lbl" style="margin:0">الصق النص هنا، أو اختر ملفاً نصياً. كل ذكرى تبدأ بتاريخها في أول السطر، مثل 12/3/2025 أو Saturday, 8 November 2025 أو 8 تشرين الثاني 2025، والأسطر بعده إلى التاريخ التالي هي ذكرى ذلك اليوم. القراءة تتم على جهازك فقط.</p>'+
     '<div class="row" style="gap:6px"><label class="btn sm filebtn">ملف PDF أو صور ممسوحة<input id="mi-scan" type="file" accept="application/pdf,.pdf,image/*" multiple></label><label class="btn sm filebtn">ملف نصي<input id="mi-file" type="file" accept=".txt,text/plain"></label></div>'+
     '<p class="lbl" style="margin:0">الملف الممسوح يُقرأ على جهازك بالكامل ولا يُرسل لأي مكان. القراءة الآلية تخطئ أحياناً، فراجع النص قبل المعاينة.</p>'+
     '<p class="small" id="mi-st" hidden></p>'+
