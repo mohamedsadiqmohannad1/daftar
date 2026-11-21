@@ -1435,7 +1435,7 @@ function taskRow(x,k){
   const fl=isFl(x,k);
   if(x.ld||fl){const pv=hPrev(x,k);badges.push('<span class="st">'+(pv?(on?"قبلها ":"آخر مرة ")+'<span class="num">'+esc(fNum(pv))+'</span>':"لم تُنجز قبل")+'</span>')}
   if(isExc(x,k))badges.push('<span class="st exc">معذور</span>');
-  if(fl)badges.push('<span class="st fl">مرنة</span>'); // a flexible task shows when it was last done, not how often
+  // a flexible task shows only when it was last done
   else if(wk)badges.push('<span class="st">'+(wkMet?"اكتملت هذا الأسبوع":"هذا الأسبوع")+' <span class="num">'+L(wc+"/"+x.wk)+'</span></span>');
   else if(k===t&&st)badges.push('<span class="st">سلسلة <span class="num">'+st+'</span> '+(st===1?"يوم":"أيام")+'</span>');
   const edit='<button class="iconbtn xdel" data-act="editHabit" data-id="'+x.id+'" aria-label="تعديل أو حذف '+esc(x.name)+'">'+ICON.edit+'</button>';
@@ -4022,7 +4022,7 @@ function hDoneDays(h){return Object.keys(S.days).filter(k=>{const v=rawV(h,k);re
 function hPrev(h,k){const ks=hDoneDays(h);for(const x of ks)if(x<k)return x;return null}
 function hLogHTML(h){const ks=hDoneDays(h);if(!ks.length)return '<p class="lbl" style="margin:0">لم تُنجز بعد.</p>';
   return '<details class="hlog"><summary class="chip-link">سجل الإنجاز ('+ks.length+' '+(ks.length===1?"مرة":ks.length===2?"مرتان":ks.length<=10?"مرات":"مرة")+')</summary><div class="entries" style="max-height:260px">'+
-    ks.map((k,i)=>{const nx=ks[i+1],gap=nx?diffD(nx,k):null;return '<div><span>'+esc(DAY_NAME[dow(k)])+' '+esc(fShort(k))+(isQ(h)?' <b class="num">'+L(num(+rawV(h,k),2)+(h.q.u?" "+esc(h.q.u):""))+'</b>':"")+'</span><span class="lbl">'+(gap!==null?(gap===1?"بعد يوم واحد":gap===2?"بعد يومين":"بعد "+gap+(gap<=10?" أيام":" يوماً"))+" من السابقة":"أول مرة")+'</span></div>'}).join("")+'</div></details>'}
+    ks.map((k,i)=>{const nx=ks[i+1],gap=nx?diffD(nx,k):null;return '<div><span><span class="num">'+esc(fShort(k))+'</span>'+(isQ(h)?' <b class="num">'+L(num(+rawV(h,k),2)+(h.q.u?" "+esc(h.q.u):""))+'</b>':"")+'</span><span class="lbl">'+(gap!==null?(gap===1?"بعد يوم واحد":gap===2?"بعد يومين":"بعد "+gap+(gap<=10?" أيام":" يوماً"))+" من السابقة":"أول مرة")+'</span></div>'}).join("")+'</div></details>'}
 function clearExc(d,id){if(d.xh&&d.xh[id]){delete d.xh[id];if(!Object.keys(d.xh).length)delete d.xh}}
 function toggleHabit(id){
   const k=S.cur,h=S.habits.find(x=>x.id===id);if(!h)return;
