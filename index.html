@@ -2743,11 +2743,15 @@ function bmrOn(k){
   if(c)return {v:370+21.6*c.lbm,W:W,age:age,m:"katch",lbm:c.lbm,c:c};
   return {v:10*W+6.25*(+p.h)-5*age+(p.sex==="m"?5:-161),W:W,age:age,m:"mifflin"};
 }
+// a session's intensity over all its minutes, rests included: Compendium 02054 (3.5, multiple exercises 8 to 15 reps, measured)
+// far from failure, rising to 5.0 at failure. 02050 (6.0, vigorous body building) is an old estimated value that
+// assumes almost no rest, and it made machine and cable sessions with timed rests count too much
+const GYM_LO=3.5,GYM_HI=5;
 function gymMet(w){
   const gm=+NUT().gmet;if(gm>0)return {met:gm,r:null,fixed:true};
   const rs=[];(w.ex||[]).forEach(e=>e.sets.forEach(s=>{if(s.done!==false&&hasRir(s))rs.push(+s.rir)}));
   const r=rs.length?avg(rs):TR(),t=Math.max(0,Math.min(1,(4-r)/4));
-  return {met:3.5+2.5*t,r:r,fixed:false}; // between Compendium 02054 (3.5, 8 to 15 reps at varied resistance) and 02050 (6.0, vigorous body building) by closeness to failure
+  return {met:GYM_LO+(GYM_HI-GYM_LO)*t,r:r,fixed:false}; // see GYM_LO
 }
 const netK=(met,min,W,bmr)=>Math.max(0,(met*3.5*W/200-bmr/1440)*min);
 // a gym day picked by hand: average duration and intensity of its last 5 logged sessions, or from its sets and rest times if never logged
@@ -2757,7 +2761,7 @@ function groupEst(gid,k,W,bmr){
   const g=findG(gid);if(!g)return null;
   const hs=doneWos().filter(w=>w.gid===gid&&w.date<=k).slice(0,5);let min,met,src;
   if(hs.length){min=avg(hs.map(w=>woMin(w)));met=avg(hs.map(w=>gymMet(w).met));src="متوسط آخر "+hs.length+" "+(hs.length===1?"جلسة":"جلسات")+" لهذه المجموعة"}
-  else{const sec=g.ex.reduce((a,e)=>a+(+e.sets||3)*((+e.rest||S.gym.rest)+40),0);min=sec/60;const gm=+NUT().gmet,t=Math.max(0,Math.min(1,(4-TR())/4));met=gm>0?gm:3.5+2.5*t;src="من عدد جولاتها وأوقات الراحة، بلا جلسات سابقة"}
+  else{const sec=g.ex.reduce((a,e)=>a+(+e.sets||3)*((+e.rest||S.gym.rest)+40),0);min=sec/60;const gm=+NUT().gmet,t=Math.max(0,Math.min(1,(4-TR())/4));met=gm>0?gm:GYM_LO+(GYM_HI-GYM_LO)*t;src="من عدد جولاتها وأوقات الراحة، بلا جلسات سابقة"}
   return {n:g.name,min:min,met:met,src:src,kc:netK(met,min,W,bmr)};
 }
 /* usual day: default steps and swimming from settings, used on every day up to today where you did not type a number */
@@ -2768,7 +2772,7 @@ function effSwim(k){const d=S.nutri[k]||{},sw=(d.act||[]).find(x=>x.id==="swim")
 function energyOn(k){
   if(EN_C[k])return EN_C[k];
   const p=nProf(),b=bmrOn(k);if(!b)return null;
-  const d=S.nutri[k]||{},W=b.W,neat=0.15*b.v;
+  const d=S.nutri[k]||{},W=b.W,neat=0.2*b.v; // resting x 1.2: light movement outside walking, and digesting food
   const es=effSteps(k),km=es.v>0?es.v*strideM()/1000:0,est=false;
   const stepsK=km*W*WALK_NET;
   const logged=doneWos().filter(w=>w.date===k);
@@ -2778,14 +2782,17 @@ function energyOn(k){
   const swE=effSwim(k),acts=(d.act||[]).filter(a=>a.id!=="swim").concat(swE.a?[swE.a]:[]);
   const act=acts.map(a=>({id:a.id,n:a.n,min:+a.min||0,met:+a.met||0,c:a.c,kc:+a.kc>0?+a.kc:netK(+a.met||0,+a.min||0,W,b.v),watch:+a.kc>0,def:a===swE.a&&swE.def}));
   const ex=gym.reduce((s,x)=>s+x.kc,0)+act.reduce((s,x)=>s+x.kc,0);
-  const sub=b.v+neat+stepsK+ex,total=sub/0.9;
-  return EN_C[k]={W:W,b:b,neat:neat,km:km,est:est,steps:es.v,stepsDef:es.def,stepsK:stepsK,gym:gym,act:act,ex:ex,tef:total-sub,total:total};
+  const total=b.v+neat+stepsK+ex;
+  return EN_C[k]={W:W,b:b,neat:neat,km:km,est:est,steps:es.v,stepsDef:es.def,stepsK:stepsK,gym:gym,act:act,ex:ex,tef:0,total:total};
 }
 function intakeOk(k,F){const d=S.nutri[k];if(!d||d.st==="part")return null;const kc=vSum(d.it)[0];if(!(kc>0))return null;if(d.st!=="done"&&F&&kc<0.5*F)return null;return kc}
+const CAL_FROM="2026-11-24";
 function adaptive(){
   if(EN_C._ad)return EN_C._ad;
   const t=todayK(),end=addD(t,-1),st=addD(end,-27),days=[];
-  for(let k=st;k<=end;k=addD(k,1)){const e=energyOn(k);if(!e)continue;const kc=intakeOk(k,e.total);if(kc!==null)days.push({k:k,kc:kc,F:e.total})}
+  // every logged day except those marked «يوم ناقص», from CAL_FROM on: before it, days with food left out unlogged
+  // made the burn look about 550 kcal lower than it was. From then on, a day off plan gets a rough quick-add estimate
+  for(let k=st<CAL_FROM?CAL_FROM:st;k<=end;k=addD(k,1)){const e=energyOn(k);if(!e)continue;const kc=intakeOk(k,e.total);if(kc!==null)days.push({k:k,kc:kc,F:e.total})}
   const wk=wKeys().filter(k=>k>=st&&k<=end),span=wk.length?diffD(wk[0],wk[wk.length-1]):0;
   const out={ok:false,nI:days.length,nW:wk.length,span:span,st:st,end:end};
   if(days.length>=10&&wk.length>=6&&span>=14){
@@ -3152,15 +3159,14 @@ function energyHTML(k){
   const row=(a,b,c)=>'<div class="erow"><span>'+a+(c?' <span class="lbl">'+c+'</span>':"")+'</span><b class="num">'+b+'</b></div>';
   return '<h2>تفاصيل الحرق · '+esc(fShort(k))+'</h2><div class="f"><div class="entries" style="max-height:none">'+
     row("الأيض الأساسي",L(kc0(e.b.v)),(e.b.m==="katch"?"معادلة كاتش ماكاردل من كتلتك الخالية من الدهون "+L(num(e.b.lbm,1))+" كغم (دهون "+L(num(e.b.c.bf,1)+"%")+"، قياس "+esc(fShort(e.b.c.k))+")":"معادلة ميفلين سان جيور، لعدم وجود قياس دهون")+" · وزن "+L(num(e.W,1))+" · عمر "+e.b.age)+
-    row("النشاط العام في اليوم",L(kc0(e.neat)),"15% من الأيض الأساسي، تقدير أولي تصححه المعايرة")+
+    row("الحياة اليومية وهضم الطعام",L(kc0(e.neat)),"20% من الأيض الأساسي: الحركة الخفيفة غير المشي، وهضم الأكل")+
     row("المشي",L(kc0(e.stepsK)),e.km>0?e.steps.toLocaleString("en")+" خطوة × "+L(num(strideM()*100,1))+" سم = "+L(num(e.km,1))+" كم":"لم تُسجل خطوات")+
     e.gym.map(g=>row("<bdi>"+esc(g.n)+"</bdi>",L(kc0(g.kc)),Math.round(g.min)+" دقيقة · "+L(num(g.met,1))+" MET"+(g.pick?" · "+esc(g.src):g.fixed?" (قيمة ثابتة من الإعدادات)":g.r!=null?" من متوسط عدات باقية "+L(num(g.r,1)):""))).join("")+
     e.act.map(a=>row(esc(a.n),L(kc0(a.kc)),a.watch?"من الساعة":Math.round(a.min)+" دقيقة · "+L(num(a.met,1))+" MET")).join("")+
-    row("هضم الطعام",L(kc0(e.tef)),"نحو 10% من المجموع")+
     row("<b>المجموع بالمعادلة</b>",L(kc0(e.total)))+
-    row("معامل المعايرة",L("×"+num(f,3)),A.ok?"من "+A.nI+" يوماً مسجلاً و "+A.nW+" قراءة وزن":"لم تتم بعد")+
+    row("معامل المعايرة",L("×"+num(f,3)),A.ok?"من "+A.nI+" يوماً مسجلاً و "+A.nW+" قراءة وزن":"لم تتم بعد: تحتاج 10 أيام مسجلة، عندك "+A.nI)+
     row("<b>الحرق المقدّر</b>",L(kc0(e.total*f)))+'</div>'+
-    '<p class="lbl" style="margin:0">التمرين والمشي محسوبان صافيين فوق الراحة: سعرات النشاط ناقص ما كنت ستحرقه وأنت مرتاح في نفس المدة، لأن الراحة محسوبة في الأيض الأساسي. شدة جلسة الجم بين 3.5 و 6 MET بحسب قربك من الفشل.</p>'+
+    '<p class="lbl" style="margin:0">التمرين والمشي محسوبان صافيين فوق الراحة: سعرات النشاط ناقص ما كنت ستحرقه وأنت مرتاح في نفس المدة، لأن الراحة محسوبة في الأيض الأساسي. شدة جلسة الجم بين 3.5 و 5 MET على كل دقائقها مع الراحة، بحسب قربك من الفشل.</p>'+
     '<div class="row"><button class="btn" data-act="closeSheet">إغلاق</button></div></div>';
 }
 
@@ -3188,7 +3194,7 @@ function vNutSet(){
     '<div class="fld"><label for="np-dw">السباحة (دقائق)</label><input id="np-dw" name="dw" class="ltr" type="number" inputmode="numeric" min="0" max="600" step="1" value="'+(N.ad&&+N.ad.swim>0?N.ad.swim:"")+'" placeholder="60"></div>'+
     '<div class="fld"><label for="np-dc">نوع السباحة</label><select id="np-dc" name="dc" class="sel">'+ACTS[0][1].map(a=>'<option value="'+a[0]+'"'+(a[0]===(N.ad&&N.ad.swc||lastSwimC(todayK()))?" selected":"")+'>'+esc(a[2])+'</option>').join("")+'</select></div></div>'+
     '<span class="lbl">تُحسب هذه القيم تلقائياً في كل يوم لا تكتب فيه رقماً، بما فيها الأيام السابقة. في اليوم المختلف اكتب الرقم الفعلي، و0 إن لم تمشِ أو لم تسبح. مهمة الخطوات لا تُنجز من القيمة الافتراضية، فقط من رقم تكتبه أو يصل من تطبيق الصحة.</span>'+
-    '<div class="fld"><label for="np-gm">شدة جلسة الجم (MET)</label><input id="np-gm" name="gmet" class="ltr" type="number" inputmode="decimal" min="0" max="9" step="any" value="'+(+N.gmet>0?N.gmet:"")+'" placeholder="تلقائي من العدات الباقية" style="max-width:240px"><span class="lbl">اتركه فارغاً ليُحسب لكل جلسة: 6 MET إذا وصلت للفشل، وتنخفض حتى 3.5 كلما بقيت عدات أكثر.</span></div>'+
+    '<div class="fld"><label for="np-gm">شدة جلسة الجم (MET)</label><input id="np-gm" name="gmet" class="ltr" type="number" inputmode="decimal" min="0" max="9" step="any" value="'+(+N.gmet>0?N.gmet:"")+'" placeholder="تلقائي من العدات الباقية" style="max-width:240px"><span class="lbl">اتركه فارغاً ليُحسب لكل جلسة: 5 MET إذا وصلت للفشل، وتنخفض حتى 3.5 كلما بقيت عدات أكثر.</span></div>'+
     '<p class="err" id="np-err"'+(S.nu.msg?"":" hidden")+'>'+esc(S.nu.msg||"")+'</p><div class="row"><button class="btn pri" type="submit">حفظ</button></div></form>';
   const k=todayK(),tg=targetOn(k),e=energyOn(k);
   if(tg)s+='<section class="panel sec"><div class="sec-h"><h2>هدفك اليوم</h2><button class="chip-link" data-act="nEnergy">تفاصيل الحرق</button></div><div class="kv"><div><b>'+L(kc0(tg.kcal))+'</b><span>سعرة</span></div><div><b>'+L(num(tg.p,0))+'</b><span>بروتين (غ)</span></div><div><b>'+L(num(tg.c,0))+'</b><span>كربوهيدرات (غ)</span></div><div><b>'+L(num(tg.f,0))+'</b><span>دهون (غ)</span></div></div>'+
@@ -3229,7 +3235,7 @@ function compHTML(){
 }
 function adaptHTML(A){
   let s='<section class="panel sec"><div class="sec-h"><h2>معايرة الحرق من بياناتك</h2></div>';
-  if(!A.ok){s+='<p class="small" style="margin:0">تبدأ المعايرة حين يتوفر خلال آخر 28 يوماً: 10 أيام تسجيل أكل على الأقل، و6 قراءات وزن تمتد 14 يوماً. عندك الآن '+A.nI+' '+(A.nI===1?"يوم":"أيام")+' و '+A.nW+' قراءة'+(A.nW?' تمتد '+A.span+' يوماً':"")+'.</p><p class="lbl" style="margin:0">إلى أن تكتمل، الحرق محسوب بالمعادلات فقط.</p></section>';return s}
+  if(!A.ok){s+='<p class="small" style="margin:0">تبدأ المعايرة حين يتوفر خلال آخر 28 يوماً: 10 أيام تسجيل أكل على الأقل من '+esc(fShort(CAL_FROM))+'، و6 قراءات وزن تمتد 14 يوماً. اليوم الذي أكلت فيه شيئاً لم تسجله، أضف له تقديراً بـ«إضافة سريعة»؛ واليوم المعلَّم «يوم ناقص» لا يدخل. عندك الآن '+A.nI+' '+(A.nI===1?"يوم":A.nI===2?"يومان":"أيام")+' و '+A.nW+' قراءة'+(A.nW?' تمتد '+A.span+' يوماً':"")+'.</p><p class="lbl" style="margin:0">إلى أن تكتمل، الحرق محسوب بالمعادلات فقط.</p></section>';return s}
   s+='<div class="kv"><div><b>'+L(kc0(A.avgI))+'</b><span>متوسط أكلك اليومي</span></div><div><b>'+L(signed(A.slope*7,2))+'</b><span>اتجاه الوزن (كغم أسبوعياً)</span></div><div><b>'+L(kc0(A.obs))+'</b><span>الحرق المقاس من بياناتك</span></div><div><b>'+L(kc0(A.Fm))+'</b><span>الحرق بالمعادلات للأيام نفسها</span></div><div><b>'+L("×"+num(A.f,3))+'</b><span>معامل المعايرة المطبق</span></div><div><b>'+L(Math.round(A.conf*100)+"%")+'</b><span>الثقة بالبيانات</span></div></div>'+
     '<p class="lbl" style="margin:0">الحرق المقاس = متوسط الأكل ناقص تغير الوزن × 7700 سعرة لكل كغم. اتجاه الوزن من خط مستقيم عبر كل قراءات الفترة، فلا يتأثر كثيراً بتذبذب الماء اليومي. المعامل يُطبق بقدر الثقة: '+A.nI+' يوماً من 21 و '+A.nW+' قراءة من 12 تعطي ثقة كاملة.'+(A.clamped?' النسبة المحسوبة ('+L(num(A.ratio,2))+') خارج المدى المعقول فقُصرت بين 0.75 و 1.25؛ راجع اكتمال تسجيلك.':"")+'</p></section>';
   return s;
