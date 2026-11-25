@@ -531,6 +531,13 @@ nav.tabs button{font-size:11px}
 .mstar{color:var(--warm)}
 .btn.star-on{color:var(--warm);border-color:var(--warm)}
 .mtabs{display:flex;gap:6px;flex-wrap:wrap}
+.voice{align-items:center}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:var(--bad);animation:recb 1s ease-in-out infinite}
+@keyframes recb{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.rec-dot{animation:none}}
+.au-list{display:grid;gap:6px}
+.au-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.au-row audio{height:34px;max-width:100%;flex:1;min-width:200px}
 .legend i.lg-note{width:9px;height:9px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--accent);background:var(--surface)}
 .tip{position:absolute;z-index:3;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 10px;font-size:12px;width:max-content;max-width:240px;display:flex;flex-direction:column;gap:2px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 .tip .th{display:flex;gap:12px;justify-content:space-between;font-family:var(--f-num)}
@@ -1033,7 +1040,7 @@ function mkDB(M,fs,uid){
   return {
     doc:p=>{const r=M.doc(fs,base+p);return {set:(d,merge)=>merge?M.setDoc(r,d,{merge:true}):M.setDoc(r,d),
       update:ops=>{const a=[];ops.forEach(o=>{a.push(new M.FieldPath(...o[0]),o[1]===DEL?M.deleteField():o[1])});return M.updateDoc(r,...a)},
-      delete:()=>M.deleteDoc(r),onSnapshot:(n,e)=>M.onSnapshot(r,MD,s=>n(wrap(s)),e)}},
+      delete:()=>M.deleteDoc(r),get:()=>M.getDoc(r).then(wrap),onSnapshot:(n,e)=>M.onSnapshot(r,MD,s=>n(wrap(s)),e)}},
     collection:p=>query(M.collection(fs,base+p)),
     uid:uid,
     shareSet:d=>M.setDoc(M.doc(fs,"shares/"+uid),d),
@@ -1333,7 +1340,8 @@ const AUTO_PTS=5;
 // S.auto = {mem: day, rev: day}: that kind was switched off from that day on (earlier days keep their points)
 S.auto={};const autoOff=(t,k)=>!!(S.auto&&S.auto[t]&&k>=S.auto[t]);
 const prevMon=m=>{const y=+m.slice(0,4),mo=+m.slice(5,7);return mo===1?(y-1)+"-12":y+"-"+pad(mo-1)};
-const memDone=k=>{const d=S.days[k];return !!(d&&!d.nimp&&typeof d.note==="string"&&d.note.trim())}; // an imported memory earns no points
+const auN=d=>d&&Array.isArray(d.au)?d.au.length:0;
+const memDone=k=>{const d=S.days[k];return !!(d&&!d.nimp&&((typeof d.note==="string"&&d.note.trim())||auN(d)))}; // an imported memory earns no points
 const revHas=m=>{const x=S.monx&&S.monx[m];return !!(x&&x.t&&String(x.t).trim())};
 function autoOn(k){
   const o=[];if(memDone(k)&&!autoOff("mem",k))o.push({id:"mem",pts:AUTO_PTS});
@@ -1791,7 +1799,7 @@ function setNote(k,txt){const d=ensureDay(k);if(txt.trim())d.note=txt;else{delet
 function drawMemChart(){
   const box=$("#mem-chart");if(!box)return;
   const t=todayK(),st=memRangeStart(),n=diffD(st,t),pts=[];
-  for(let i=0;i<=n;i++){const k=addD(st,i),d=S.days[k],v=getHappy(d);if(Number.isFinite(v))pts.push({i:i,k:k,v:v,mark:!!(d&&d.note),star:!!(d&&d.star)})}
+  for(let i=0;i<=n;i++){const k=addD(st,i),d=S.days[k],v=getHappy(d);if(Number.isFinite(v))pts.push({i:i,k:k,v:v,mark:!!(d&&(d.note||auN(d))),star:!!(d&&d.star)})}
   curve(box,{st:st,n:n,pts:pts,yMin:-100,yMax:100,yTicks:[[-100,"-100"],[-50,"-50"],[0,"0"],[50,"+50"],[100,"+100"]],zero:0,area:0,sel:S.mem.sel,label:"منحني المزاج اليومي",
     empty:"لا توجد قيم في هذه الفترة. حدّد مزاج أي يوم من المحرر أدناه.",
     tip:p=>{const d=S.days[p.k]||{};return tipHead(p.k,L(signed(p.v,0)))+(d.note?'<span class="ex" dir="rtl">'+esc(d.note.length>90?d.note.slice(0,90)+"…":d.note)+'</span>':"")},
@@ -1805,7 +1813,7 @@ function refreshMemEditor(){
 function drawMemList(){
   const box=$("#mem-list");if(!box)return;
   const q=S.mem.q.trim(),t=todayK();
-  const st=S.mem.f==="star",all=Object.keys(S.days).filter(k=>{const d=S.days[k];return k<=t&&(st?d.star:d.note)&&(!q||(d.note||"").includes(q))});
+  const st=S.mem.f==="star",all=Object.keys(S.days).filter(k=>{const d=S.days[k];return k<=t&&(st?d.star:(d.note||auN(d)))&&(!q||(d.note||"").includes(q))});
   // one year at a time; a search looks through every year
   const yc={};all.forEach(k=>{const y=k.slice(0,4);yc[y]=(yc[y]||0)+1});const ys=Object.keys(yc).sort().reverse();
   if(!yc[S.mem.y])S.mem.y=yc[t.slice(0,4)]?t.slice(0,4):(ys[0]||"");
@@ -1813,7 +1821,7 @@ function drawMemList(){
   const chips=byY?'<div class="mtabs" style="margin-bottom:6px" role="group" aria-label="السنة">'+ys.map(y=>'<button class="btn sm'+(y===S.mem.y?" pri":"")+'" data-act="memY" data-y="'+y+'">'+L(y)+' <span class="num" style="opacity:.7">'+yc[y]+'</span></button>').join("")+'</div>':"";
   const nb=$("#mem-nstar");if(nb)nb.textContent=Object.keys(S.days).filter(k=>k<=t&&S.days[k].star).length;
   box.innerHTML=chips+(ks.length?ks.slice(0,1000).map(k=>{const d=S.days[k],v=getHappy(d);
-    return '<button class="mitem'+(k===S.mem.sel?" sel":"")+'" data-act="memPick" data-k="'+k+'"><span class="mh"><span class="md">'+(d.star?'<span class="mstar" aria-label="يوم مميز">★ </span>':"")+esc(fList(k))+'</span><span class="pill '+(!Number.isFinite(v)?"nodata":v>20?"ok":v<-20?"behind":"nodata")+'">'+(Number.isFinite(v)?L(signed(v,0)):"–")+'</span></span><span class="mt">'+(d.note?esc(d.note):'<span class="muted">بلا ذكرى مكتوبة</span>')+'</span></button>'}).join("")
+    return '<button class="mitem'+(k===S.mem.sel?" sel":"")+'" data-act="memPick" data-k="'+k+'"><span class="mh"><span class="md">'+(d.star?'<span class="mstar" aria-label="يوم مميز">★ </span>':"")+esc(fList(k))+'</span><span class="pill '+(!Number.isFinite(v)?"nodata":v>20?"ok":v<-20?"behind":"nodata")+'">'+(Number.isFinite(v)?L(signed(v,0)):"–")+'</span></span><span class="mt">'+(auN(d)?'<span class="lbl">🎙 '+(auN(d)===1?"تسجيل صوتي":auN(d)===2?"تسجيلان":auN(d)+" تسجيلات")+'</span> ':"")+(d.note?esc(d.note):auN(d)?"":'<span class="muted">بلا ذكرى مكتوبة</span>')+'</span></button>'}).join("")
     :'<p class="muted small" style="margin:0">'+(q?(st?"لا يوجد يوم مميز ذكراه تحتوي هذا النص.":"لا توجد ذكرى تحتوي هذا النص."):st?"لم تحدّد أي يوم مميز بعد. افتح أي يوم واضغط «يوم مميز».":"لم تكتب أي ذكرى بعد. اختر يوماً من المنحني واكتب ما حدث فيه.")+'</p>');
 }
 function syncMemEditor(){
@@ -1824,6 +1832,70 @@ function syncMemEditor(){
   const rg=$("#me-range");if(rg){rg.classList.toggle("unset",!Number.isFinite(v));if(document.activeElement!==rg)rg.value=Number.isFinite(v)?v:0}
   const nm=$("#me-num");if(nm&&document.activeElement!==nm)nm.value=Number.isFinite(v)?Math.round(v):"";
 }
+/* ---------- voice in memories ----------
+   Speaking into text uses the browser's own speech service (Apple's on an iPhone, Google's in Chrome); Brave and
+   Firefox have none, so the button is not shown there. A recording is kept in the account, in users/{uid}/audio,
+   cut into pieces below the 1 MB limit of a document; the day keeps only the list (d.au). Recordings are not in the
+   backup file: they are too big for it, and they stay in the account. */
+const AU_MAX=300,AU_PART=700000,AU_URL={};let REC=null,DICT=null,DICT_LANG="ar-IQ";
+const SRC=window.SpeechRecognition||window.webkitSpeechRecognition;
+const auOk=()=>!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
+function voiceHTML(k,d){
+  const recHere=REC&&REC.k===k,list=d.au||[];
+  return '<div class="row voice" style="gap:6px">'+
+    (SRC?'<button class="btn sm'+(DICT?" danger":"")+'" type="button" data-act="dict">'+(DICT?"■ إيقاف الكتابة بالصوت":"🎤 اكتب بصوتك")+'</button>':"")+
+    (auOk()?(recHere?'<span class="rec-dot" aria-hidden="true"></span><span id="rec-t" class="num">'+fmtS((Date.now()-REC.t0)/1000)+'</span><button class="btn sm pri" type="button" data-act="recStop">إيقاف وحفظ</button><button class="btn sm" type="button" data-act="recCancel">إلغاء</button>'
+      :'<button class="btn sm" type="button" data-act="recStart"'+(REC||!DB?" disabled":"")+'>🎙 تسجيل صوتي</button>'):"")+'</div>'+
+    (DICT?'<p class="lbl" style="margin:0">تكلّم، والكلام يُضاف للنص. <span id="dict-i" class="muted"></span></p>':"")+
+    (list.length?'<div class="au-list">'+list.map((x,i)=>'<div class="au-row"><span>🎙 تسجيل '+(i+1)+' · <span class="num">'+fmtS(x.s||0)+'</span></span>'+
+      (AU_URL[x.id]?'<audio controls preload="metadata" src="'+AU_URL[x.id]+'"></audio>':'<button class="btn sm" type="button" data-act="auPlay" data-id="'+x.id+'">تشغيل</button>')+
+      '<button class="chip-link" type="button" data-act="auDel" data-id="'+x.id+'">حذف</button></div>').join("")+'</div>':"")+
+    (SRC||auOk()?'<p class="lbl" style="margin:0">'+(SRC?"الكتابة بالصوت تمر عبر خدمة الكلام في جهازك: أبل في الآيفون، وجوجل في كروم. ":"")+(auOk()?"التسجيل يُحفظ في حسابك، حتى "+(AU_MAX/60)+" دقائق للتسجيل الواحد، ولا يدخل في ملف النسخة الاحتياطية.":"")+'</p>':"");
+}
+function auMime(){for(const m of ["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus"])if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(m))return m;return ""}
+async function recStart(){
+  if(REC||!auOk()||!DB)return;const k=S.mem.sel;let st;
+  try{st=await navigator.mediaDevices.getUserMedia({audio:true})}catch(e){showBanner("لم يُسمح باستخدام المايكروفون. فعّله للبرنامج من إعدادات المتصفح أو الهاتف.");return}
+  const mime=auMime();let mr;try{mr=new MediaRecorder(st,Object.assign({audioBitsPerSecond:32000},mime?{mimeType:mime}:{}))}catch(e){mr=new MediaRecorder(st)}
+  const r={k:k,mr:mr,st:st,ch:[],t0:Date.now(),cancel:false};REC=r;
+  mr.ondataavailable=e=>{if(e.data&&e.data.size)r.ch.push(e.data)};
+  mr.onstop=()=>{st.getTracks().forEach(t=>t.stop());clearInterval(r.iv);if(REC===r)REC=null;if(!r.cancel)recSave(r);if(S.mem.sel===r.k)refreshMemEditor()};
+  mr.start(1000);
+  r.iv=setInterval(()=>{const s=(Date.now()-r.t0)/1000,el=$("#rec-t");if(el)el.textContent=fmtS(s);if(s>=AU_MAX)recStop(false)},250);
+  if(S.mem.sel===k)refreshMemEditor()}
+function recStop(cancel){if(!REC)return;REC.cancel=!!cancel;try{REC.mr.stop()}catch(e){}}
+async function recSave(r){
+  const blob=new Blob(r.ch,{type:(r.mr.mimeType||"audio/webm").split(";")[0]}),sec=Math.max(1,Math.round((Date.now()-r.t0)/1000));if(blob.size<200)return;
+  const b64=await new Promise(ok=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(",")[1]||"");fr.onerror=()=>ok("");fr.readAsDataURL(blob)});if(!b64)return;
+  const id=uid(),n=Math.ceil(b64.length/AU_PART),ops=[];for(let i=0;i<n;i++)ops.push({path:"audio/"+id+"_"+i,data:{k:r.k,i:i,n:n,m:blob.type,d:b64.slice(i*AU_PART,(i+1)*AU_PART)}});
+  // written in the background: without a connection the pieces wait on the device and go up later
+  if(DB)DB.batch(ops).catch(()=>showBanner("تعذّر رفع التسجيل الأخير. سيُعاد المحاولة حين يعود الاتصال، وإلا سجّله مرة أخرى."));
+  AU_URL[id]=URL.createObjectURL(blob);
+  const d=ensureDay(r.k);d.au=(d.au||[]).concat([{id:id,s:sec,n:n,m:blob.type,at:new Date().toISOString()}]);saveDay(r.k);
+  if(S.mem.sel===r.k)refreshMemEditor();drawMemList()}
+async function auLoad(x){
+  if(AU_URL[x.id])return AU_URL[x.id];
+  const parts=await Promise.all(Array.from({length:x.n||1},(_,i)=>DB.doc("audio/"+x.id+"_"+i).get()));
+  if(parts.some(q=>!q.exists))throw new Error("missing");
+  const bin=atob(parts.map(q=>q.data().d).join("")),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  return AU_URL[x.id]=URL.createObjectURL(new Blob([u],{type:x.m||"audio/mp4"}))}
+function auWipe(x){if(DB)DB.batch(Array.from({length:x.n||1},(_,i)=>({path:"audio/"+x.id+"_"+i,data:null}))).catch(()=>{});if(AU_URL[x.id]){URL.revokeObjectURL(AU_URL[x.id]);delete AU_URL[x.id]}}
+function dictToggle(){
+  if(DICT){try{DICT.stop()}catch(e){}return}
+  if(!SRC)return;const k=S.mem.sel,r=new SRC();r.lang=DICT_LANG;r.continuous=true;r.interimResults=true;DICT=r;let fail=null;
+  r.onresult=e=>{if(S.mem.sel!==k){try{r.stop()}catch(er){}return}let fin="",tmp="";
+    for(let i=e.resultIndex;i<e.results.length;i++){const x=e.results[i];if(x.isFinal)fin+=x[0].transcript;else tmp+=x[0].transcript}
+    if(fin.trim()){const ta=$("#me-note"),cur=ta?ta.value:((S.days[k]||{}).note||""),nv=cur+(cur&&!/\s$/.test(cur)?" ":"")+fin.trim();
+      if(ta){ta.value=nv;ta.dispatchEvent(new Event("input",{bubbles:true}))}else setNote(k,nv)}
+    const it=$("#dict-i");if(it)it.textContent=tmp};
+  r.onerror=e=>{fail=e.error};
+  r.onend=()=>{if(DICT===r)DICT=null;
+    if(fail==="language-not-supported"&&DICT_LANG!=="ar-SA"){DICT_LANG="ar-SA";dictToggle();return}
+    if(fail==="not-allowed"||fail==="service-not-allowed")showBanner("لم يُسمح بالتعرف على الكلام. فعّل المايكروفون والإملاء للبرنامج من الإعدادات.");
+    else if(fail&&fail!=="no-speech"&&fail!=="aborted")showBanner("توقفت الكتابة بالصوت ("+fail+").");
+    if(S.mem.sel===k)refreshMemEditor()};
+  try{r.start()}catch(e){DICT=null;return}
+  refreshMemEditor()}
 function memEditorHTML(){
   const k=S.mem.sel,d=S.days[k]||{},v=getHappy(d),t=todayK();
   return '<section class="panel sec mem-ed" id="mem-ed">'+
@@ -1833,8 +1905,8 @@ function memEditorHTML(){
     '<div class="scale" dir="ltr"><span>-100</span><span>0</span><span>+100</span></div>'+
     '<div class="row"><input id="me-num" class="keep ltr numin" type="number" min="-100" max="100" step="1" inputmode="numeric" placeholder="من -100 إلى 100" value="'+(Number.isFinite(v)?Math.round(v):"")+'" aria-label="قيمة المزاج بالأرقام">'+
       '<button class="btn sm" data-act="memClearVal"'+(Number.isFinite(v)?"":" hidden")+'>مسح القيمة</button></div>'+
-    '<div class="fld"><label for="me-note">ماذا حدث في هذا اليوم؟</label><textarea id="me-note" class="keep" rows="7" placeholder="اكتب ما تريد تذكّره عن هذا اليوم">'+esc(d.note||"")+'</textarea></div>'+
-    '<div class="row" style="justify-content:space-between"><span class="lbl">'+(d.nimp?"ذكرى مستوردة: تُحفظ تعديلاتك تلقائياً، ولا تضيف نقاطاً لهذا اليوم":"يُحفظ تلقائياً أثناء الكتابة، وكتابة ذكرى اليوم تضيف "+AUTO_PTS+" نقاط لهذا اليوم")+'</span>'+'<button class="btn sm danger" data-act="memDel"'+((Number.isFinite(v)||d.note||d.star)?"":" hidden")+'>حذف ذكرى هذا اليوم</button></div>'+
+    '<div class="fld"><label for="me-note">ماذا حدث في هذا اليوم؟</label><textarea id="me-note" class="keep" rows="7" placeholder="اكتب ما تريد تذكّره عن هذا اليوم">'+esc(d.note||"")+'</textarea></div>'+voiceHTML(k,d)+
+    '<div class="row" style="justify-content:space-between"><span class="lbl">'+(d.nimp?"ذكرى مستوردة: تُحفظ تعديلاتك تلقائياً، ولا تضيف نقاطاً لهذا اليوم":"يُحفظ تلقائياً أثناء الكتابة، وكتابة ذكرى اليوم تضيف "+AUTO_PTS+" نقاط لهذا اليوم")+'</span>'+'<button class="btn sm danger" data-act="memDel"'+((Number.isFinite(v)||d.note||d.star||auN(d))?"":" hidden")+'>حذف ذكرى هذا اليوم</button></div>'+
   '</section>';
 }
 /* ---------- memories import ----------
@@ -4437,7 +4509,15 @@ document.addEventListener("click",e=>{
     case "memF":S.mem.f=b.dataset.f==="star"?"star":"all";render(true);break;
     case "memPick":{const k=b.dataset.k;const out=k<memRangeStart();S.mem.sel=k;if(out){S.mem.range="all";render(true)}else refreshMemEditor();const ed=$("#mem-ed");if(ed)ed.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});break}
     case "memClearVal":setHappy(S.mem.sel,null);render(true);break;
-    case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);delete d.happy;delete d.note;delete d.mood;delete d.star;delete d.nimp;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
+    case "dict":dictToggle();break;
+    case "recStart":recStart();break;
+    case "recStop":recStop(false);break;
+    case "recCancel":recStop(true);break;
+    case "auPlay":{const k=S.mem.sel,x=((S.days[k]||{}).au||[]).find(y=>y.id===b.dataset.id);if(!x||!DB)break;b.disabled=true;b.textContent="جارٍ التحميل…";
+      auLoad(x).then(()=>{if(S.mem.sel===k){refreshMemEditor();const au=document.querySelector('#mem-ed audio[src="'+AU_URL[x.id]+'"]');if(au)au.play().catch(()=>{})}}).catch(()=>{if(b.isConnected){b.disabled=false;b.textContent="تعذّر التحميل"}});break}
+    case "auDel":{const k=S.mem.sel,id=b.dataset.id;if(confirmArm[a+id]){delete confirmArm[a+id];const d=ensureDay(k),x=(d.au||[]).find(y=>y.id===id);if(x)auWipe(x);d.au=(d.au||[]).filter(y=>y.id!==id);if(!d.au.length)delete d.au;saveDay(k);refreshMemEditor();drawMemList();drawMemChart()}
+      else{confirmArm[a+id]=1;b.textContent="اضغط مرة أخرى";setTimeout(()=>{delete confirmArm[a+id];if(b.isConnected)b.textContent="حذف"},4000)}break}
+    case "memDel":{const k=S.mem.sel;if(confirmArm[a+k]){const d=ensureDay(k);(d.au||[]).forEach(x=>auWipe(x));delete d.au;delete d.happy;delete d.note;delete d.mood;delete d.star;delete d.nimp;saveDay(k);delete confirmArm[a+k];render(true)}else{confirmArm[a+k]=1;b.textContent="اضغط مرة أخرى لتأكيد الحذف";setTimeout(()=>{delete confirmArm[a+k];if(b.isConnected)b.textContent="حذف ذكرى هذا اليوم"},4000)}break}
     case "export":doExport();break;
     case "chNew":case "chAcc":case "chNo":case "chEnd":case "chLog":case "chLogDel":case "chDel":case "chEdit":chalAct(a,b);break;
     case "gtTog":gtToggle(b.dataset.k,id);break;
